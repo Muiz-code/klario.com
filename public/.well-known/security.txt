@@ -1,0 +1,5 @@
+Contact: mailto:security@klario.finance
+Expires: 2027-05-10T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://klario.finance/.well-known/security.txt
+Policy: https://klario.finance/privacy

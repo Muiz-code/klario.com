@@ -81,6 +81,37 @@ export const FOOTER = {
     "Klario is not a bank. We are a financial intelligence platform. klario.finance",
 } as const;
 
+export const FAQS = [
+  {
+    q: "What is Klario?",
+    a: "Klario is an AI-powered personal finance app for Nigerians. It connects all your bank accounts in one place, tracks your spending with AI, automates savings, and lets you pay bills without leaving the app.",
+  },
+  {
+    q: "Is Klario a bank?",
+    a: "No. Klario is a financial intelligence platform, not a bank. We do not hold or custody your funds. All banking and payment functions run through licensed CBN-regulated partners.",
+  },
+  {
+    q: "How does Klario connect to my bank accounts?",
+    a: "Klario uses licensed open banking infrastructure to read your bank data securely. Your bank login credentials never touch Klario's servers. We receive read-only data through cryptographically signed APIs.",
+  },
+  {
+    q: "Is Klario safe to use?",
+    a: "Yes. Your data is encrypted with AES-256 at rest and TLS 1.3 in transit. We use biometric authentication, BVN verification, and row-level database security so users cannot access each other's data.",
+  },
+  {
+    q: "How much does Klario cost?",
+    a: "Klario has three tiers: Free at ₦0 per month, Money Manager at ₦1,900 per month, and Financial Executive at ₦5,400 per month. Annual billing is 10% cheaper.",
+  },
+  {
+    q: "Who is behind Klario?",
+    a: "Klario is built and operated by Klario Finance, a venture of Raavon (RC-XXXXX, www.raavon.com). The team is based in Nigeria and focuses exclusively on Nigerian financial users.",
+  },
+  {
+    q: "When can I download the Klario app?",
+    a: "Klario is currently in pre-launch. Join the waitlist on klario.finance to be notified the moment we go live on iOS and Android.",
+  },
+] as const;
+
 export const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "Security", href: "#security" },

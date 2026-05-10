@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { legalBreadcrumbJsonLd } from "@/lib/jsonld";
 import type { LegalPage, Block } from "@/lib/legal";
 
 function BlockRenderer({ block }: { block: Block }) {
@@ -47,8 +48,13 @@ function BlockRenderer({ block }: { block: Block }) {
 }
 
 export function LegalLayout({ page }: { page: LegalPage }) {
+  const breadcrumb = legalBreadcrumbJsonLd(page.slug, page.title);
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
+      />
       <Navbar theme="light" />
       <main className="bg-bg pt-32 pb-20 md:pt-40 md:pb-28">
         <div className="mx-auto w-full max-w-[800px] px-6 md:px-10">

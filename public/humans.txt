@@ -1,0 +1,19 @@
+/* TEAM */
+  Klario Finance — A venture of Raavon
+  Site: https://klario.finance
+  Twitter: @klarionance
+  Parent: https://www.raavon.com
+  Country: Nigeria
+
+/* THANKS */
+  Every Nigerian who's ever wondered where the money went.
+  Open banking partners. Banking partners. The waitlist.
+
+/* SITE */
+  Last update: 2026-05-10
+  Standards: HTML5, CSS3, ES2024
+  Components: React 19, Next 16, Tailwind v4
+  Software: framer-motion, lucide-react
+
+/* MISSION */
+  Your money, finally making sense.
