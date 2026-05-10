@@ -4,11 +4,11 @@ import { SITE } from "./constants";
 export const siteMetadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: `${SITE.name} — ${SITE.tagline}`,
+    default: `${SITE.name}: ${SITE.tagline}`,
     template: `%s · ${SITE.name}`,
   },
   description:
-    "Klario is an AI-powered personal finance app for Nigerians. Connect all your bank accounts, track spending with AI, automate savings, and pay bills — all in one place.",
+    "Klario is an AI-powered personal finance app for Nigerians. Connect all your bank accounts, track spending with AI, automate savings, and pay bills. All in one place.",
   keywords: [
     "Klario",
     "personal finance Nigeria",
@@ -19,7 +19,7 @@ export const siteMetadata: Metadata = {
   ],
   applicationName: SITE.name,
   openGraph: {
-    title: `${SITE.name} — ${SITE.tagline}`,
+    title: `${SITE.name}: ${SITE.tagline}`,
     description: SITE.subTagline,
     url: SITE.url,
     siteName: SITE.name,
@@ -28,7 +28,7 @@ export const siteMetadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE.name} — ${SITE.tagline}`,
+    title: `${SITE.name}: ${SITE.tagline}`,
     description: SITE.subTagline,
   },
   robots: { index: true, follow: true },

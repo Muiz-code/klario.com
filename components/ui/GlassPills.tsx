@@ -47,9 +47,8 @@ export function GlassPills({
               background: chrome,
               border: "1px solid rgba(255,255,255,0.28)",
               boxShadow:
-                "0 0 60px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(255,255,255,0.45)",
-              backdropFilter: "blur(8px)",
-              WebkitBackdropFilter: "blur(8px)",
+                "inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(255,255,255,0.45)",
+              willChange: "transform, opacity",
             }}
           />
         ))}
