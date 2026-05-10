@@ -126,11 +126,11 @@ export function Ambassadors() {
                   </p>
                 </div>
 
-                <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
-                  <legend className={cn(labelCls, "float-left mb-0 p-0")}>
+                <div className="flex flex-col gap-3">
+                  <span className={cn(labelCls, "leading-none")}>
                     I am a
-                  </legend>
-                  <div className="grid grid-cols-2 gap-2">
+                  </span>
+                  <div role="radiogroup" aria-label="I am a" className="grid grid-cols-2 gap-2">
                     {(["student", "staff"] as Role[]).map((r) => {
                       const active = role === r;
                       return (
@@ -151,7 +151,7 @@ export function Ambassadors() {
                       );
                     })}
                   </div>
-                </fieldset>
+                </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Full name">

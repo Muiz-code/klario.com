@@ -102,11 +102,11 @@ export function Contact() {
                 onSubmit={onSubmit}
                 className="flex flex-col gap-5"
               >
-                <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
-                  <legend className={cn(labelCls, "float-left mb-0 p-0")}>
+                <div className="flex flex-col gap-3">
+                  <span className={cn(labelCls, "leading-none")}>
                     This is about
-                  </legend>
-                  <div className="flex flex-wrap gap-2">
+                  </span>
+                  <div role="radiogroup" aria-label="This is about" className="flex flex-wrap gap-2">
                     {CONTACT.topics.map((t) => {
                       const active = topic === t;
                       return (
@@ -127,7 +127,7 @@ export function Contact() {
                       );
                     })}
                   </div>
-                </fieldset>
+                </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="flex flex-col gap-1.5">
