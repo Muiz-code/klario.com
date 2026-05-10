@@ -110,7 +110,7 @@ export const PROBLEM = {
 
 export const DOWNLOAD = {
   heading: "Take control of your money.",
-  emphasis: "Download Klario today.",
+  emphasis: "Download Klario.",
   sub: "Join thousands of Nigerians already on the waitlist.",
   waitlistPlaceholder: "you@example.com",
   waitlistCta: "Join Waitlist",

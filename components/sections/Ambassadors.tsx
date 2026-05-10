@@ -126,7 +126,7 @@ export function Ambassadors() {
                   </p>
                 </div>
 
-                <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
+                <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
                   <legend className={cn(labelCls, "float-left mb-0 p-0")}>
                     I am a
                   </legend>

@@ -35,17 +35,18 @@ export function Download() {
         Klario
       </span>
 
-      <Container className="relative z-10 flex flex-col items-center gap-8 text-center">
+      <Container className="relative z-10 flex flex-col items-center gap-8 px-4 text-center md:px-10">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.4 }}
           transition={{ duration: 0.7, ease }}
-          className="font-display text-balance text-4xl leading-[1.05] capitalize sm:text-5xl md:text-6xl lg:text-[4.5rem]"
+          className="font-display text-[1.65rem] leading-[1.1] capitalize sm:text-4xl md:text-5xl lg:text-[4.5rem]"
         >
-          {DOWNLOAD.heading}
-          <br />
-          <span className="italic text-gold">{DOWNLOAD.emphasis}</span>
+          <span className="block whitespace-nowrap">{DOWNLOAD.heading}</span>
+          <span className="block whitespace-nowrap italic text-gold">
+            {DOWNLOAD.emphasis}
+          </span>
         </motion.h2>
 
         <motion.p
@@ -63,18 +64,25 @@ export function Download() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.4 }}
           transition={{ duration: 0.6, delay: 0.3, ease }}
-          className="flex flex-wrap items-center justify-center gap-3"
+          className="flex w-full max-w-sm items-center justify-center gap-2 sm:w-auto sm:max-w-none sm:gap-3"
         >
-          <Button href={SITE.downloadHref} size="lg" variant="solid">
-            <Apple size={16} /> Download on iOS
+          <Button
+            href={SITE.downloadHref}
+            size="lg"
+            variant="solid"
+            className="flex-1 px-4 sm:flex-none sm:px-6"
+          >
+            <Apple size={16} />{" "}
+            <span className="hidden sm:inline">Download on </span>iOS
           </Button>
           <Button
             href={SITE.downloadHref}
             size="lg"
             variant="outline"
-            className="border-bg/25 text-bg hover:border-bg hover:bg-bg/10"
+            className="flex-1 border-bg/25 px-4 text-bg hover:border-bg hover:bg-bg/10 sm:flex-none sm:px-6"
           >
-            <Smartphone size={16} /> Get on Android
+            <Smartphone size={16} />{" "}
+            <span className="hidden sm:inline">Get on </span>Android
           </Button>
         </motion.div>
 
