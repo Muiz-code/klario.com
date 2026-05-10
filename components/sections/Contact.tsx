@@ -102,8 +102,10 @@ export function Contact() {
                 onSubmit={onSubmit}
                 className="flex flex-col gap-5"
               >
-                <fieldset className="flex flex-col gap-2">
-                  <legend className={labelCls}>This is about</legend>
+                <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
+                  <legend className={cn(labelCls, "float-left mb-0 p-0")}>
+                    This is about
+                  </legend>
                   <div className="flex flex-wrap gap-2">
                     {CONTACT.topics.map((t) => {
                       const active = topic === t;
@@ -135,7 +137,7 @@ export function Contact() {
                       type="text"
                       value={form.name}
                       onChange={update("name")}
-                      placeholder="Adaeze Okonkwo"
+                      placeholder="Daneil Abdulrauf"
                       className={inputCls}
                     />
                   </label>

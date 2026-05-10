@@ -2,7 +2,7 @@ export const SITE = {
   name: "Klario",
   tagline: "Your money, finally making sense.",
   subTagline: "One app. Every account. Full clarity.",
-  url: "https://klario.app",
+  url: "https://klario.finance",
   downloadHref: "#download",
   ambassadorsHref: "#ambassadors",
   poweredBy: { brand: "RaaVon", rc: "RC-XXXXX" },
@@ -115,11 +115,6 @@ export const DOWNLOAD = {
   waitlistPlaceholder: "you@example.com",
   waitlistCta: "Join Waitlist",
   waitlistDisclaimer: "No spam. We only message when we launch.",
-  stats: [
-    { value: 10000, suffix: "+", label: "Waitlist" },
-    { value: 5, suffix: "", label: "Nigerian Banks" },
-    { value: 3, suffix: "", label: "Revenue Streams" },
-  ],
 } as const;
 
 export const AMBASSADORS = {
@@ -155,7 +150,7 @@ export const PRICING = {
       monthly: 0,
       cta: "Get Started Free",
       features: [
-        "1 bank connection",
+        "Limited bank connections",
         "5 KlarioAI queries / month",
         "Basic balance dashboard",
         "Budget alerts",
@@ -170,7 +165,7 @@ export const PRICING = {
       cta: "Start Money Manager",
       featured: true,
       features: [
-        "3 bank connections",
+        "Multiple bank connections",
         "15 KlarioAI queries / day",
         "Automated budget engine",
         "4-tier debt risk scoring",

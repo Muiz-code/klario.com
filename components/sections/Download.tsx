@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { Apple, Smartphone, ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
-import { CountUp } from "@/components/ui/CountUp";
 import { DOWNLOAD, SITE } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -117,27 +116,6 @@ export function Download() {
             {state === "done" ? "You're on the list. We'll keep you posted." : DOWNLOAD.waitlistDisclaimer}
           </p>
         </motion.form>
-
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.6, delay: 0.6, ease }}
-          className="mt-8 grid w-full max-w-3xl grid-cols-1 gap-8 border-t border-bg/10 pt-10 sm:grid-cols-3"
-        >
-          {DOWNLOAD.stats.map((s) => (
-            <div key={s.label} className="flex flex-col items-center gap-1">
-              <CountUp
-                to={s.value}
-                suffix={s.suffix}
-                className="font-display text-3xl text-gold md:text-4xl"
-              />
-              <span className="text-[11px] uppercase tracking-[0.18em] text-bg/55">
-                {s.label}
-              </span>
-            </div>
-          ))}
-        </motion.div>
       </Container>
     </section>
   );

@@ -126,8 +126,10 @@ export function Ambassadors() {
                   </p>
                 </div>
 
-                <fieldset className="flex flex-col gap-2">
-                  <legend className={labelCls}>I am a</legend>
+                <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
+                  <legend className={cn(labelCls, "float-left mb-0 p-0")}>
+                    I am a
+                  </legend>
                   <div className="grid grid-cols-2 gap-2">
                     {(["student", "staff"] as Role[]).map((r) => {
                       const active = role === r;
@@ -158,7 +160,7 @@ export function Ambassadors() {
                       type="text"
                       value={form.name}
                       onChange={update("name")}
-                      placeholder="Adaeze Okonkwo"
+                      placeholder="Tomiwa Owolabi"
                       className={inputCls}
                     />
                   </Field>

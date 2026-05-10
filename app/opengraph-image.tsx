@@ -41,7 +41,7 @@ export default async function OpengraphImage() {
               display: "flex",
             }}
           >
-            AI Personal Finance · Nigeria
+            Personal Finance Manager · Nigeria
           </div>
         </div>
 
@@ -92,7 +92,7 @@ export default async function OpengraphImage() {
             Connect every bank · Track every naira · Pay every bill
           </div>
           <div style={{ display: "flex", color: "rgba(212,168,83,0.85)" }}>
-            klario.app
+            klario.finance
           </div>
         </div>
       </div>
