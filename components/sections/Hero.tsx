@@ -80,18 +80,25 @@ export function Hero() {
           initial="hidden"
           animate="visible"
           transition={{ delay: 0.75 }}
-          className="flex flex-wrap items-center justify-center gap-3"
+          className="flex w-full max-w-sm items-center justify-center gap-2 sm:w-auto sm:max-w-none sm:gap-3"
         >
-          <Button href={SITE.downloadHref} size="lg" variant="solid">
-            <Apple size={16} /> Download on iOS
+          <Button
+            href={SITE.downloadHref}
+            size="lg"
+            variant="solid"
+            className="flex-1 px-4 sm:flex-none sm:px-6"
+          >
+            <Apple size={16} />{" "}
+            <span className="hidden sm:inline">Download on </span>iOS
           </Button>
           <Button
             href={SITE.downloadHref}
             size="lg"
             variant="outline"
-            className="border-bg/25 text-bg hover:border-bg hover:bg-bg/10"
+            className="flex-1 border-bg/25 px-4 text-bg hover:border-bg hover:bg-bg/10 sm:flex-none sm:px-6"
           >
-            <Smartphone size={16} /> Get on Android
+            <Smartphone size={16} />{" "}
+            <span className="hidden sm:inline">Get on </span>Android
           </Button>
         </motion.div>
 
