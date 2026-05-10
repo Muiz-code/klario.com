@@ -13,6 +13,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "contact",
   ];
 
+  const legal = ["privacy", "terms", "cookies"];
+
   return [
     {
       url: SITE.url,
@@ -25,6 +27,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: "monthly" as const,
       priority: 0.7,
+    })),
+    ...legal.map((s) => ({
+      url: `${SITE.url}/${s}`,
+      lastModified: now,
+      changeFrequency: "yearly" as const,
+      priority: 0.4,
     })),
   ];
 }

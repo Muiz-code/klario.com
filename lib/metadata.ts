@@ -1,24 +1,25 @@
 import type { Metadata } from "next";
 import { SITE } from "./constants";
 
-const title = "Klario | Personal Finance Manager. All Banks, One App.";
+const title = "Klario — Your Money, Finally Making Sense";
 const description =
-  "Klario is an AI-powered personal finance app for Nigerians. Connect every bank account, track every naira, automate savings, and pay bills, all in one place.";
+  "Klario is an AI-powered personal finance app for Nigerians. Connect all your bank accounts, track spending with AI, automate savings, and pay bills — all in one place.";
 
 export const siteMetadata: Metadata = {
-  metadataBase: new URL(SITE.url),
+  metadataBase: new URL("https://klario.finance"),
   title: {
     default: title,
     template: `%s · ${SITE.name}`,
   },
   description,
   applicationName: SITE.name,
-  authors: [{ name: SITE.name }],
-  creator: SITE.name,
-  publisher: SITE.name,
+  authors: [{ name: SITE.legalName }],
+  creator: SITE.legalName,
+  publisher: SITE.legalName,
   category: "Finance",
   keywords: [
     "Klario",
+    "Klario Finance",
     "personal finance Nigeria",
     "AI finance app Nigeria",
     "bank account tracker Nigeria",
@@ -36,8 +37,8 @@ export const siteMetadata: Metadata = {
   openGraph: {
     title,
     description,
-    url: SITE.url,
-    siteName: SITE.name,
+    url: "https://klario.finance",
+    siteName: SITE.legalName,
     type: "website",
     locale: "en_NG",
     images: [
@@ -54,7 +55,8 @@ export const siteMetadata: Metadata = {
     title,
     description,
     images: ["/opengraph-image"],
-    creator: "@klario_app",
+    site: SITE.twitter,
+    creator: SITE.twitter,
   },
   robots: {
     index: true,

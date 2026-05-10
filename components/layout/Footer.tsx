@@ -48,6 +48,17 @@ export function Footer() {
             <p className="max-w-sm text-sm leading-relaxed text-body/70">
               {SITE.tagline} {SITE.subTagline}
             </p>
+            <p className="text-[11px] text-body/50">
+              A {SITE.poweredBy.brand} venture —{" "}
+              <a
+                href={SITE.poweredBy.url}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-body/70 transition-colors hover:text-gold"
+              >
+                www.raavon.com
+              </a>
+            </p>
             <div className="flex gap-2">
               {FOOTER.social.map((s) => (
                 <a
@@ -83,19 +94,23 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="flex flex-col items-start justify-between gap-4 border-t border-border-gold/40 pt-8 md:flex-row md:items-center">
-          <p className="text-xs text-body/55">
-            © {new Date().getFullYear()} {SITE.name} Financial Technology. All rights reserved.
+        <div className="flex flex-col items-start justify-between gap-3 border-t border-border-gold/40 pt-8 md:flex-row md:items-center">
+          <p className="text-xs text-body/65">
+            © {new Date().getFullYear()} {SITE.legalName}. Powered by{" "}
+            <a
+              href={SITE.poweredBy.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-body/85 transition-colors hover:text-gold"
+            >
+              {SITE.poweredBy.brand}
+            </a>
+            {" — "}
+            <span className="font-mono">{SITE.poweredBy.rc}</span>. All rights
+            reserved.
           </p>
           <p className="text-xs text-body/55">{FOOTER.disclaimer}</p>
         </div>
-
-        <p className="text-center text-[11px] uppercase tracking-[0.18em] text-body/45">
-          {SITE.name} is powered by{" "}
-          <span className="text-ink/85">{SITE.poweredBy.brand}</span>
-          <span className="mx-1.5 text-ink/30">·</span>
-          <span className="font-mono text-ink/70">{SITE.poweredBy.rc}</span>
-        </p>
       </Container>
     </footer>
   );

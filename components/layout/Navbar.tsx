@@ -11,14 +11,15 @@ import { cn } from "@/lib/utils";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-export function Navbar() {
+export function Navbar({ theme = "auto" }: { theme?: "auto" | "light" }) {
   const scrolled = useScrolled(80);
   const [open, setOpen] = useState(false);
-  const onDark = !scrolled && !open;
+  const isLight = theme === "light" || scrolled;
+  const onDark = !isLight && !open;
 
   const linkClass = cn(
     "text-sm transition-colors hover:text-gold",
-    scrolled ? "text-ink/70" : "text-bg/75"
+    isLight ? "text-ink/70" : "text-bg/75"
   );
 
   return (
@@ -26,9 +27,7 @@ export function Navbar() {
       <header
         className={cn(
           "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-          scrolled
-            ? "bg-bg/95 border-b border-border-gold"
-            : "bg-transparent"
+          isLight ? "bg-bg/95 border-b border-border-gold" : "bg-transparent"
         )}
       >
         <div className="hidden h-16 items-center px-8 md:grid md:grid-cols-[1fr_auto_1fr] lg:px-12">
@@ -56,7 +55,7 @@ export function Navbar() {
             aria-expanded={open}
             className={cn(
               "relative z-60 transition-colors hover:text-gold",
-              scrolled || open ? "text-ink/80" : "text-bg/85"
+              isLight || open ? "text-ink/80" : "text-bg/85"
             )}
             onClick={() => setOpen((v) => !v)}
           >

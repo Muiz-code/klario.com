@@ -1,11 +1,22 @@
 export const SITE = {
   name: "Klario",
+  legalName: "Klario Finance",
   tagline: "Your money, finally making sense.",
   subTagline: "One app. Every account. Full clarity.",
   url: "https://klario.finance",
   downloadHref: "#download",
   ambassadorsHref: "#ambassadors",
-  poweredBy: { brand: "RaaVon", rc: "RC-XXXXX" },
+  emails: {
+    hello: "hello@klario.finance",
+    privacy: "privacy@klario.finance",
+    legal: "legal@klario.finance",
+  },
+  poweredBy: {
+    brand: "Raavon",
+    rc: "RC-XXXXX",
+    url: "https://www.raavon.com",
+  },
+  twitter: "@klarionance",
 } as const;
 
 export const CONTACT = {
@@ -14,7 +25,7 @@ export const CONTACT = {
   emphasis: "or just hello.",
   intro:
     "Press, partnerships, support — drop us a line and we'll get back within two business days.",
-  email: "hello@klario.app",
+  email: "hello@klario.finance",
   topics: ["General", "Partnership", "Press", "Support"] as const,
   successTitle: "Message sent.",
   successBody: "We'll be in touch within two business days.",
@@ -55,9 +66,9 @@ export const FOOTER = {
     {
       title: "Legal",
       links: [
-        { label: "Privacy Policy", href: "#" },
-        { label: "Terms of Service", href: "#" },
-        { label: "Cookie Policy", href: "#" },
+        { label: "Privacy Policy", href: "/privacy" },
+        { label: "Terms of Service", href: "/terms" },
+        { label: "Cookie Policy", href: "/cookies" },
       ],
     },
   ],
@@ -67,7 +78,7 @@ export const FOOTER = {
     { label: "LinkedIn", href: "#", icon: "Linkedin" },
   ],
   disclaimer:
-    "Klario is not a bank. Klario is a financial intelligence platform.",
+    "Klario is not a bank. We are a financial intelligence platform. klario.finance",
 } as const;
 
 export const NAV_LINKS = [

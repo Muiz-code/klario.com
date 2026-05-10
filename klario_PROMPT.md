@@ -543,7 +543,7 @@ export const metadata = {
   openGraph: {
     title: 'Klario — Your Money, Finally Making Sense',
     description: 'One app. Every account. Full clarity.',
-    url: 'https://klario.app',
+    url: 'https://klario.finance',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
   },
   twitter: { card: 'summary_large_image' },
@@ -621,5 +621,5 @@ npm run dev
 
 ---
 
-*PROMPT.md — Klario Financial Technology · klario.app · 2026*
+*PROMPT.md — Klario Financial Technology · klario.finance · 2026*
 *Your money, finally making sense.*
