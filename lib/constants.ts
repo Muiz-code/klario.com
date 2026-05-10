@@ -3,15 +3,78 @@ export const SITE = {
   tagline: "Your money, finally making sense.",
   subTagline: "One app. Every account. Full clarity.",
   url: "https://klario.app",
-  waitlistHref: "#waitlist",
+  downloadHref: "#download",
+  ambassadorsHref: "#ambassadors",
   poweredBy: { brand: "RaaVon", rc: "RC-XXXXX" },
+} as const;
+
+export const CONTACT = {
+  label: "Contact",
+  heading: "Questions, partnerships,",
+  emphasis: "or just hello.",
+  intro:
+    "Press, partnerships, support — drop us a line and we'll get back within two business days.",
+  email: "hello@klario.app",
+  topics: ["General", "Partnership", "Press", "Support"] as const,
+  successTitle: "Message sent.",
+  successBody: "We'll be in touch within two business days.",
+} as const;
+
+export const NEWSLETTER = {
+  eyebrow: "The Klario Letter",
+  heading: "Money clarity, monthly.",
+  body: "One short email a month: AI-driven money insights, naira tips, and Nigerian fintech moves. No spam.",
+  placeholder: "you@example.com",
+  cta: "Subscribe",
+  successTitle: "You're subscribed.",
+  successBody: "Watch your inbox for our next drop.",
+  delayMs: 12000,
+  storageKey: "klario_newsletter_dismissed_v1",
+} as const;
+
+export const FOOTER = {
+  columns: [
+    {
+      title: "Product",
+      links: [
+        { label: "Features", href: "#features" },
+        { label: "Security", href: "#security" },
+        { label: "Pricing", href: "#pricing" },
+        { label: "Download", href: "#download" },
+      ],
+    },
+    {
+      title: "Company",
+      links: [
+        { label: "Ambassadors", href: "#ambassadors" },
+        { label: "Contact", href: "#contact" },
+        { label: "Blog", href: "#" },
+        { label: "Careers", href: "#" },
+      ],
+    },
+    {
+      title: "Legal",
+      links: [
+        { label: "Privacy Policy", href: "#" },
+        { label: "Terms of Service", href: "#" },
+        { label: "Cookie Policy", href: "#" },
+      ],
+    },
+  ],
+  social: [
+    { label: "X / Twitter", href: "#", icon: "Twitter" },
+    { label: "Instagram", href: "#", icon: "Instagram" },
+    { label: "LinkedIn", href: "#", icon: "Linkedin" },
+  ],
+  disclaimer:
+    "Klario is not a bank. Klario is a financial intelligence platform.",
 } as const;
 
 export const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "Security", href: "#security" },
   { label: "Pricing", href: "#pricing" },
-  { label: "About", href: "#about" },
+  { label: "Ambassadors", href: "#ambassadors" },
 ] as const;
 
 export const PROBLEM = {
@@ -41,6 +104,164 @@ export const PROBLEM = {
       title: "Saving Without a System",
       body: "Wanting to save isn't a plan. Without automation, most save by mood, not by method, and the goal never moves.",
       stat: "Saving by chance, not by plan",
+    },
+  ],
+} as const;
+
+export const DOWNLOAD = {
+  heading: "Take control of your money.",
+  emphasis: "Download Klario today.",
+  sub: "Join thousands of Nigerians already on the waitlist.",
+  waitlistPlaceholder: "you@example.com",
+  waitlistCta: "Join Waitlist",
+  waitlistDisclaimer: "No spam. We only message when we launch.",
+  stats: [
+    { value: 10000, suffix: "+", label: "Waitlist" },
+    { value: 5, suffix: "", label: "Nigerian Banks" },
+    { value: 3, suffix: "", label: "Revenue Streams" },
+  ],
+} as const;
+
+export const AMBASSADORS = {
+  label: "Call for Ambassadors",
+  heading: "Rep Klario at your",
+  emphasis: "school or workplace.",
+  intro:
+    "Students and staff across Nigeria: become a Klario ambassador. Earn a stipend, build real product and marketing skills, and help your community take control of their money.",
+  perks: [
+    { icon: "Wallet", title: "Monthly stipend", body: "Get paid for hosting events, running campaigns, and onboarding users." },
+    { icon: "Gift", title: "Klario merch", body: "Hoodies, stickers, swag for you and your community." },
+    { icon: "GraduationCap", title: "Resume credit", body: "Real product experience plus a written reference from the team." },
+    { icon: "MessageSquare", title: "Direct line to founders", body: "Monthly call with the team. Your voice shapes the product." },
+  ],
+  form: {
+    title: "Apply to be an ambassador",
+    note: "We review applications weekly. You'll hear back within 7 days.",
+    successTitle: "Application received.",
+    successBody: "We'll review and reach out within 7 days. Watch your inbox.",
+  },
+} as const;
+
+export const PRICING = {
+  label: "Simple Pricing",
+  heading: "Start free. Upgrade when",
+  emphasis: "you're ready.",
+  annualDiscount: 0.1,
+  tiers: [
+    {
+      id: "free",
+      name: "Free",
+      tagline: "A first taste of clarity.",
+      monthly: 0,
+      cta: "Get Started Free",
+      features: [
+        "1 bank connection",
+        "5 KlarioAI queries / month",
+        "Basic balance dashboard",
+        "Budget alerts",
+        "₦10 per transaction",
+      ],
+    },
+    {
+      id: "money-manager",
+      name: "Money Manager",
+      tagline: "For everyday active money management.",
+      monthly: 1900,
+      cta: "Start Money Manager",
+      featured: true,
+      features: [
+        "3 bank connections",
+        "15 KlarioAI queries / day",
+        "Automated budget engine",
+        "4-tier debt risk scoring",
+        "In-app bill payments",
+        "Transaction export (PDF / CSV)",
+        "Bank-integrated savings goals",
+        "Push notifications",
+        "₦10 per transaction",
+      ],
+    },
+    {
+      id: "executive",
+      name: "Financial Executive",
+      tagline: "A real human financial manager in your corner.",
+      monthly: 5400,
+      cta: "Go Executive",
+      features: [
+        "Unlimited bank connections",
+        "30 KlarioAI queries / day",
+        "Everything in Money Manager",
+        "Dedicated human financial manager",
+        "Monthly 1-on-1 strategy call",
+        "Personalised financial plan (quarterly)",
+        "Investment partner referrals",
+        "Zero transfer fees",
+        "Priority support (2hr response)",
+      ],
+    },
+  ],
+} as const;
+
+export const SECURITY = {
+  label: "Bank-Grade Security",
+  heading: "Your data is safer here than",
+  emphasis: "anywhere else.",
+  intro:
+    "We are obsessed with security. Not because we have to be, because your financial data deserves nothing less.",
+  cards: [
+    {
+      icon: "Fingerprint",
+      title: "Biometric Authentication",
+      body: "Face ID or fingerprint required every session. No one gets in but you.",
+    },
+    {
+      icon: "ShieldCheck",
+      title: "256-bit AES Encryption",
+      body: "Every piece of your data, encrypted end to end, at rest and in transit. Always.",
+    },
+    {
+      icon: "BadgeCheck",
+      title: "BVN Verification",
+      body: "Every user verified against their Bank Verification Number. Zero fake accounts.",
+    },
+    {
+      icon: "KeyRound",
+      title: "Zero Knowledge Storage",
+      body: "Your bank credentials never touch Klario's servers. We read data, we never store passwords.",
+    },
+    {
+      icon: "Webhook",
+      title: "HMAC-SHA512 Webhooks",
+      body: "Every payment callback cryptographically verified before a single naira moves.",
+    },
+    {
+      icon: "DatabaseZap",
+      title: "Row-Level Security",
+      body: "Database rules ensure no user can ever access another user's data. Architecturally impossible.",
+    },
+  ],
+  compliance: ["VAPT Audited", "NDPC Compliant", "CBN Framework"],
+} as const;
+
+export const HOW_IT_WORKS = {
+  label: "Get Started",
+  heading: "Three steps to",
+  emphasis: "financial clarity.",
+  steps: [
+    {
+      icon: "Smartphone",
+      title: "Download Klario",
+      body: "Available on iOS and Android. Takes 60 seconds to install.",
+    },
+    {
+      icon: "Link",
+      title: "Connect Your Banks",
+      body: "Securely link all your Nigerian bank accounts. Your credentials never touch our servers.",
+    },
+    {
+      icon: "Lightbulb",
+      title: "Get Clarity",
+      body: "Klario analyses your finances and gives you a complete picture, instantly.",
     },
   ],
 } as const;

@@ -82,11 +82,11 @@ export function Hero() {
           transition={{ delay: 0.75 }}
           className="flex flex-wrap items-center justify-center gap-3"
         >
-          <Button href={SITE.waitlistHref} size="lg" variant="solid">
+          <Button href={SITE.downloadHref} size="lg" variant="solid">
             <Apple size={16} /> Download on iOS
           </Button>
           <Button
-            href={SITE.waitlistHref}
+            href={SITE.downloadHref}
             size="lg"
             variant="outline"
             className="border-bg/25 text-bg hover:border-bg hover:bg-bg/10"

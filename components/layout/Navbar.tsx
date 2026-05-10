@@ -43,8 +43,8 @@ export function Navbar() {
           <Logo onDark={onDark} />
 
           <div className="flex justify-end">
-            <Button href={SITE.waitlistHref} size="md">
-              Get Early Access
+            <Button href={SITE.downloadHref} size="md">
+              Get Started
             </Button>
           </div>
         </div>
@@ -97,11 +97,11 @@ export function Navbar() {
               className="mt-6"
             >
               <Button
-                href={SITE.waitlistHref}
+                href={SITE.downloadHref}
                 size="lg"
                 onClick={() => setOpen(false)}
               >
-                Get Early Access
+                Get Started
               </Button>
             </motion.div>
           </motion.div>
