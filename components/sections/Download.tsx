@@ -31,7 +31,7 @@ export function Download() {
     >
       <span
         aria-hidden
-        className="font-display pointer-events-none absolute inset-0 flex select-none items-center justify-center text-[28vw] leading-none tracking-tighter text-bg/[0.03] uppercase"
+        className="font-display pointer-events-none absolute inset-0 flex select-none items-center justify-center text-[28vw] leading-none tracking-tighter text-bg/3 uppercase"
       >
         Klario
       </span>
@@ -87,7 +87,7 @@ export function Download() {
           transition={{ duration: 0.6, delay: 0.45, ease }}
           className="flex w-full max-w-md flex-col items-center gap-2"
         >
-          <div className="flex w-full overflow-hidden rounded-full border border-bg/15 bg-bg/[0.04] p-1 focus-within:border-gold/60">
+          <div className="flex w-full items-center rounded-full border border-bg/15 bg-bg/4 p-1 focus-within:border-gold/60">
             <input
               type="email"
               value={email}
@@ -95,18 +95,21 @@ export function Download() {
               disabled={state !== "idle"}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={DOWNLOAD.waitlistPlaceholder}
-              className="flex-1 bg-transparent px-4 py-2 text-sm text-bg placeholder:text-bg/40 focus:outline-none disabled:opacity-50"
+              className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-bg placeholder:text-bg/40 focus:outline-none disabled:opacity-50 sm:px-4"
               aria-label="Email"
             />
             <button
               type="submit"
               disabled={state !== "idle"}
+              aria-label={DOWNLOAD.waitlistCta}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full bg-gold px-5 text-sm font-medium text-ink transition-all",
+                "inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gold px-4 py-1.5 text-sm font-medium text-ink transition-all sm:px-5",
                 "hover:scale-[1.02] disabled:opacity-70"
               )}
             >
-              {state === "done" ? "Thanks." : state === "submitting" ? "..." : DOWNLOAD.waitlistCta}
+              <span className="hidden sm:inline">
+                {state === "done" ? "Thanks." : state === "submitting" ? "..." : DOWNLOAD.waitlistCta}
+              </span>
               {state === "idle" && <ArrowRight size={14} />}
             </button>
           </div>

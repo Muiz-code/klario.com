@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import { siteMetadata } from "@/lib/metadata";
+import { jsonLd } from "@/lib/jsonld";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -53,6 +54,10 @@ export default function RootLayout({
       className={`${jakarta.variable} ${inter.variable} ${jetbrains.variable} ${fraunces.variable}`}
     >
       <body className="bg-bg text-body grain min-h-dvh antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         {children}
       </body>
     </html>

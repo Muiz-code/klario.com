@@ -144,7 +144,7 @@ export function NewsletterPopup() {
                   </p>
 
                   <form onSubmit={onSubmit} className="flex flex-col gap-2">
-                    <div className="flex w-full overflow-hidden rounded-full border border-bg/15 bg-bg/4 p-1 focus-within:border-gold/60">
+                    <div className="flex w-full items-center rounded-full border border-bg/15 bg-bg/4 p-1 focus-within:border-gold/60">
                       <input
                         type="email"
                         required
@@ -152,18 +152,21 @@ export function NewsletterPopup() {
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder={NEWSLETTER.placeholder}
                         disabled={state !== "idle"}
-                        className="flex-1 bg-transparent px-4 py-2 text-sm text-bg placeholder:text-bg/40 focus:outline-none disabled:opacity-50"
+                        className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-bg placeholder:text-bg/40 focus:outline-none disabled:opacity-50 sm:px-4"
                         aria-label="Email"
                       />
                       <button
                         type="submit"
                         disabled={state !== "idle"}
+                        aria-label={NEWSLETTER.cta}
                         className={cn(
-                          "inline-flex items-center gap-1.5 rounded-full bg-gold px-5 text-sm font-medium text-ink transition-all",
+                          "inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gold px-4 py-1.5 text-sm font-medium text-ink transition-all sm:px-5",
                           "hover:scale-[1.02] disabled:opacity-70"
                         )}
                       >
-                        {state === "submitting" ? "..." : NEWSLETTER.cta}
+                        <span className="hidden sm:inline">
+                          {state === "submitting" ? "..." : NEWSLETTER.cta}
+                        </span>
                         {state === "idle" && <ArrowRight size={14} />}
                       </button>
                     </div>
