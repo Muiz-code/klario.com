@@ -25,7 +25,7 @@ export const siteMetadata: Metadata = {
     "Klario AI",
     "KlarioAI",
     "Klario fintech",
-    "Klario Raavon",
+    "Klario Raavon Limited",
     "Klario money",
     "Klario money manager",
     "Klario download",

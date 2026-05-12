@@ -303,7 +303,7 @@ export const PRIVACY: LegalPage = {
           text: "If you have any questions, concerns, or requests regarding this Privacy Policy, please contact us:",
         },
         { type: "subhead", text: "Klario Finance" },
-        { type: "p", text: "Powered by Raavon — RC-XXXXX" },
+        { type: "p", text: "Powered by Raavon Limited — RC-9537604" },
         { type: "p", text: "Email: privacy@klario.finance" },
         { type: "p", text: "Website: klario.finance" },
         {
@@ -341,7 +341,7 @@ export const TERMS: LegalPage = {
       blocks: [
         {
           type: "p",
-          text: "Klario is a personal finance management platform developed and operated by Klario Finance, a venture of Raavon (RC-XXXXX, www.raavon.com). We are not a bank, deposit-taking institution, or payment service provider. We do not hold, custody, or control your funds. All banking and payment functions are delivered through licensed third-party financial infrastructure partners operating under the regulatory framework of the Central Bank of Nigeria (CBN).",
+          text: "Klario is a personal finance management platform developed under Klario Finance and operated by Raavon Limited (RC-9537604, www.raavon.com). We are not a bank, deposit-taking institution, or payment service provider. We do not hold, custody, or control your funds. All banking and payment functions are delivered through licensed third-party financial infrastructure partners operating under the regulatory framework of the Central Bank of Nigeria (CBN).",
         },
       ],
     },
@@ -619,7 +619,7 @@ export const TERMS: LegalPage = {
           text: "For questions or concerns regarding these Terms:",
         },
         { type: "subhead", text: "Klario Finance" },
-        { type: "p", text: "Powered by Raavon — RC-XXXXX" },
+        { type: "p", text: "Powered by Raavon Limited — RC-9537604" },
         { type: "p", text: "Email: legal@klario.finance" },
         { type: "p", text: "Website: klario.finance" },
         {
@@ -823,7 +823,7 @@ export const COOKIES: LegalPage = {
           text: "If you have any questions about our use of cookies or this Cookie Policy, please contact us:",
         },
         { type: "subhead", text: "Klario Finance" },
-        { type: "p", text: "Powered by Raavon — RC-XXXXX" },
+        { type: "p", text: "Powered by Raavon Limited — RC-9537604" },
         { type: "p", text: "Email: privacy@klario.finance" },
         { type: "p", text: "Website: klario.finance" },
         {

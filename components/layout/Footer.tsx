@@ -49,7 +49,7 @@ export function Footer() {
               {SITE.tagline} {SITE.subTagline}
             </p>
             <p className="text-[11px] text-body/50">
-              A {SITE.poweredBy.brand} venture —{" "}
+              Operated by {SITE.poweredBy.brand} —{" "}
               <a
                 href={SITE.poweredBy.url}
                 target="_blank"

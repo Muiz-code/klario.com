@@ -12,11 +12,11 @@ export const SITE = {
     legal: "legal@klario.finance",
   },
   poweredBy: {
-    brand: "Raavon",
-    rc: "RC-XXXXX",
+    brand: "Raavon Limited",
+    rc: "RC-9537604",
     url: "https://www.raavon.com",
   },
-  twitter: "@klarionance",
+  twitter: "@klariofinance",
 } as const;
 
 export const CONTACT = {
@@ -73,9 +73,21 @@ export const FOOTER = {
     },
   ],
   social: [
-    { label: "X / Twitter", href: "#", icon: "Twitter" },
-    { label: "Instagram", href: "#", icon: "Instagram" },
-    { label: "LinkedIn", href: "#", icon: "Linkedin" },
+    {
+      label: "X / Twitter",
+      href: "https://x.com/klariofinance",
+      icon: "Twitter",
+    },
+    {
+      label: "Instagram",
+      href: "https://www.instagram.com/klariofinance",
+      icon: "Instagram",
+    },
+    {
+      label: "LinkedIn",
+      href: "https://ng.linkedin.com/in/klario-finance-7b55a140a",
+      icon: "Linkedin",
+    },
   ],
   disclaimer:
     "Klario is not a bank. We are a financial intelligence platform. klario.finance",
@@ -104,7 +116,7 @@ export const FAQS = [
   },
   {
     q: "Who is behind Klario?",
-    a: "Klario is built and operated by Klario Finance, a venture of Raavon (RC-XXXXX, www.raavon.com). The team is based in Nigeria and focuses exclusively on Nigerian financial users.",
+    a: "Klario is a product of Klario Finance, operated by Raavon Limited (RC-9537604, www.raavon.com). The team is based in Nigeria and focuses exclusively on Nigerian financial users.",
   },
   {
     q: "When can I download the Klario app?",

@@ -1,4 +1,11 @@
-import { SITE, PRICING, HOW_IT_WORKS, FAQS, SOLUTION } from "./constants";
+import {
+  SITE,
+  PRICING,
+  HOW_IT_WORKS,
+  FAQS,
+  SOLUTION,
+  FOOTER,
+} from "./constants";
 
 const orgId = `${SITE.url}/#organization`;
 const siteId = `${SITE.url}/#website`;
@@ -30,7 +37,7 @@ export const jsonLd = {
         name: SITE.poweredBy.brand,
         url: SITE.poweredBy.url,
       },
-      sameAs: [],
+      sameAs: FOOTER.social.map((s) => s.href),
     },
     {
       "@type": "WebSite",
