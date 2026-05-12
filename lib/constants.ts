@@ -57,10 +57,10 @@ export const FOOTER = {
     {
       title: "Company",
       links: [
+        { label: "FAQ", href: "#faq" },
         { label: "Ambassadors", href: "#ambassadors" },
         { label: "Contact", href: "#contact" },
         { label: "Blog", href: "#" },
-        { label: "Careers", href: "#" },
       ],
     },
     {

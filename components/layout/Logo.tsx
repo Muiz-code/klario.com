@@ -1,5 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
+
+import lightWordmark from "@/public/klarioLogoLight.png";
+import darkWordmark from "@/public/klarioLogoDark.png";
 
 export function Logo({
   className,
@@ -8,18 +12,20 @@ export function Logo({
   className?: string;
   onDark?: boolean;
 }) {
+  const src = onDark ? lightWordmark : darkWordmark;
   return (
     <Link
       href="/"
       aria-label="Klario home"
-      className={cn(
-        "font-display inline-flex items-baseline text-xl tracking-tight md:text-2xl",
-        className
-      )}
+      className={cn("inline-flex items-center", className)}
     >
-      <span className={onDark ? "text-bg" : "text-ink"}>Kla</span>
-      <span className="text-gold">rio</span>
-      <span className="text-gold/40">.</span>
+      <Image
+        src={src}
+        alt="Klario"
+        priority
+        sizes="(min-width: 768px) 140px, 112px"
+        className="h-7 w-auto md:h-8"
+      />
     </Link>
   );
 }

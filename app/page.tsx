@@ -6,6 +6,7 @@ import { Solution } from "@/components/sections/Solution";
 import { HowItWorks } from "@/components/sections/HowItWorks";
 import { Security } from "@/components/sections/Security";
 import { Pricing } from "@/components/sections/Pricing";
+import { Faq } from "@/components/sections/Faq";
 import { Download } from "@/components/sections/Download";
 import { Ambassadors } from "@/components/sections/Ambassadors";
 import { Contact } from "@/components/sections/Contact";
@@ -22,6 +23,7 @@ export default function Home() {
         <HowItWorks />
         <Security />
         <Pricing />
+        <Faq />
         <Download />
         <Contact />
         <Ambassadors />
