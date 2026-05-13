@@ -62,25 +62,6 @@ export function Security() {
         })}
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.6 }}
-        transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 rounded-2xl border border-gold/30 bg-gold/[0.06] px-8 py-5"
-      >
-        {SECURITY.compliance.map((label, i) => (
-          <span
-            key={label}
-            className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.18em] text-gold"
-          >
-            {label}
-            {i < SECURITY.compliance.length - 1 && (
-              <span aria-hidden className="h-3 w-px bg-gold/40" />
-            )}
-          </span>
-        ))}
-      </motion.div>
     </Section>
   );
 }

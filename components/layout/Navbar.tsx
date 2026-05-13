@@ -6,7 +6,8 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "./Logo";
 import { useScrolled } from "@/hooks/useScrolled";
-import { NAV_LINKS, SITE } from "@/lib/constants";
+import { NAV_LINKS } from "@/lib/constants";
+import { openBetaModal } from "@/components/ui/BetaModal";
 import { cn } from "@/lib/utils";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -42,7 +43,7 @@ export function Navbar({ theme = "auto" }: { theme?: "auto" | "light" }) {
           <Logo onDark={onDark} />
 
           <div className="flex justify-end">
-            <Button href={SITE.downloadHref} size="md">
+            <Button onClick={openBetaModal} size="md">
               Get Started
             </Button>
           </div>
@@ -96,9 +97,11 @@ export function Navbar({ theme = "auto" }: { theme?: "auto" | "light" }) {
               className="mt-6"
             >
               <Button
-                href={SITE.downloadHref}
                 size="lg"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setOpen(false);
+                  openBetaModal();
+                }}
               >
                 Get Started
               </Button>

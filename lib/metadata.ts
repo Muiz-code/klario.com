@@ -6,7 +6,7 @@ const description =
   "Klario is an AI-powered personal finance app for Nigerians. Connect every bank, track spending with AI, automate savings, and pay bills, all in one place.";
 
 export const siteMetadata: Metadata = {
-  metadataBase: new URL("https://klario.finance"),
+  metadataBase: new URL(SITE.url),
   title: {
     default: title,
     template: `%s · ${SITE.name}`,
@@ -93,7 +93,7 @@ export const siteMetadata: Metadata = {
   openGraph: {
     title,
     description,
-    url: "https://klario.finance",
+    url: SITE.url,
     siteName: SITE.legalName,
     type: "website",
     locale: "en_NG",

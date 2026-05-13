@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Apple, Smartphone, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { Button } from "@/components/ui/Button";
-import { DOWNLOAD, SITE } from "@/lib/constants";
+import { DOWNLOAD } from "@/lib/constants";
+import { openBetaModal } from "@/components/ui/BetaModal";
 import { cn } from "@/lib/utils";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -66,24 +66,14 @@ export function Download() {
           transition={{ duration: 0.6, delay: 0.3, ease }}
           className="flex w-full max-w-sm items-center justify-center gap-2 sm:w-auto sm:max-w-none sm:gap-3"
         >
-          <Button
-            href={SITE.downloadHref}
-            size="lg"
-            variant="solid"
-            className="flex-1 px-4 sm:flex-none sm:px-6"
+          <button
+            type="button"
+            onClick={openBetaModal}
+            className="inline-flex items-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-medium text-ink transition-all hover:scale-[1.02] hover:shadow-[0_12px_40px_-8px_rgba(212,168,83,0.55)]"
           >
-            <Apple size={16} />{" "}
-            <span className="hidden sm:inline">Download on </span>iOS
-          </Button>
-          <Button
-            href={SITE.downloadHref}
-            size="lg"
-            variant="outline"
-            className="flex-1 border-bg/25 px-4 text-bg hover:border-bg hover:bg-bg/10 sm:flex-none sm:px-6"
-          >
-            <Smartphone size={16} />{" "}
-            <span className="hidden sm:inline">Get on </span>Android
-          </Button>
+            <Sparkles size={15} />
+            Join the beta
+          </button>
         </motion.div>
 
         <motion.form

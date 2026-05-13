@@ -3,7 +3,7 @@ export const SITE = {
   legalName: "Klario Finance",
   tagline: "Your money, finally making sense.",
   subTagline: "One app. Every account. Full clarity.",
-  url: "https://klario.finance",
+  url: "https://www.klario.finance",
   downloadHref: "#download",
   ambassadorsHref: "#ambassadors",
   emails: {
@@ -44,34 +44,19 @@ export const NEWSLETTER = {
 } as const;
 
 export const FOOTER = {
-  columns: [
-    {
-      title: "Product",
-      links: [
-        { label: "Features", href: "#features" },
-        { label: "Security", href: "#security" },
-        { label: "Pricing", href: "#pricing" },
-        { label: "Download", href: "#download" },
-      ],
-    },
-    {
-      title: "Company",
-      links: [
-        { label: "FAQ", href: "#faq" },
-        { label: "Ambassadors", href: "#ambassadors" },
-        { label: "Contact", href: "#contact" },
-        { label: "Blog", href: "#" },
-      ],
-    },
-    {
-      title: "Legal",
-      links: [
-        { label: "Privacy Policy", href: "/privacy" },
-        { label: "Terms of Service", href: "/terms" },
-        { label: "Cookie Policy", href: "/cookies" },
-      ],
-    },
-  ],
+  cta: {
+    heading: "Take control of your money",
+    emphasis: "with Klario.",
+    primary: "Join the beta",
+    secondary: "See how it works",
+    secondaryHref: "#features",
+  },
+  getStarted: {
+    title: "Get Started",
+    links: [
+      { label: "Join the beta", action: "beta" as const },
+    ],
+  },
   social: [
     {
       label: "X / Twitter",
@@ -89,8 +74,104 @@ export const FOOTER = {
       icon: "Linkedin",
     },
   ],
+  columns: [
+    {
+      title: "Product",
+      links: [
+        { label: "Features", href: "#features" },
+        { label: "Security", href: "#security" },
+        { label: "Pricing", href: "#pricing" },
+        { label: "How it works", href: "#how-it-works" },
+        { label: "FAQ", href: "#faq" },
+      ],
+    },
+    {
+      title: "Use Cases",
+      links: [
+        { label: "Unified Dashboard", href: "#features" },
+        { label: "KlarioAI Advisor", href: "#features" },
+        { label: "Smart Savings", href: "#features" },
+        { label: "Bill Payments", href: "#features" },
+        { label: "Financial Manager", href: "#features" },
+      ],
+    },
+    {
+      title: "Company",
+      links: [
+        { label: "About", href: "#problem" },
+        { label: "Ambassadors", href: "#ambassadors" },
+        { label: "Contact", href: "#contact" },
+        { label: "Beta program", action: "beta" as const },
+      ],
+    },
+    {
+      title: "Legal",
+      links: [
+        { label: "Privacy Policy", href: "/privacy" },
+        { label: "Terms of Service", href: "/terms" },
+        { label: "Cookie Policy", href: "/cookies" },
+      ],
+    },
+    {
+      title: "Resources",
+      links: [
+        { label: "Blog", href: "#" },
+        { label: "Press", href: `mailto:${"hello@klario.finance"}` },
+        { label: "Support", href: "#contact" },
+        { label: "Newsletter", href: "#contact" },
+      ],
+    },
+  ],
   disclaimer:
     "Klario is not a bank. We are a financial intelligence platform. klario.finance",
+  disclaimerLong: {
+    title: "Disclaimer",
+    paragraphs: [
+      "The information provided on this website is intended for general informational purposes only and does not constitute financial, legal, or professional advice. While we strive to ensure that the content presented is accurate and up-to-date, we make no representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability, or availability with respect to the website or the information, products, services, or related graphics contained on the website for any purpose. Any reliance you place on such information is therefore strictly at your own risk.",
+      "Our platform is designed to give Nigerians a unified view of their bank accounts, AI-driven insights, and tools to manage their money. Despite our use of bank-grade security protocols to protect sensitive information, we cannot guarantee the absolute security of your data. Users are advised to independently verify the accuracy and completeness of all information obtained through our services before making any financial decisions.",
+      "Klario is operated by Raavon Limited (RC-9537604) and is not a bank. All banking and payment functions are powered by licensed CBN-regulated partners. Klario does not hold or custody user funds.",
+      "By using this website, you agree to these terms and acknowledge that any reliance on the information provided here is at your own risk. If you have any questions regarding this disclaimer or the website's content, please contact us at hello@klario.finance.",
+    ],
+  },
+} as const;
+
+export const BETA = {
+  eyebrow: "Closed Beta",
+  title: "Join the Klario beta",
+  intro:
+    "Klario is in private build. Join the beta list and we'll reach out as soon as we open the next testing wave to you.",
+  steps: [
+    {
+      title: "Tell us about you",
+      body: "Share your name, email, and the bank(s) you use most. Two minutes, no commitment.",
+    },
+    {
+      title: "We review and shortlist",
+      body: "We onboard testers in small waves to keep feedback tight. Every applicant gets a reply.",
+    },
+    {
+      title: "Get your invite",
+      body: "When your wave opens, you'll receive a TestFlight (iOS) or APK (Android) link with onboarding steps.",
+    },
+  ],
+  fields: {
+    name: { label: "Full name", placeholder: "Tomiwa Owolabi" },
+    email: { label: "Email", placeholder: "you@example.com" },
+    phone: { label: "Phone (optional)", placeholder: "+234 ..." },
+    bank: {
+      label: "Primary bank",
+      placeholder: "GTBank, Access, Kuda, ...",
+    },
+    device: { label: "Device" },
+  },
+  devices: ["iOS", "Android", "Both"] as const,
+  cta: "Request beta access",
+  note: "By submitting, you agree to receive beta-related emails from Klario. No spam, ever.",
+  successTitle: "You're on the beta list.",
+  successBody:
+    "We'll review your submission and reach out once the beta stage is ready. Look out for an email from hello@klario.finance.",
+  successHint:
+    "In the meantime, follow us on social for build updates and product previews.",
 } as const;
 
 export const FAQS = [
@@ -289,7 +370,6 @@ export const SECURITY = {
       body: "Database rules ensure no user can ever access another user's data. Architecturally impossible.",
     },
   ],
-  compliance: ["VAPT Audited", "NDPC Compliant", "CBN Framework"],
 } as const;
 
 export const HOW_IT_WORKS = {
