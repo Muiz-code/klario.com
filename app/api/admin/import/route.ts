@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { csvToContacts } from "@/lib/csv";
 import { importSignups } from "@/lib/db/signups";
+import { createAuditEvent } from "@/lib/db/audit";
+import { getAdminEmail } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -54,6 +56,15 @@ export async function POST(req: Request) {
     })),
     "import"
   );
+
+  await createAuditEvent({
+    action: "import",
+    actor: await getAdminEmail(),
+    subject: `Imported ${added} contact${added === 1 ? "" : "s"}`,
+    template: "CSV import",
+    recipientCount: contacts.length,
+    meta: { parsed: contacts.length, added, skipped, invalid },
+  });
 
   return NextResponse.json({
     ok: true,

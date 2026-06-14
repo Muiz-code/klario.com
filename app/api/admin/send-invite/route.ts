@@ -7,6 +7,8 @@ import {
 } from "@/lib/db/signups";
 import { getSettings } from "@/lib/db/settings";
 import { logEmails } from "@/lib/db/email-log";
+import { createAuditEvent } from "@/lib/db/audit";
+import { getAdminEmail } from "@/lib/supabase/server";
 import { renderWelcome } from "@/lib/email/welcome";
 import { unsubscribeUrl } from "@/lib/email/links";
 import { sendBatch, type BatchMessage } from "@/lib/email/batch";
@@ -95,6 +97,24 @@ export async function POST(req: Request) {
     if (byEmail.get(s.email)?.ok) sentIds.push(s.id);
   }
 
+  const sent = results.filter((r) => r.ok).length;
+  const failed = results.length - sent;
+
+  const auditId = await createAuditEvent({
+    action: "beta_invite",
+    actor: await getAdminEmail(),
+    subject,
+    template: "Beta welcome",
+    segment: body.all === true ? "all" : resend ? "selected (resend)" : "selected",
+    recipientCount: results.length,
+    sentCount: sent,
+    failedCount: failed,
+    meta: {
+      skipped,
+      failures: results.filter((r) => !r.ok).map((r) => ({ email: r.to, error: r.error })),
+    },
+  });
+
   await Promise.all([
     markInvited(sentIds),
     logEmails(
@@ -104,12 +124,10 @@ export async function POST(req: Request) {
         resend_id: r.id ?? null,
         status: r.ok ? ("sent" as const) : ("failed" as const),
         error: r.error ?? null,
-      }))
+      })),
+      auditId
     ),
   ]);
-
-  const sent = results.filter((r) => r.ok).length;
-  const failed = results.length - sent;
 
   return NextResponse.json({
     ok: true,

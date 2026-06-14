@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSettings } from "@/lib/db/settings";
 import { logEmails } from "@/lib/db/email-log";
+import { createAuditEvent } from "@/lib/db/audit";
+import { getAdminEmail } from "@/lib/supabase/server";
 import { renderWelcome } from "@/lib/email/welcome";
 import { sendBatch } from "@/lib/email/batch";
 import { validateEmail } from "@/lib/email/validation";
@@ -37,15 +39,28 @@ export async function POST(req: Request) {
     { to: email, subject: `[TEST] ${settings.welcome_subject}`, html, text },
   ]);
 
-  await logEmails([
-    {
-      email,
-      type: "beta_welcome_test",
-      resend_id: result?.id ?? null,
-      status: result?.ok ? "sent" : "failed",
-      error: result?.error ?? null,
-    },
-  ]);
+  const auditId = await createAuditEvent({
+    action: "test_send",
+    actor: await getAdminEmail(),
+    subject: `[TEST] ${settings.welcome_subject}`,
+    template: "Beta welcome",
+    recipientCount: 1,
+    sentCount: result?.ok ? 1 : 0,
+    failedCount: result?.ok ? 0 : 1,
+  });
+
+  await logEmails(
+    [
+      {
+        email,
+        type: "beta_welcome_test",
+        resend_id: result?.id ?? null,
+        status: result?.ok ? "sent" : "failed",
+        error: result?.error ?? null,
+      },
+    ],
+    auditId
+  );
 
   if (!result?.ok) {
     return NextResponse.json(

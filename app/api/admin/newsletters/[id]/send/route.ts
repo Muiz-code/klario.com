@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getNewsletter, markNewsletterSent } from "@/lib/db/newsletters";
 import { listSignups } from "@/lib/db/signups";
 import { logEmails } from "@/lib/db/email-log";
+import { createAuditEvent } from "@/lib/db/audit";
+import { getAdminEmail } from "@/lib/supabase/server";
 import { unsubscribeUrl } from "@/lib/email/links";
 import { sendBatch, type BatchMessage } from "@/lib/email/batch";
 
@@ -86,6 +88,22 @@ export async function POST(
 
   const results = await sendBatch(messages);
   const sent = results.filter((r) => r.ok).length;
+  const failed = results.length - sent;
+
+  const auditId = await createAuditEvent({
+    action: "newsletter",
+    actor: await getAdminEmail(),
+    subject: newsletter.subject,
+    template: "Newsletter",
+    segment: emailSet ? "choose" : segment,
+    recipientCount: recipients.length,
+    sentCount: sent,
+    failedCount: failed,
+    meta: {
+      newsletter_id: id,
+      failures: results.filter((r) => !r.ok).map((r) => ({ email: r.to, error: r.error })),
+    },
+  });
 
   await Promise.all([
     logEmails(
@@ -95,7 +113,8 @@ export async function POST(
         resend_id: r.id ?? null,
         status: r.ok ? ("sent" as const) : ("failed" as const),
         error: r.error ?? null,
-      }))
+      })),
+      auditId
     ),
     markNewsletterSent(id, {
       recipientCount: recipients.length,

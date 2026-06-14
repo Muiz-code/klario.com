@@ -8,7 +8,10 @@ export type EmailLogEntry = {
   error?: string | null;
 };
 
-export async function logEmails(entries: EmailLogEntry[]): Promise<void> {
+export async function logEmails(
+  entries: EmailLogEntry[],
+  auditId?: string | null
+): Promise<void> {
   if (entries.length === 0) return;
   const db = supabaseAdmin();
   const { error } = await db.from("email_log").insert(
@@ -18,6 +21,7 @@ export async function logEmails(entries: EmailLogEntry[]): Promise<void> {
       resend_id: e.resend_id ?? null,
       status: e.status,
       error: e.error ?? null,
+      audit_id: auditId ?? null,
     }))
   );
   if (error) console.error("[db] logEmails failed:", error.message);

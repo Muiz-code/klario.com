@@ -10,6 +10,7 @@ import {
   Mail,
   Send,
   PenSquare,
+  ScrollText,
   LogOut,
   Menu,
   X,
@@ -22,6 +23,7 @@ const items = [
   { href: "/p@ss1/submissions", label: "Submissions", icon: Inbox },
   { href: "/p@ss1/email", label: "Beta invite", icon: Send },
   { href: "/p@ss1/newsletters", label: "Newsletters", icon: Mail },
+  { href: "/p@ss1/audit", label: "Audit log", icon: ScrollText },
 ];
 
 export function AdminSidebar({ email }: { email: string }) {
