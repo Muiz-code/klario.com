@@ -3,7 +3,7 @@ import { Resend } from "resend";
 const apiKey = process.env.RESEND_API_KEY;
 
 if (!apiKey && process.env.NODE_ENV === "production") {
-  console.warn("[email] RESEND_API_KEY missing — emails will fail.");
+  console.warn("[email] RESEND_API_KEY missing, emails will fail.");
 }
 
 export const resend = new Resend(apiKey || "re_missing_key");

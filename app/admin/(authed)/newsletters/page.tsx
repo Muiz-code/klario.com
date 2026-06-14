@@ -63,10 +63,10 @@ export default async function NewslettersPage() {
                   <td className="px-4 py-3 text-[12px] text-bg/55">
                     {n.status === "sent"
                       ? `${n.sent_count} / ${n.recipient_count}`
-                      : "—"}
+                      : "-"}
                   </td>
                   <td className="px-4 py-3 text-[12px] text-bg/55">
-                    {n.sent_at ? new Date(n.sent_at).toLocaleString() : "—"}
+                    {n.sent_at ? new Date(n.sent_at).toLocaleString() : "-"}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <NewsletterRowActions id={n.id} status={n.status} />

@@ -41,7 +41,7 @@ export function newsletterWelcome(opts: { firstName?: string }): Email {
       ],
       tagline: { lead: "Your money,", emphasis: "finally in your control." },
     },
-    "Welcome to Klario — you're on the list"
+    "Welcome to Klario, you're on the list"
   );
 }
 
@@ -58,7 +58,7 @@ export function betaConfirmation(opts: {
       eyebrow: "Beta request received",
       heading: `Thanks, ${name}. You're in the queue.`,
       intro:
-        "We received your beta access request and added you to our review list. We onboard testers in small waves to keep feedback tight, so it may take a little time — but every applicant gets a reply.",
+        "We received your beta access request and added you to our review list. We onboard testers in small waves to keep feedback tight, so it may take a little time, but every applicant gets a reply.",
       cta: { label: "Visit Klario", href: SITE.url },
       steps: [
         {
@@ -103,7 +103,7 @@ export function ambassadorConfirmation(opts: {
         },
         {
           title: "You get a reply within 7 days",
-          body: "Yes or no — you'll hear from us. If yes, we'll send onboarding, swag details, and your first campaign brief.",
+          body: "Yes or no, you'll hear from us. If yes, we'll send onboarding, swag details, and your first campaign brief.",
         },
         {
           title: "You start earning",
@@ -134,7 +134,7 @@ export function contactAcknowledgement(opts: {
       tagline: { lead: "We read every word.", emphasis: "And we respond." },
       showUnsubscribe: false,
     },
-    "We received your message — Klario"
+    "We received your message | Klario"
   );
 }
 

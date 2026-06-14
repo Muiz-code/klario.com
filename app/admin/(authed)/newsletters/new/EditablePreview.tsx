@@ -26,28 +26,31 @@ export function EditablePreview({
   setBody: (v: string) => void;
 }) {
   return (
-    <div style={{ background: "#ECEAE3", padding: "24px 12px", overflowY: "auto" }}>
+    <div style={{ background: "#0A0B0D", padding: "24px 12px", overflowY: "auto" }}>
       <style>{`
-        .klario-edit:empty:before{ content: attr(data-ph); color:#9AA0A8; }
-        .klario-edit:focus{ outline: 2px solid rgba(25,195,125,0.5); outline-offset: 2px; border-radius: 4px; }
+        .klario-edit:empty:before{ content: attr(data-ph); color:#6F757F; }
+        .klario-edit:focus{ outline: 2px solid rgba(212,168,83,0.6); outline-offset: 2px; border-radius: 4px; }
         .klario-edit{ cursor: text; }
       `}</style>
       <div
         style={{
           maxWidth: 600,
           margin: "0 auto",
-          background: "#fff",
-          borderRadius: 20,
+          background: "#16181D",
+          border: "1px solid #272B33",
+          borderRadius: 18,
           overflow: "hidden",
-          boxShadow: "0 8px 30px rgba(14,17,22,0.10)",
-          fontFamily: "'Segoe UI',Helvetica,Arial,sans-serif",
+          fontFamily: "Helvetica,Arial,sans-serif",
         }}
       >
         {/* Header */}
-        <div style={{ background: "#0E1116", padding: "22px 40px" }}>
-          <span style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>
-            Klario<span style={{ color: "#19C37D" }}>.</span>
-          </span>
+        <div style={{ background: "#FFFFFF", padding: "24px 32px", textAlign: "center" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/klarioLogoDark.png"
+            alt="Klario"
+            style={{ height: 27, width: "auto", display: "inline-block" }}
+          />
         </div>
 
         {images.map((url, i) => (
@@ -79,7 +82,7 @@ export function EditablePreview({
               lineHeight: "34px",
               fontWeight: 800,
               letterSpacing: "-0.5px",
-              color: "#0E1116",
+              color: "#FFFFFF",
             }}
           />
           <Editable
@@ -92,7 +95,7 @@ export function EditablePreview({
               margin: 0,
               fontSize: 16,
               lineHeight: "26px",
-              color: "#4A5159",
+              color: "#C2C7CF",
               whiteSpace: "pre-wrap",
             }}
           />
@@ -102,11 +105,11 @@ export function EditablePreview({
                 style={{
                   display: "inline-block",
                   padding: "14px 30px",
-                  background: "#19C37D",
+                  background: "#D4A853",
                   color: "#0E1116",
                   fontSize: 15,
                   fontWeight: 700,
-                  borderRadius: 12,
+                  borderRadius: 999,
                 }}
               >
                 {ctaLabel} →
@@ -116,20 +119,36 @@ export function EditablePreview({
         </div>
 
         {/* Footer */}
+        <div style={{ padding: "0 40px" }}>
+          <div style={{ height: 1, background: "#272B33" }} />
+        </div>
         <div
           style={{
-            background: "#0E1116",
-            padding: "20px 40px",
+            background: "#16181D",
+            padding: "26px 40px 32px",
+            textAlign: "center",
             fontSize: 12,
-            lineHeight: "18px",
+            lineHeight: "20px",
             color: "#7E8794",
           }}
         >
-          Klario by Raavon Limited (RC 9537604), Lagos, Nigeria.
-          <br />
-          <span style={{ color: "#19C37D", textDecoration: "underline" }}>
-            Unsubscribe
-          </span>
+          <p style={{ margin: "0 0 8px" }}>
+            <strong style={{ color: "#C2C7CF" }}>Klario Finance</strong> &middot;
+            Powered by{" "}
+            <span style={{ color: "#D4A853" }}>Raavon Limited</span> &middot;
+            RC-9537604
+          </p>
+          <p style={{ margin: "0 0 14px" }}>
+            Klario is not a bank. We are a financial intelligence platform.
+          </p>
+          <p style={{ margin: "0 0 14px" }}>
+            <span style={{ color: "#D4A853", fontWeight: 600 }}>klario.finance</span>
+          </p>
+          <p style={{ margin: 0, fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase" }}>
+            <span style={{ textDecoration: "underline" }}>Unsubscribe</span>{" "}
+            &middot; <span style={{ textDecoration: "underline" }}>Privacy</span>{" "}
+            &middot; <span style={{ textDecoration: "underline" }}>Terms</span>
+          </p>
         </div>
       </div>
     </div>

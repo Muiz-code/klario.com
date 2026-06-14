@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SITE } from "./constants";
 
-const title = "Klario — Your Money, Finally Making Sense for Nigerians";
+const title = "Klario: Your Money, Finally Making Sense for Nigerians";
 const description =
   "Klario is an AI-powered personal finance app for Nigerians. Connect every bank, track spending with AI, automate savings, and pay bills, all in one place.";
 

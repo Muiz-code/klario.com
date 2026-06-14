@@ -15,6 +15,7 @@ type Cycle = "monthly" | "annual";
 export function Pricing() {
   const [cycle, setCycle] = useState<Cycle>("monthly");
   const isAnnual = cycle === "annual";
+  const reveal = PRICING.revealPrices;
 
   return (
     <Section
@@ -23,6 +24,7 @@ export function Pricing() {
       heading={PRICING.heading}
       emphasis={PRICING.emphasis}
     >
+      {reveal && (
       <div className="mb-12 flex justify-center">
         <div
           role="tablist"
@@ -65,6 +67,7 @@ export function Pricing() {
           })}
         </div>
       </div>
+      )}
 
       <div className="grid gap-6 md:grid-cols-3 md:items-stretch">
         {PRICING.tiers.map((tier, i) => {
@@ -98,31 +101,48 @@ export function Pricing() {
                 {tier.tagline}
               </p>
 
-              <div className="mt-6 flex items-baseline gap-1.5">
-                <span className="font-mono text-base text-ink/55">₦</span>
-                <span className="relative inline-flex h-12 items-baseline overflow-hidden md:h-14">
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={`${tier.id}-${cycle}`}
-                      initial={{ y: "100%", opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: "-100%", opacity: 0 }}
-                      transition={{ duration: 0.35, ease }}
-                      className="font-mono text-4xl font-medium text-ink md:text-5xl"
-                    >
-                      {monthly.toLocaleString("en-NG")}
-                    </motion.span>
-                  </AnimatePresence>
-                </span>
-                <span className="text-sm text-body/55">/month</span>
-              </div>
-              <p className="mt-1 min-h-[18px] text-xs text-body/50">
-                {isAnnual && tier.monthly > 0
-                  ? `Billed ₦${(monthly * 12).toLocaleString("en-NG")} annually`
-                  : tier.monthly === 0
-                    ? "Free, forever."
-                    : "Cancel anytime."}
-              </p>
+              {reveal ? (
+                <>
+                  <div className="mt-6 flex items-baseline gap-1.5">
+                    <span className="font-mono text-base text-ink/55">₦</span>
+                    <span className="relative inline-flex h-12 items-baseline overflow-hidden md:h-14">
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={`${tier.id}-${cycle}`}
+                          initial={{ y: "100%", opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={{ y: "-100%", opacity: 0 }}
+                          transition={{ duration: 0.35, ease }}
+                          className="font-mono text-4xl font-medium text-ink md:text-5xl"
+                        >
+                          {monthly.toLocaleString("en-NG")}
+                        </motion.span>
+                      </AnimatePresence>
+                    </span>
+                    <span className="text-sm text-body/55">/month</span>
+                  </div>
+                  <p className="mt-1 min-h-[18px] text-xs text-body/50">
+                    {isAnnual && tier.monthly > 0
+                      ? `Billed ₦${(monthly * 12).toLocaleString("en-NG")} annually`
+                      : tier.monthly === 0
+                        ? "Free, forever."
+                        : "Cancel anytime."}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="mt-6 flex items-baseline gap-1.5">
+                    <span className="font-mono text-base text-ink/55">₦</span>
+                    <span className="font-mono text-4xl font-medium tracking-wider text-ink/35 md:text-5xl">
+                      {tier.monthly === 0 ? "0" : "###"}
+                    </span>
+                    <span className="text-sm text-body/45">/month</span>
+                  </div>
+                  <p className="mt-1 min-h-[18px] text-xs text-gold/80">
+                    {tier.monthly === 0 ? "Free, forever." : "Pricing coming soon."}
+                  </p>
+                </>
+              )}
 
               <ul className="mt-7 flex flex-1 flex-col gap-3">
                 {tier.features.map((f) => (

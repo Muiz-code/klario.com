@@ -217,9 +217,9 @@ export function SubmissionsView({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-bg/85">{s.email}</td>
-                    <td className="px-4 py-3 text-bg/70">{s.name || "—"}</td>
+                    <td className="px-4 py-3 text-bg/70">{s.name || "-"}</td>
                     <td className="max-w-xs truncate px-4 py-3 text-[12px] text-bg/55">
-                      {preview || "—"}
+                      {preview || "-"}
                     </td>
                     <td className="px-4 py-3 text-[12px] text-bg/55">
                       {new Date(s.created_at).toLocaleDateString(undefined, {

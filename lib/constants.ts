@@ -24,7 +24,7 @@ export const CONTACT = {
   heading: "Questions, partnerships,",
   emphasis: "or just hello.",
   intro:
-    "Press, partnerships, support — drop us a line and we'll get back within two business days.",
+    "Press, partnerships, support. Drop us a line and we'll get back within two business days.",
   email: "hello@klario.finance",
   topics: ["General", "Partnership", "Press", "Support"] as const,
   successTitle: "Message sent.",
@@ -316,6 +316,9 @@ export const PRICING = {
   label: "Simple Pricing",
   heading: "Start free. Upgrade when",
   emphasis: "you're ready.",
+  // Flip to true once standard pricing is locked. While false, amounts are
+  // masked and the billing toggle is hidden.
+  revealPrices: false,
   annualDiscount: 0.1,
   tiers: [
     {

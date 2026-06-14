@@ -325,7 +325,7 @@ export function SubscribersTable({ signups }: { signups: Signup[] }) {
                     </td>
                     <td className="px-4 py-3 text-bg/85">{s.email}</td>
                     <td className="px-4 py-3 text-bg/70">
-                      {[s.first_name, s.last_name].filter(Boolean).join(" ") || "—"}
+                      {[s.first_name, s.last_name].filter(Boolean).join(" ") || "-"}
                     </td>
                     <td className="px-4 py-3">
                       <span

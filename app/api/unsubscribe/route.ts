@@ -31,7 +31,7 @@ function page(ok: boolean): string {
   const body = ok
     ? "You will no longer receive Klario beta emails. Changed your mind? Just sign up again on the site."
     : "This unsubscribe link is invalid or has expired. If you keep getting emails, reply to any of them and we will remove you.";
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title} — Klario</title></head>
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title} | Klario</title></head>
 <body style="margin:0;background:#ECEAE3;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#0E1116;">
 <div style="max-width:480px;margin:12vh auto;padding:40px 28px;background:#fff;border-radius:20px;box-shadow:0 8px 30px rgba(14,17,22,.1);text-align:center;">
 <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;">Klario<span style="color:#19C37D;">.</span></div>

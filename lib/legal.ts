@@ -303,7 +303,7 @@ export const PRIVACY: LegalPage = {
           text: "If you have any questions, concerns, or requests regarding this Privacy Policy, please contact us:",
         },
         { type: "subhead", text: "Klario Finance" },
-        { type: "p", text: "Powered by Raavon Limited — RC-9537604" },
+        { type: "p", text: "Powered by Raavon Limited (RC-9537604)" },
         { type: "p", text: "Email: privacy@klario.finance" },
         { type: "p", text: "Website: klario.finance" },
         {
@@ -619,7 +619,7 @@ export const TERMS: LegalPage = {
           text: "For questions or concerns regarding these Terms:",
         },
         { type: "subhead", text: "Klario Finance" },
-        { type: "p", text: "Powered by Raavon Limited — RC-9537604" },
+        { type: "p", text: "Powered by Raavon Limited (RC-9537604)" },
         { type: "p", text: "Email: legal@klario.finance" },
         { type: "p", text: "Website: klario.finance" },
         {
@@ -823,7 +823,7 @@ export const COOKIES: LegalPage = {
           text: "If you have any questions about our use of cookies or this Cookie Policy, please contact us:",
         },
         { type: "subhead", text: "Klario Finance" },
-        { type: "p", text: "Powered by Raavon Limited — RC-9537604" },
+        { type: "p", text: "Powered by Raavon Limited (RC-9537604)" },
         { type: "p", text: "Email: privacy@klario.finance" },
         { type: "p", text: "Website: klario.finance" },
         {

@@ -3,7 +3,7 @@ import { LegalLayout } from "@/components/legal/LegalLayout";
 import { COOKIES } from "@/lib/legal";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy — Klario Finance",
+  title: "Cookie Policy | Klario Finance",
   description:
     "How Klario Finance uses cookies and how you can manage them in your browser.",
   alternates: { canonical: "/cookies" },

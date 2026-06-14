@@ -45,7 +45,7 @@ export function galleryTemplates(): GalleryTemplate[] {
   <tr><td style="padding:40px;">
     <h1 style="margin:0 0 16px;font-size:28px;font-weight:800;color:#0E1116;">Hi {{first_name}},</h1>
     <p style="margin:0 0 16px;font-size:16px;line-height:26px;color:#4A5159;">Write your message here. You can edit this HTML directly, add images, and change anything you like.</p>
-    <p style="margin:0;font-size:16px;line-height:26px;color:#4A5159;">— The Klario team</p>
+    <p style="margin:0;font-size:16px;line-height:26px;color:#4A5159;">The Klario team</p>
   </td></tr>
   <tr><td style="background:#0E1116;padding:20px 40px;font-size:12px;color:#7E8794;">
     Klario by Raavon Limited. <a href="{{unsubscribe_url}}" style="color:#19C37D;">Unsubscribe</a>
