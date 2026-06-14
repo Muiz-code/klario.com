@@ -119,12 +119,14 @@ export function AuditTable({ events }: { events: AuditEvent[] }) {
             {open && (
               <div className="border-t border-bg/10 px-4 py-3">
                 {/* Mobile-only counts */}
-                <div className="mb-3 flex gap-4 sm:hidden">
+                <div className="mb-3 flex flex-wrap gap-4 sm:hidden">
                   <Stat label="Recipients" value={e.recipient_count} />
                   {isEmail && <Stat label="Sent" value={e.sent_count} />}
                   {isEmail && (
                     <Stat label="Delivered" value={e.delivered_count} tone="good" />
                   )}
+                  {isEmail && <Stat label="Opened" value={e.opened_count} />}
+                  {isEmail && <Stat label="Clicked" value={e.clicked_count} />}
                 </div>
 
                 {!isEmail ? (
@@ -158,12 +160,28 @@ function RecipientList({ rows }: { rows: AuditRecipient[] }) {
             <tr key={r.email + i} className="border-b border-bg/5 last:border-0">
               <td className="py-2 pr-3 text-bg/85">{r.email}</td>
               <td className="py-2 pr-3">
-                <DeliveryBadge status={r.status} />
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <DeliveryBadge status={r.status} />
+                  {r.opened_at && (
+                    <span className="rounded-full bg-sky-400/15 px-2 py-0.5 text-[11px] text-sky-300">
+                      Opened
+                    </span>
+                  )}
+                  {r.clicked_at && (
+                    <span className="rounded-full bg-violet-400/15 px-2 py-0.5 text-[11px] text-violet-300">
+                      Clicked
+                    </span>
+                  )}
+                </div>
               </td>
               <td className="py-2 text-right text-[11px] text-bg/40">
-                {r.delivered_at
-                  ? `delivered ${formatDate(r.delivered_at)}`
-                  : formatDate(r.sent_at)}
+                {r.clicked_at
+                  ? `clicked ${formatDate(r.clicked_at)}`
+                  : r.opened_at
+                    ? `opened ${formatDate(r.opened_at)}`
+                    : r.delivered_at
+                      ? `delivered ${formatDate(r.delivered_at)}`
+                      : formatDate(r.sent_at)}
               </td>
             </tr>
           ))}
