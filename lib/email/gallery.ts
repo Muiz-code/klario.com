@@ -1,5 +1,6 @@
 import { renderNewsletter } from "./newsletter";
 import { WELCOME_TEMPLATE_HTML } from "./welcome";
+import { COLORS, wrapDocument } from "./brand";
 
 export type GalleryTemplate = {
   id: string;
@@ -36,23 +37,16 @@ export function galleryTemplates(): GalleryTemplate[] {
     ctaHref: "https://www.klario.finance",
   });
 
-  const blank = `<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="margin:0;background:#ECEAE3;font-family:'Segoe UI',Helvetica,Arial,sans-serif;color:#0E1116;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ECEAE3;"><tr><td align="center" style="padding:28px 12px;">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:#fff;border-radius:20px;overflow:hidden;">
-  <tr><td style="background:#0E1116;padding:22px 40px;font-size:22px;font-weight:800;color:#fff;">Klario<span style="color:#19C37D;">.</span></td></tr>
-  <tr><td style="padding:40px;">
-    <h1 style="margin:0 0 16px;font-size:28px;font-weight:800;color:#0E1116;">Hi {{first_name}},</h1>
-    <p style="margin:0 0 16px;font-size:16px;line-height:26px;color:#4A5159;">Write your message here. You can edit this HTML directly, add images, and change anything you like.</p>
-    <p style="margin:0;font-size:16px;line-height:26px;color:#4A5159;">The Klario team</p>
-  </td></tr>
-  <tr><td style="background:#0E1116;padding:20px 40px;font-size:12px;color:#7E8794;">
-    Klario by Raavon Limited. <a href="{{unsubscribe_url}}" style="color:#19C37D;">Unsubscribe</a>
-  </td></tr>
-</table>
-</td></tr></table>
-</body></html>`;
+  const F = "Helvetica,Arial,sans-serif";
+  const blank = wrapDocument({
+    preheader: "A note from Klario.",
+    title: "A note from Klario",
+    inner: `<tr><td class="px" style="padding:42px 40px;font-family:${F};">
+      <h1 class="h1" style="margin:0 0 16px;font-size:28px;line-height:1.18;font-weight:800;letter-spacing:-0.5px;color:${COLORS.white};">Hi {{first_name}},</h1>
+      <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:${COLORS.text};">Write your message here. You can edit this HTML directly, add images, links and buttons, and change anything you like.</p>
+      <p style="margin:0;font-size:16px;line-height:1.6;color:${COLORS.text};">The Klario team</p>
+    </td></tr>`,
+  });
 
   return [
     {

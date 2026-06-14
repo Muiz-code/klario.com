@@ -111,7 +111,10 @@ export function AuditTable({ events }: { events: AuditEvent[] }) {
                 )}
                 {!isEmail && <Stat label="Recipients" value={e.recipient_count} />}
               </div>
-              <span className="shrink-0 text-right text-[11px] text-bg/40">
+              <span
+                suppressHydrationWarning
+                className="shrink-0 text-right text-[11px] text-bg/40"
+              >
                 {formatDate(e.created_at)}
               </span>
             </button>
@@ -174,7 +177,10 @@ function RecipientList({ rows }: { rows: AuditRecipient[] }) {
                   )}
                 </div>
               </td>
-              <td className="py-2 text-right text-[11px] text-bg/40">
+              <td
+                suppressHydrationWarning
+                className="py-2 text-right text-[11px] text-bg/40"
+              >
                 {r.clicked_at
                   ? `clicked ${formatDate(r.clicked_at)}`
                   : r.opened_at
@@ -255,10 +261,13 @@ function Stat({
 
 function formatDate(iso: string): string {
   try {
-    return new Date(iso).toLocaleString(undefined, {
-      month: "short",
+    // Fixed locale so server and client agree on ordering. The remaining
+    // timezone difference (server vs browser) is handled by
+    // suppressHydrationWarning on the elements that render this.
+    return new Date(iso).toLocaleString("en-GB", {
       day: "numeric",
-      hour: "numeric",
+      month: "short",
+      hour: "2-digit",
       minute: "2-digit",
     });
   } catch {

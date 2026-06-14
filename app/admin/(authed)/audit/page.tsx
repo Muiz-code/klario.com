@@ -1,6 +1,7 @@
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import { listAuditEvents } from "@/lib/db/audit";
 import { AuditTable } from "./AuditTable";
+import { StorageCleanupButton } from "./StorageCleanupButton";
 
 export const dynamic = "force-dynamic";
 
@@ -10,12 +11,15 @@ export default async function AuditPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="font-display text-3xl text-bg">Audit log</h1>
-        <p className="mt-1 text-sm text-bg/55">
-          Every email send and import: who, what, how many, and delivery. Click a
-          row to see the recipients.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl text-bg">Audit log</h1>
+          <p className="mt-1 text-sm text-bg/55">
+            Every email send and import: who, what, how many, and delivery. Click
+            a row to see the recipients.
+          </p>
+        </div>
+        {configured && <StorageCleanupButton />}
       </div>
 
       {!configured ? (

@@ -6,6 +6,7 @@ import { createAuditEvent } from "@/lib/db/audit";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { unsubscribeUrl } from "@/lib/email/links";
 import { sendBatch, type BatchMessage } from "@/lib/email/batch";
+import { cleanupOrphanImages } from "@/lib/storage/cleanup";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -122,6 +123,12 @@ export async function POST(
       status: sent > 0 ? "sent" : "failed",
     }),
   ]);
+
+  // Free space: remove orphaned images (abandoned composes / test uploads).
+  // Images used by this newsletter are protected because its html is saved.
+  cleanupOrphanImages().catch((e) =>
+    console.error("[storage] post-send cleanup failed:", e)
+  );
 
   return NextResponse.json({
     ok: true,

@@ -7,6 +7,40 @@
  * per-recipient filling).
  */
 import { COLORS, wrapDocument } from "./brand";
+import { inlineEmailStyles } from "./rich-to-email";
+
+/**
+ * Builds the full email from the rich-text editor's body HTML: inlines the
+ * block styles, adds an optional CTA button, and wraps it in the brand shell.
+ */
+export function buildRichEmail(opts: {
+  bodyHtml: string;
+  subject?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+}): string {
+  const body = inlineEmailStyles(
+    opts.bodyHtml?.trim() || `<p style="color:${COLORS.text};">Write your message...</p>`
+  );
+
+  const ctaLabel = (opts.ctaLabel || "").trim();
+  const ctaHref = (opts.ctaHref || "").trim();
+  const cta =
+    ctaLabel && ctaHref
+      ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:8px;"><tr><td style="border-radius:999px;background:${COLORS.gold};"><a href="${escapeAttr(
+          ctaHref
+        )}" target="_blank" style="display:inline-block;padding:14px 30px;font-family:Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:${COLORS.ink};text-decoration:none;border-radius:999px;">${escapeHtml(
+          ctaLabel
+        )} &#8594;</a></td></tr></table>`
+      : "";
+
+  const inner = `<tr><td class="px" style="padding:42px 40px;font-family:Helvetica,Arial,sans-serif;">${body}${cta}</td></tr>`;
+  return wrapDocument({
+    preheader: opts.subject || "A note from Klario.",
+    title: opts.subject || "Klario",
+    inner,
+  });
+}
 
 export type ComposeInput = {
   heading?: string;

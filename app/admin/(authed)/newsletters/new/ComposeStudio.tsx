@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Image as ImageIcon, Send, Save, Pencil, Code } from "lucide-react";
 import type { GalleryTemplate } from "@/lib/email/gallery";
-import { buildEmailHtml } from "@/lib/email/compose-html";
-import { EditablePreview } from "./EditablePreview";
+import { buildRichEmail } from "@/lib/email/compose-html";
+import { RichEmailEditor } from "./RichEmailEditor";
 import { EditableHtmlFrame } from "./EditableHtmlFrame";
 import {
   ConfirmModal,
@@ -15,6 +15,14 @@ import {
 
 const INPUT =
   "w-full rounded-xl border border-bg/15 bg-bg/4 px-3.5 py-2.5 text-sm text-bg placeholder:text-bg/40 focus:border-gold/60 focus:outline-none";
+
+/** Strips tags to check whether the rich body actually has content. */
+function plainText(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+}
 
 type Mode = "write" | "html";
 type Segment = "all" | "new" | "existing" | "choose";
@@ -48,15 +56,18 @@ export function ComposeStudio({
   const [pickerQuery, setPickerQuery] = useState("");
 
   // Write-mode fields
-  const [heading, setHeading] = useState("");
-  const [body, setBody] = useState("");
+  const [bodyHtml, setBodyHtml] = useState("");
   const [ctaLabel, setCtaLabel] = useState("");
   const [ctaHref, setCtaHref] = useState("");
-  const [images, setImages] = useState<string[]>([]);
 
   // HTML-mode source
   const [rawHtml, setRawHtml] = useState("");
   const [templateId, setTemplateId] = useState<string | null>(null);
+
+  // The live preview is built with DOM APIs (inlineEmailStyles) that only run
+  // client-side, so we render it after mount to avoid a hydration mismatch.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const [busy, setBusy] = useState<null | "save" | "send" | "image">(null);
   const [confirm, setConfirm] = useState<ConfirmState>(null);
@@ -65,10 +76,10 @@ export function ComposeStudio({
   // The HTML that will actually be sent (and previewed).
   const html = useMemo(() => {
     if (mode === "write") {
-      return buildEmailHtml({ heading, body, ctaLabel, ctaHref, images });
+      return buildRichEmail({ bodyHtml, subject, ctaLabel, ctaHref });
     }
     return rawHtml;
-  }, [mode, heading, body, ctaLabel, ctaHref, images, rawHtml]);
+  }, [mode, bodyHtml, subject, ctaLabel, ctaHref, rawHtml]);
 
   const chosenList = people.filter((p) => chosen.has(p.email));
   const audienceCount =
@@ -119,7 +130,7 @@ export function ComposeStudio({
 
   const validate = (): string | null => {
     if (!subject.trim()) return "Add a subject line.";
-    if (mode === "write" && !body.trim()) return "Write a message.";
+    if (mode === "write" && !plainText(bodyHtml)) return "Write a message.";
     if (mode === "html" && !rawHtml.trim()) return "Add some HTML content.";
     return null;
   };
@@ -240,7 +251,7 @@ export function ComposeStudio({
             // nothing is lost when switching, unless they were already editing
             // raw HTML.
             if (mode === "write" && !rawHtml.trim()) {
-              setRawHtml(buildEmailHtml({ heading, body, ctaLabel, ctaHref, images }));
+              setRawHtml(buildRichEmail({ bodyHtml, subject, ctaLabel, ctaHref }));
             }
             setMode("html");
           }}
@@ -271,17 +282,34 @@ export function ComposeStudio({
           </label>
 
           {mode === "write" ? (
-            <WriteEditor
-              ctaLabel={ctaLabel}
-              setCtaLabel={setCtaLabel}
-              ctaHref={ctaHref}
-              setCtaHref={setCtaHref}
-              images={images}
-              setImages={setImages}
-              uploadImage={uploadImage}
-              uploading={busy === "image"}
-              configured={configured}
-            />
+            <div className="flex flex-col gap-4">
+              <RichEmailEditor
+                value={bodyHtml}
+                onChange={setBodyHtml}
+                uploadImage={uploadImage}
+                uploading={busy === "image"}
+                configured={configured}
+              />
+              <details className="rounded-xl border border-bg/10 bg-bg/4 px-4 py-3">
+                <summary className="cursor-pointer text-[12px] font-medium uppercase tracking-[0.14em] text-bg/45">
+                  Add a button (optional)
+                </summary>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <input
+                    value={ctaLabel}
+                    onChange={(e) => setCtaLabel(e.target.value)}
+                    placeholder="Button text (e.g. Read more)"
+                    className={INPUT}
+                  />
+                  <input
+                    value={ctaHref}
+                    onChange={(e) => setCtaHref(e.target.value)}
+                    placeholder="https://klario.finance"
+                    className={INPUT}
+                  />
+                </div>
+              </details>
+            </div>
           ) : (
             <HtmlEditor
               templates={templates}
@@ -375,21 +403,20 @@ export function ComposeStudio({
         {/* Preview column */}
         <div className="flex flex-col gap-2">
           <p className="text-[11px] uppercase tracking-[0.18em] text-bg/45">
-            Preview (click to edit)
+            {mode === "write" ? "Live preview" : "Preview (click to edit)"}
           </p>
-          <div className="h-[620px] overflow-hidden rounded-2xl border border-bg/10 bg-white">
+          <div className="h-[620px] overflow-hidden rounded-2xl border border-bg/10 bg-[#0A0B0D]">
             {mode === "write" ? (
-              <div className="h-full overflow-y-auto">
-                <EditablePreview
-                  heading={heading}
-                  body={body}
-                  ctaLabel={ctaLabel}
-                  ctaHref={ctaHref}
-                  images={images}
-                  setHeading={setHeading}
-                  setBody={setBody}
+              mounted ? (
+                <iframe
+                  title="Email preview"
+                  srcDoc={html.replace(/\{\{\s*first_name\s*\}\}/g, "Tomiwa")}
+                  className="h-full w-full"
+                  sandbox=""
                 />
-              </div>
+              ) : (
+                <div className="h-full w-full" />
+              )
             ) : (
               <EditableHtmlFrame
                 html={rawHtml}
@@ -434,109 +461,6 @@ function ModeButton({
       <Icon size={13} />
       {children}
     </button>
-  );
-}
-
-function WriteEditor(props: {
-  ctaLabel: string;
-  setCtaLabel: (v: string) => void;
-  ctaHref: string;
-  setCtaHref: (v: string) => void;
-  images: string[];
-  setImages: (v: string[]) => void;
-  uploadImage: (file: File) => Promise<string | null>;
-  uploading: boolean;
-  configured: boolean;
-}) {
-  const fileRef = useRef<HTMLInputElement>(null);
-  return (
-    <div className="flex flex-col gap-4">
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        multiple
-        className="hidden"
-        onChange={async (e) => {
-          const files = Array.from(e.target.files ?? []);
-          for (const f of files) {
-            const url = await props.uploadImage(f);
-            if (url) props.setImages([...props.images, url]);
-          }
-          if (fileRef.current) fileRef.current.value = "";
-        }}
-      />
-      <div className="rounded-xl border border-bg/10 bg-bg/4 px-4 py-3 text-[13px] leading-relaxed text-bg/70">
-        Click the heading and body in the preview on the right to write your
-        message. Use <span className="text-bg/85">{"{{first_name}}"}</span> to
-        greet each person by name.
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-bg/45">
-            Images (optional)
-          </span>
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={props.uploading || !props.configured}
-            className="inline-flex items-center gap-1.5 rounded-full border border-bg/15 px-2.5 py-1 text-[11px] text-bg/80 hover:border-gold/50 hover:text-bg disabled:opacity-40"
-          >
-            <ImageIcon size={12} />
-            {props.uploading ? "Uploading..." : "Add image"}
-          </button>
-        </div>
-        {props.images.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {props.images.map((url, i) => (
-              <div
-                key={url + i}
-                className="group relative h-16 w-16 overflow-hidden rounded-lg border border-bg/15"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" className="h-full w-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() =>
-                    props.setImages(props.images.filter((_, j) => j !== i))
-                  }
-                  aria-label="Remove image"
-                  className="absolute right-0.5 top-0.5 rounded bg-ink/70 px-1 text-[11px] text-white opacity-0 transition-opacity group-hover:opacity-100"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-bg/45">
-            Button text (optional)
-          </span>
-          <input
-            value={props.ctaLabel}
-            onChange={(e) => props.setCtaLabel(e.target.value)}
-            placeholder="Read more"
-            className={INPUT}
-          />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-bg/45">
-            Button link (optional)
-          </span>
-          <input
-            value={props.ctaHref}
-            onChange={(e) => props.setCtaHref(e.target.value)}
-            placeholder="https://klario.finance"
-            className={INPUT}
-          />
-        </label>
-      </div>
-    </div>
   );
 }
 
