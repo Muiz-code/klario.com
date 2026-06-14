@@ -29,11 +29,17 @@ export function Contact() {
     e.preventDefault();
     if (state === "submitting") return;
     setState("submitting");
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[Contact message]", { topic, ...form });
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, ...form }),
+      });
+      if (!res.ok) throw new Error("Submission failed");
+      setState("done");
+    } catch {
+      setState("idle");
     }
-    await new Promise((r) => setTimeout(r, 700));
-    setState("done");
   };
 
   return (

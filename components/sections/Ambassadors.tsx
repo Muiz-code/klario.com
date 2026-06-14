@@ -50,12 +50,17 @@ export function Ambassadors() {
     e.preventDefault();
     if (state === "submitting") return;
     setState("submitting");
-    const payload = { role, ...form };
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[Ambassadors application]", payload);
+    try {
+      const res = await fetch("/api/ambassador", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role, ...form }),
+      });
+      if (!res.ok) throw new Error("Submission failed");
+      setState("done");
+    } catch {
+      setState("idle");
     }
-    await new Promise((r) => setTimeout(r, 800));
-    setState("done");
   };
 
   return (

@@ -39,8 +39,9 @@ export function BetaModal() {
     name: "",
     email: "",
     phone: "",
-    bank: "",
   });
+  const [banks, setBanks] = useState<string[]>([]);
+  const [bankQuery, setBankQuery] = useState("");
 
   useEffect(() => {
     const handler = () => {
@@ -80,15 +81,30 @@ export function BetaModal() {
 
   const close = () => setOpen(false);
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (state === "submitting") return;
     setState("submitting");
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[Beta application]", { ...form, device });
+    setErrorMsg(null);
+    try {
+      const res = await fetch("/api/beta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, device, banks }),
+      });
+      if (!res.ok) {
+        const { error } = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(error || "Submission failed");
+      }
+      setState("done");
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Something went wrong");
+      setState("idle");
     }
-    await new Promise((r) => setTimeout(r, 800));
-    setState("done");
   };
 
   return (
@@ -237,27 +253,22 @@ export function BetaModal() {
                             className={inputCls}
                           />
                         </Field>
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <Field label={BETA.fields.phone.label}>
-                            <input
-                              type="tel"
-                              value={form.phone}
-                              onChange={update("phone")}
-                              placeholder={BETA.fields.phone.placeholder}
-                              className={inputCls}
-                            />
-                          </Field>
-                          <Field label={BETA.fields.bank.label}>
-                            <input
-                              required
-                              type="text"
-                              value={form.bank}
-                              onChange={update("bank")}
-                              placeholder={BETA.fields.bank.placeholder}
-                              className={inputCls}
-                            />
-                          </Field>
-                        </div>
+                        <Field label={BETA.fields.phone.label}>
+                          <input
+                            type="tel"
+                            value={form.phone}
+                            onChange={update("phone")}
+                            placeholder={BETA.fields.phone.placeholder}
+                            className={inputCls}
+                          />
+                        </Field>
+
+                        <BankPicker
+                          selected={banks}
+                          onChange={setBanks}
+                          query={bankQuery}
+                          onQueryChange={setBankQuery}
+                        />
 
                         <div className="flex flex-col gap-2">
                           <span className={labelCls}>
@@ -308,6 +319,11 @@ export function BetaModal() {
                         <p className="text-[11px] leading-relaxed text-bg/45">
                           {BETA.note}
                         </p>
+                        {errorMsg && (
+                          <p className="rounded-lg border border-red-400/30 bg-red-400/10 px-3 py-2 text-[12px] leading-relaxed text-red-200">
+                            {errorMsg}
+                          </p>
+                        )}
                       </form>
                     </div>
                   </motion.div>
@@ -333,5 +349,85 @@ function Field({
       <span className={labelCls}>{label}</span>
       {children}
     </label>
+  );
+}
+
+function BankPicker({
+  selected,
+  onChange,
+  query,
+  onQueryChange,
+}: {
+  selected: string[];
+  onChange: (next: string[]) => void;
+  query: string;
+  onQueryChange: (q: string) => void;
+}) {
+  const needle = query.trim().toLowerCase();
+  const filtered = needle
+    ? BETA.banks.filter((b) => b.toLowerCase().includes(needle))
+    : BETA.banks;
+
+  const toggle = (bank: string) => {
+    if (selected.includes(bank)) {
+      onChange(selected.filter((b) => b !== bank));
+    } else {
+      onChange([...selected, bank]);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between">
+        <span className={labelCls}>{BETA.fields.bank.label}</span>
+        {selected.length > 0 && (
+          <button
+            type="button"
+            onClick={() => onChange([])}
+            className="text-[10px] uppercase tracking-[0.14em] text-bg/45 hover:text-bg"
+          >
+            Clear ({selected.length})
+          </button>
+        )}
+      </div>
+
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => onQueryChange(e.target.value)}
+        placeholder={BETA.fields.bank.placeholder}
+        className={inputCls}
+        aria-label="Search banks"
+      />
+
+      <div className="flex max-h-44 flex-wrap gap-1.5 overflow-y-auto rounded-xl border border-bg/10 bg-bg/2 p-2.5">
+        {filtered.length === 0 ? (
+          <p className="px-2 py-3 text-[12px] text-bg/45">
+            {BETA.fields.bank.empty}
+          </p>
+        ) : (
+          filtered.map((bank) => {
+            const active = selected.includes(bank);
+            return (
+              <button
+                key={bank}
+                type="button"
+                onClick={() => toggle(bank)}
+                aria-pressed={active}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] transition-colors",
+                  active
+                    ? "border-gold bg-gold-dim text-bg"
+                    : "border-bg/15 text-bg/70 hover:border-gold/60 hover:text-bg"
+                )}
+              >
+                {active && <CircleCheck size={12} />}
+                {bank}
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
   );
 }

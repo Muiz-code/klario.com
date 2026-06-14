@@ -18,8 +18,17 @@ export function Download() {
     e.preventDefault();
     if (!email || state === "submitting") return;
     setState("submitting");
-    await new Promise((r) => setTimeout(r, 700));
-    setState("done");
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error("Subscription failed");
+      setState("done");
+    } catch {
+      setState("idle");
+    }
   };
 
   return (

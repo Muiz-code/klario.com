@@ -45,15 +45,21 @@ export function NewsletterPopup() {
     e.preventDefault();
     if (!email || state === "submitting") return;
     setState("submitting");
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[Newsletter subscribe]", email);
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error("Subscription failed");
+      setState("done");
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(NEWSLETTER.storageKey, "subscribed");
+      }
+      window.setTimeout(() => setOpen(false), 1800);
+    } catch {
+      setState("idle");
     }
-    await new Promise((r) => setTimeout(r, 700));
-    setState("done");
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(NEWSLETTER.storageKey, "subscribed");
-    }
-    window.setTimeout(() => setOpen(false), 1800);
   };
 
   return (
