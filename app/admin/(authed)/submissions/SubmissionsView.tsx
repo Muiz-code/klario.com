@@ -173,8 +173,8 @@ export function SubmissionsView({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-bg/10">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-2xl border border-bg/10">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="border-b border-bg/10 bg-bg/4 text-left text-[11px] uppercase tracking-[0.14em] text-bg/45">
             <tr>
               <th className="px-4 py-3 font-medium">Kind</th>

@@ -9,6 +9,7 @@ import {
   Inbox,
   Mail,
   Send,
+  PenSquare,
   LogOut,
   Menu,
   X,
@@ -85,6 +86,17 @@ export function AdminSidebar({ email }: { email: string }) {
           >
             <X size={18} />
           </button>
+        </div>
+
+        <div className="px-3 pt-4">
+          <Link
+            href="/p@ss1/newsletters/new"
+            onClick={() => setOpen(false)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-sm font-medium text-ink transition-all hover:scale-[1.01]"
+          >
+            <PenSquare size={15} />
+            Compose mail
+          </Link>
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">

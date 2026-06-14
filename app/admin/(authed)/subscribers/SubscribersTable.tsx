@@ -279,7 +279,7 @@ export function SubscribersTable({ signups }: { signups: Signup[] }) {
 
       {/* Table */}
       <div className="overflow-x-auto rounded-2xl border border-bg/10">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[680px] text-sm">
           <thead className="border-b border-bg/10 bg-bg/4 text-left text-[11px] uppercase tracking-[0.14em] text-bg/45">
             <tr>
               <th className="w-10 px-4 py-3">
