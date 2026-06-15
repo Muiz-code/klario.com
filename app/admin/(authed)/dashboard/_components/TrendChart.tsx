@@ -14,6 +14,13 @@ type TrendChartProps = {
   days: string[];
   lines: ChartLine[];
   height?: number;
+  /**
+   * What the legend shows next to each series:
+   * - "sum" (default): total of all points — right for per-day counts.
+   * - "last": the final point — right for a cumulative/running total.
+   * - "none": no number.
+   */
+  legend?: "sum" | "last" | "none";
 };
 
 // Internal SVG coordinate system; the SVG scales responsively via viewBox.
@@ -38,7 +45,12 @@ function formatDay(key: string): string {
   return `${months[Number(m) - 1]} ${Number(d)}`;
 }
 
-export function TrendChart({ days, lines, height = 220 }: TrendChartProps) {
+export function TrendChart({
+  days,
+  lines,
+  height = 220,
+  legend = "sum",
+}: TrendChartProps) {
   const uid = useId().replace(/[:]/g, "");
   const svgRef = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState<number | null>(null);
@@ -212,7 +224,10 @@ export function TrendChart({ days, lines, height = 220 }: TrendChartProps) {
       {/* Legend */}
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
         {lines.map((l) => {
-          const total = l.values.reduce((a, b) => a + b, 0);
+          const num =
+            legend === "last"
+              ? l.values[l.values.length - 1]
+              : l.values.reduce((a, b) => a + b, 0);
           return (
             <div key={l.key} className="flex items-center gap-1.5 text-[12px]">
               <span
@@ -220,7 +235,11 @@ export function TrendChart({ days, lines, height = 220 }: TrendChartProps) {
                 style={{ background: l.color }}
               />
               <span className="text-bg/60">{l.label}</span>
-              <span className="font-medium text-bg/85">{total}</span>
+              {legend !== "none" && (
+                <span className="font-medium text-bg/85">
+                  {num.toLocaleString()}
+                </span>
+              )}
             </div>
           );
         })}

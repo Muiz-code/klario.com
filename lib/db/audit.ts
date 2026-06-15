@@ -4,7 +4,8 @@ export type AuditAction =
   | "beta_invite"
   | "newsletter"
   | "test_send"
-  | "import";
+  | "import"
+  | "automation";
 
 export type AuditEvent = {
   id: string;

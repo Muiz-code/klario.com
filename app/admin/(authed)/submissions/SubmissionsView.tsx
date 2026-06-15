@@ -263,7 +263,7 @@ export function SubmissionsView({
                       {preview || "-"}
                     </td>
                     <td className="px-4 py-3 text-[12px] text-bg/55">
-                      {new Date(s.created_at).toLocaleDateString(undefined, {
+                      {new Date(s.created_at).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
                       })}
