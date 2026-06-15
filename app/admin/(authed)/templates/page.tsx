@@ -33,7 +33,7 @@ export default async function TemplatesPage() {
         </p>
       </div>
 
-      <TemplatesView builtins={builtins} custom={custom} />
+      <TemplatesView builtins={builtins} custom={custom} configured={configured} />
     </div>
   );
 }

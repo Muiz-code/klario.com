@@ -2,9 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, ArrowRight, X, Plus, Trash2 } from "lucide-react";
+import { Eye, ArrowRight, X, Plus, Trash2, Pencil, Code } from "lucide-react";
 import type { GalleryTemplate } from "@/lib/email/gallery";
+import { buildRichEmail } from "@/lib/email/compose-html";
 import { ConfirmModal, type ConfirmState } from "../_components/Modal";
+import { RichEmailEditor } from "../newsletters/new/RichEmailEditor";
 
 export type TemplateItem = GalleryTemplate & { custom: boolean };
 
@@ -30,9 +32,11 @@ function previewHtml(html: string): string {
 export function TemplatesView({
   builtins,
   custom,
+  configured,
 }: {
   builtins: TemplateItem[];
   custom: TemplateItem[];
+  configured: boolean;
 }) {
   const router = useRouter();
   const [preview, setPreview] = useState<TemplateItem | null>(null);
@@ -126,6 +130,7 @@ export function TemplatesView({
       )}
       {builderOpen && (
         <TemplateBuilder
+          configured={configured}
           onClose={() => setBuilderOpen(false)}
           onSaved={() => {
             setBuilderOpen(false);
@@ -281,21 +286,74 @@ function PreviewModal({
   );
 }
 
+type BuilderMode = "write" | "html";
+
 function TemplateBuilder({
+  configured,
   onClose,
   onSaved,
 }: {
+  configured: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const [mode, setMode] = useState<BuilderMode>("write");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [subject, setSubject] = useState("");
-  const [html, setHtml] = useState(STARTER_HTML);
+
+  // Write mode: rich body + optional button. HTML mode: raw markup.
+  const [bodyHtml, setBodyHtml] = useState("");
+  const [ctaLabel, setCtaLabel] = useState("");
+  const [ctaHref, setCtaHref] = useState("");
+  const [rawHtml, setRawHtml] = useState(STARTER_HTML);
+
+  const [imageBusy, setImageBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const preview = useMemo(() => previewHtml(html), [html]);
+  // The final HTML that gets saved + previewed.
+  const finalHtml = useMemo(
+    () =>
+      mode === "write"
+        ? buildRichEmail({ bodyHtml, subject, ctaLabel, ctaHref })
+        : rawHtml,
+    [mode, bodyHtml, subject, ctaLabel, ctaHref, rawHtml]
+  );
+  const preview = useMemo(() => previewHtml(finalHtml), [finalHtml]);
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    setImageBusy(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/admin/upload-image", {
+        method: "POST",
+        body: form,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Image upload failed.");
+        return null;
+      }
+      return data.url as string;
+    } finally {
+      setImageBusy(false);
+    }
+  };
+
+  const switchToHtml = () => {
+    // Seed the raw editor from the rich content the first time.
+    if (!rawHtml.trim() || rawHtml === STARTER_HTML) {
+      setRawHtml(buildRichEmail({ bodyHtml, subject, ctaLabel, ctaHref }));
+    }
+    setMode("html");
+  };
+
+  const hasContent =
+    mode === "write"
+      ? bodyHtml.replace(/<[^>]*>/g, "").trim().length > 0
+      : rawHtml.trim().length > 0;
 
   const save = async () => {
     setBusy(true);
@@ -304,7 +362,7 @@ function TemplateBuilder({
       const res = await fetch("/api/admin/templates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description, subject, html }),
+        body: JSON.stringify({ name, description, subject, html: finalHtml }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -320,7 +378,7 @@ function TemplateBuilder({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div onClick={onClose} className="absolute inset-0 bg-ink/70 backdrop-blur-sm" aria-hidden />
-      <div className="relative flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-bg/12 bg-[#0d0e12] shadow-2xl">
+      <div className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-bg/12 bg-[#0d0e12] shadow-2xl">
         <header className="flex items-center justify-between border-b border-bg/10 px-5 py-4">
           <h2 className="font-display text-lg text-bg">New template</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="rounded-md p-1 text-bg/55 hover:text-bg">
@@ -355,15 +413,58 @@ function TemplateBuilder({
                 className="w-full rounded-lg border border-bg/15 bg-bg/4 px-3 py-2 text-sm text-bg placeholder:text-bg/35 focus:border-gold/50 focus:outline-none"
               />
             </Field>
-            <Field label="HTML">
-              <textarea
-                value={html}
-                onChange={(e) => setHtml(e.target.value)}
-                rows={12}
-                spellCheck={false}
-                className="w-full resize-y rounded-lg border border-bg/15 bg-bg/4 px-3 py-2 font-mono text-[12px] text-bg focus:border-gold/50 focus:outline-none"
-              />
-            </Field>
+
+            {/* Mode toggle */}
+            <div className="flex items-center gap-1 rounded-xl border border-bg/12 bg-bg/4 p-1">
+              <ModeTab active={mode === "write"} onClick={() => setMode("write")} icon={Pencil}>
+                Write
+              </ModeTab>
+              <ModeTab active={mode === "html"} onClick={switchToHtml} icon={Code}>
+                HTML
+              </ModeTab>
+            </div>
+
+            {mode === "write" ? (
+              <div className="flex flex-col gap-3">
+                <RichEmailEditor
+                  value={bodyHtml}
+                  onChange={setBodyHtml}
+                  uploadImage={uploadImage}
+                  uploading={imageBusy}
+                  configured={configured}
+                />
+                <details className="rounded-xl border border-bg/10 bg-bg/4 px-4 py-3">
+                  <summary className="cursor-pointer text-[12px] font-medium uppercase tracking-[0.14em] text-bg/45">
+                    Add a button (optional)
+                  </summary>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <input
+                      value={ctaLabel}
+                      onChange={(e) => setCtaLabel(e.target.value)}
+                      placeholder="Button text (e.g. Read more)"
+                      className="w-full rounded-lg border border-bg/15 bg-bg/4 px-3 py-2 text-sm text-bg placeholder:text-bg/35 focus:border-gold/50 focus:outline-none"
+                    />
+                    <input
+                      value={ctaHref}
+                      onChange={(e) => setCtaHref(e.target.value)}
+                      placeholder="https://klario.finance"
+                      className="w-full rounded-lg border border-bg/15 bg-bg/4 px-3 py-2 text-sm text-bg placeholder:text-bg/35 focus:border-gold/50 focus:outline-none"
+                    />
+                  </div>
+                </details>
+              </div>
+            ) : (
+              <Field label="HTML">
+                <textarea
+                  value={rawHtml}
+                  onChange={(e) => setRawHtml(e.target.value)}
+                  rows={14}
+                  spellCheck={false}
+                  className="w-full resize-y rounded-lg border border-bg/15 bg-bg/4 px-3 py-2 font-mono text-[12px] text-bg focus:border-gold/50 focus:outline-none"
+                />
+              </Field>
+            )}
+
             <p className="text-[11px] text-bg/40">
               Merge tags <span className="text-bg/60">{"{{first_name}}"}</span> and{" "}
               <span className="text-bg/60">{"{{unsubscribe_url}}"}</span> are
@@ -390,7 +491,7 @@ function TemplateBuilder({
             <button
               type="button"
               onClick={save}
-              disabled={busy || !name.trim() || !html.trim()}
+              disabled={busy || !name.trim() || !hasContent}
               className="rounded-full bg-gold px-4 py-2 text-[13px] font-medium text-ink transition-transform hover:scale-[1.02] disabled:opacity-40 disabled:hover:scale-100"
             >
               {busy ? "Saving..." : "Save template"}
@@ -399,6 +500,31 @@ function TemplateBuilder({
         </footer>
       </div>
     </div>
+  );
+}
+
+function ModeTab({
+  active,
+  onClick,
+  icon: Icon,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: typeof Pencil;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        "inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors " +
+        (active ? "bg-gold text-ink" : "text-bg/60 hover:text-bg")
+      }
+    >
+      <Icon size={13} /> {children}
+    </button>
   );
 }
 
