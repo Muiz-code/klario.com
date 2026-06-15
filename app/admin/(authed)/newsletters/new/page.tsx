@@ -1,4 +1,5 @@
 import { galleryTemplates } from "@/lib/email/gallery";
+import { listCustomTemplates } from "@/lib/db/templates";
 import { listSignups } from "@/lib/db/signups";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import { ComposeStudio } from "./ComposeStudio";
@@ -6,9 +7,12 @@ import { ComposeStudio } from "./ComposeStudio";
 export const dynamic = "force-dynamic";
 
 export default async function ComposePage() {
-  const templates = galleryTemplates();
   const configured = isSupabaseConfigured();
-  const signups = configured ? await listSignups({ limit: 50000 }) : [];
+  const [custom, signups] = configured
+    ? await Promise.all([listCustomTemplates(), listSignups({ limit: 50000 })])
+    : [[], []];
+  // Saved templates first, then the built-in starters.
+  const templates = [...custom, ...galleryTemplates()];
   const counts = {
     all: signups.filter((s) => s.status !== "unsubscribed").length,
     new: signups.filter((s) => s.status === "pending").length,

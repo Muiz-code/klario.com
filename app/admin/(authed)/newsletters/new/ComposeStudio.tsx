@@ -67,7 +67,53 @@ export function ComposeStudio({
   // The live preview is built with DOM APIs (inlineEmailStyles) that only run
   // client-side, so we render it after mount to avoid a hydration mismatch.
   const [mounted, setMounted] = useState(false);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- mount guard for the client-only preview
   useEffect(() => setMounted(true), []);
+
+  // Recipients handed off from the Segments page ("Send campaign"): preselect
+  // them as a "choose" audience so the composed email targets that segment.
+  // A post-mount effect (not a lazy initializer) avoids an SSR hydration
+  // mismatch, since sessionStorage is only available on the client.
+  const [segmentTarget, setSegmentTarget] = useState<string | null>(null);
+  useEffect(() => {
+    let raw: string | null = null;
+    try {
+      raw = sessionStorage.getItem("klario_segment_target");
+    } catch {
+      return;
+    }
+    if (!raw) return;
+    sessionStorage.removeItem("klario_segment_target");
+    let emails: string[] = [];
+    let label = "segment";
+    try {
+      const parsed = JSON.parse(raw) as { label?: string; emails?: string[] };
+      emails = (parsed.emails ?? []).filter((e) => typeof e === "string");
+      label = parsed.label ?? "segment";
+    } catch {
+      return;
+    }
+    if (emails.length === 0) return;
+    /* eslint-disable react-hooks/set-state-in-effect -- syncing one-time storage handoff */
+    setSegment("choose");
+    setChosen(new Set(emails.map((e) => e.toLowerCase())));
+    setSegmentTarget(label);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
+
+  // Preselect a template handed off from the Templates page (?template=<id>).
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("template");
+    if (!id) return;
+    const t = templates.find((x) => x.id === id);
+    if (!t) return;
+    /* eslint-disable react-hooks/set-state-in-effect -- applying URL template once */
+    setMode("html");
+    setTemplateId(t.id);
+    setSubject((s) => s || t.subject);
+    setRawHtml(t.html);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [templates]);
 
   const [busy, setBusy] = useState<null | "save" | "send" | "image">(null);
   const [confirm, setConfirm] = useState<ConfirmState>(null);
@@ -328,6 +374,13 @@ export function ComposeStudio({
             <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-bg/45">
               Send to
             </span>
+            {segmentTarget && (
+              <div className="rounded-xl border border-gold/30 bg-gold/8 px-3 py-2 text-[12px] text-gold">
+                Targeting segment{" "}
+                <span className="font-semibold">{segmentTarget}</span> ·{" "}
+                {chosen.size} recipient{chosen.size === 1 ? "" : "s"} preselected.
+              </div>
+            )}
             <div className="grid gap-2 sm:grid-cols-2">
               {SEGMENTS.map((s) => {
                 const active = segment === s.id;

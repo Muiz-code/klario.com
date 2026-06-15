@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { Search, Trash2, X, ChevronRight, Copy } from "lucide-react";
 import type { Submission, SubmissionKind } from "@/lib/db/submissions";
 import { duplicateEmailSet, normalizeEmail } from "@/lib/duplicates";
+import {
+  ConfirmModal,
+  InfoModal,
+  type ConfirmState,
+} from "../_components/Modal";
 
 const TABS: { id: "all" | SubmissionKind; label: string }[] = [
   { id: "all", label: "All" },
@@ -32,6 +37,8 @@ export function SubmissionsView({
   const [open, setOpen] = useState<Submission | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [confirmState, setConfirmState] = useState<ConfirmState>(null);
+  const [info, setInfo] = useState<{ title: string; message: string; ok?: boolean } | null>(null);
 
   // Emails that appear in more than one submission row — repeat submitters.
   const dupSet = useMemo(
@@ -115,18 +122,28 @@ export function SubmissionsView({
     URL.revokeObjectURL(url);
   };
 
-  const remove = async (id: string) => {
-    if (!confirm("Delete this submission? This cannot be undone.")) return;
+  const requestRemove = (id: string) => {
+    setConfirmState({
+      title: "Delete this submission?",
+      message: "This cannot be undone.",
+      confirmLabel: "Delete",
+      tone: "danger",
+      onConfirm: () => runRemove(id),
+    });
+  };
+
+  const runRemove = async (id: string) => {
     setBusy(id);
     const res = await fetch(`/api/admin/submissions/${id}`, {
       method: "DELETE",
     });
     setBusy(null);
+    setConfirmState(null);
     if (res.ok) {
       if (open?.id === id) setOpen(null);
       startTransition(() => router.refresh());
     } else {
-      alert("Could not delete.");
+      setInfo({ title: "Delete failed", message: "Could not delete.", ok: false });
     }
   };
 
@@ -283,10 +300,17 @@ export function SubmissionsView({
         <DetailDrawer
           submission={open}
           onClose={() => setOpen(null)}
-          onDelete={() => remove(open.id)}
+          onDelete={() => requestRemove(open.id)}
           deleting={busy === open.id || pending}
         />
       )}
+
+      <ConfirmModal
+        state={confirmState}
+        onClose={() => setConfirmState(null)}
+        loading={Boolean(busy)}
+      />
+      <InfoModal state={info} onClose={() => setInfo(null)} />
     </div>
   );
 }
