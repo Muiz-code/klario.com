@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { normalizeEmail } from "@/lib/duplicates";
 
 export type SignupStatus = "pending" | "invited" | "active" | "unsubscribed";
 
@@ -199,22 +200,39 @@ export async function signupStats(): Promise<SignupStats> {
   };
 }
 
+export type ImportResult = {
+  added: number;
+  skipped: number;
+  /** Emails that appeared more than once within the uploaded file. */
+  fileDuplicates: string[];
+  /** Emails skipped because they are already on the list. */
+  existingDuplicates: string[];
+};
+
 /**
  * Bulk import for CSV upload. Inserts new emails, ignores ones that already
- * exist. Returns how many were newly added vs. skipped.
+ * exist. Returns counts plus the specific emails that were duplicates — both
+ * the ones repeated inside the file and the ones already on the list — so the
+ * admin can identify exactly which addresses collided.
  */
 export async function importSignups(
   rows: SignupInput[],
   source = "import"
-): Promise<{ added: number; skipped: number }> {
-  if (rows.length === 0) return { added: 0, skipped: 0 };
+): Promise<ImportResult> {
+  if (rows.length === 0)
+    return { added: 0, skipped: 0, fileDuplicates: [], existingDuplicates: [] };
   const db = supabaseAdmin();
 
-  // Dedupe within the batch by email.
+  // Dedupe within the batch by email, tracking which emails repeated.
   const byEmail = new Map<string, SignupInput>();
+  const fileDuplicates = new Set<string>();
   for (const r of rows) {
-    const email = r.email.trim().toLowerCase();
-    if (!byEmail.has(email)) byEmail.set(email, { ...r, email, source });
+    const email = normalizeEmail(r.email);
+    if (byEmail.has(email)) {
+      fileDuplicates.add(email);
+      continue;
+    }
+    byEmail.set(email, { ...r, email, source });
   }
   const unique = [...byEmail.values()];
 
@@ -240,9 +258,19 @@ export async function importSignups(
     const { error } = await db.from("beta_signups").insert(toInsert);
     if (error) {
       console.error("[db] importSignups insert failed:", error.message);
-      return { added: 0, skipped: unique.length };
+      return {
+        added: 0,
+        skipped: unique.length,
+        fileDuplicates: [...fileDuplicates],
+        existingDuplicates: [...existing],
+      };
     }
   }
 
-  return { added: toInsert.length, skipped: unique.length - toInsert.length };
+  return {
+    added: toInsert.length,
+    skipped: unique.length - toInsert.length,
+    fileDuplicates: [...fileDuplicates],
+    existingDuplicates: [...existing],
+  };
 }

@@ -48,14 +48,15 @@ export async function POST(req: Request) {
     );
   }
 
-  const { added, skipped } = await importSignups(
-    contacts.map((c) => ({
-      email: c.email,
-      first_name: c.firstName ?? null,
-      last_name: c.lastName ?? null,
-    })),
-    "import"
-  );
+  const { added, skipped, fileDuplicates, existingDuplicates } =
+    await importSignups(
+      contacts.map((c) => ({
+        email: c.email,
+        first_name: c.firstName ?? null,
+        last_name: c.lastName ?? null,
+      })),
+      "import"
+    );
 
   await createAuditEvent({
     action: "import",
@@ -63,7 +64,14 @@ export async function POST(req: Request) {
     subject: `Imported ${added} contact${added === 1 ? "" : "s"}`,
     template: "CSV import",
     recipientCount: contacts.length,
-    meta: { parsed: contacts.length, added, skipped, invalid },
+    meta: {
+      parsed: contacts.length,
+      added,
+      skipped,
+      invalid,
+      fileDuplicates,
+      existingDuplicates,
+    },
   });
 
   return NextResponse.json({
@@ -72,5 +80,7 @@ export async function POST(req: Request) {
     added,
     skipped,
     invalid,
+    fileDuplicates,
+    existingDuplicates,
   });
 }

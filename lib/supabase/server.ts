@@ -39,8 +39,19 @@ export async function supabaseServer() {
   });
 }
 
+/** True when the public auth env vars needed to read a session are present. */
+export function isSupabaseAuthConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+}
+
 /** Returns the logged-in admin email, or null if not signed in / not allowed. */
 export async function getAdminEmail(): Promise<string | null> {
+  // Mirror proxy.ts: when Supabase auth is not configured, treat the caller as
+  // signed out rather than throwing, so the login page still renders locally.
+  if (!isSupabaseAuthConfigured()) return null;
   const supabase = await supabaseServer();
   const {
     data: { user },

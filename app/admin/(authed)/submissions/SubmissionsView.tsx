@@ -2,8 +2,9 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Trash2, X, ChevronRight } from "lucide-react";
+import { Search, Trash2, X, ChevronRight, Copy } from "lucide-react";
 import type { Submission, SubmissionKind } from "@/lib/db/submissions";
+import { duplicateEmailSet, normalizeEmail } from "@/lib/duplicates";
 
 const TABS: { id: "all" | SubmissionKind; label: string }[] = [
   { id: "all", label: "All" },
@@ -27,14 +28,23 @@ export function SubmissionsView({
   const router = useRouter();
   const [tab, setTab] = useState<"all" | SubmissionKind>("all");
   const [query, setQuery] = useState("");
+  const [dupOnly, setDupOnly] = useState(false);
   const [open, setOpen] = useState<Submission | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // Emails that appear in more than one submission row — repeat submitters.
+  const dupSet = useMemo(
+    () => duplicateEmailSet(submissions.map((s) => s.email)),
+    [submissions]
+  );
+  const isDuplicate = (s: Submission) => dupSet.has(normalizeEmail(s.email));
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return submissions
       .filter((s) => (tab === "all" ? true : s.kind === tab))
+      .filter((s) => (dupOnly ? dupSet.has(normalizeEmail(s.email)) : true))
       .filter((s) => {
         if (!needle) return true;
         const hay = [
@@ -53,7 +63,7 @@ export function SubmissionsView({
           .toLowerCase();
         return hay.includes(needle);
       });
-  }, [submissions, tab, query]);
+  }, [submissions, tab, query, dupOnly, dupSet]);
 
   const exportCsv = () => {
     const cols = [
@@ -149,6 +159,25 @@ export function SubmissionsView({
               </button>
             );
           })}
+
+          {dupSet.size > 0 && (
+            <button
+              type="button"
+              onClick={() => setDupOnly((v) => !v)}
+              title="Emails that submitted more than one form"
+              className={
+                "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] transition-colors " +
+                (dupOnly
+                  ? "bg-amber-400/20 text-amber-100"
+                  : "text-amber-200/70 hover:bg-amber-400/10 hover:text-amber-100")
+              }
+            >
+              <Copy size={12} /> Duplicates
+              <span className="rounded-full bg-amber-400/20 px-1.5 text-[10px]">
+                {dupSet.size}
+              </span>
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -216,7 +245,19 @@ export function SubmissionsView({
                         {s.kind}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-bg/85">{s.email}</td>
+                    <td className="px-4 py-3 text-bg/85">
+                      <span className="inline-flex items-center gap-2">
+                        {s.email || "-"}
+                        {isDuplicate(s) && (
+                          <span
+                            title="This email submitted more than one form"
+                            className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[10px] text-amber-200"
+                          >
+                            <Copy size={10} /> dup
+                          </span>
+                        )}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-bg/70">{s.name || "-"}</td>
                     <td className="max-w-xs truncate px-4 py-3 text-[12px] text-bg/55">
                       {preview || "-"}

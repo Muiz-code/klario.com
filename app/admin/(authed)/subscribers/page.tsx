@@ -1,4 +1,6 @@
 import { listSignups } from "@/lib/db/signups";
+import { submissionEmailCounts } from "@/lib/db/duplicates";
+import { normalizeEmail } from "@/lib/duplicates";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import { SubscribersTable } from "./SubscribersTable";
 
@@ -6,7 +8,15 @@ export const dynamic = "force-dynamic";
 
 export default async function SubscribersPage() {
   const configured = isSupabaseConfigured();
-  const signups = configured ? await listSignups({ limit: 2000 }) : [];
+  const [signups, submissionCounts] = configured
+    ? await Promise.all([listSignups({ limit: 2000 }), submissionEmailCounts()])
+    : [[], new Map<string, number>()];
+
+  // Subscriber emails that also appear in the public submissions log — the same
+  // person reached us through more than one channel (website form + the list).
+  const crossListEmails = signups
+    .map((s) => normalizeEmail(s.email))
+    .filter((e) => submissionCounts.has(e));
 
   return (
     <div className="flex flex-col gap-6">
@@ -24,7 +34,7 @@ export default async function SubscribersPage() {
         </div>
       )}
 
-      <SubscribersTable signups={signups} />
+      <SubscribersTable signups={signups} crossListEmails={crossListEmails} />
     </div>
   );
 }

@@ -1,18 +1,56 @@
 import Link from "next/link";
 import { signupStats } from "@/lib/db/signups";
 import { sentCountSince } from "@/lib/db/email-log";
+import {
+  getInteractionSeries,
+  getEngagementSeries,
+  getEngagementTotals,
+  type Series,
+  type EngagementTotals,
+} from "@/lib/db/analytics";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
+import { TrendChart, type ChartLine } from "./_components/TrendChart";
 
 export const dynamic = "force-dynamic";
 
+const WINDOW_DAYS = 30;
+
+const COLORS: Record<string, string> = {
+  signups: "#d4a853",
+  submissions: "#5b9cff",
+  sent: "#5b9cff",
+  opened: "#d4a853",
+  clicked: "#00b86b",
+};
+
+const emptySeries: Series = { days: [], lines: [] };
+
 export default async function DashboardPage() {
   const configured = isSupabaseConfigured();
-  const [stats, sent7] = configured
-    ? await Promise.all([signupStats(), sentCountSince(7)])
+  const [stats, sent7, interactions, engagement, totals]: [
+    Awaited<ReturnType<typeof signupStats>>,
+    number,
+    Series,
+    Series,
+    EngagementTotals,
+  ] = configured
+    ? await Promise.all([
+        signupStats(),
+        sentCountSince(7),
+        getInteractionSeries(WINDOW_DAYS),
+        getEngagementSeries(WINDOW_DAYS),
+        getEngagementTotals(WINDOW_DAYS),
+      ])
     : [
         { total: 0, pending: 0, invited: 0, active: 0, unsubscribed: 0 },
         0,
+        emptySeries,
+        emptySeries,
+        { sent: 0, opened: 0, clicked: 0, openRate: 0, clickRate: 0 },
       ];
+
+  const withColor = (s: Series): ChartLine[] =>
+    s.lines.map((l) => ({ ...l, color: COLORS[l.key] ?? "#d4a853" }));
 
   return (
     <div className="flex flex-col gap-8">
@@ -37,6 +75,29 @@ export default async function DashboardPage() {
         <Stat label="Sent (7 days)" value={sent7} />
       </div>
 
+      {/* Charts */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ChartCard
+          title="Audience interactions"
+          subtitle={`New signups and form submissions · last ${WINDOW_DAYS} days`}
+        >
+          <TrendChart days={interactions.days} lines={withColor(interactions)} />
+        </ChartCard>
+
+        <ChartCard
+          title="Mail tracking"
+          subtitle={`Sent, opened, and clicked · last ${WINDOW_DAYS} days`}
+          aside={
+            <div className="flex items-center gap-4">
+              <Rate label="Open rate" rate={totals.openRate} />
+              <Rate label="Click rate" rate={totals.clickRate} />
+            </div>
+          }
+        >
+          <TrendChart days={engagement.days} lines={withColor(engagement)} />
+        </ChartCard>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-3">
         <Action
           href="/p@ss1/subscribers"
@@ -54,6 +115,44 @@ export default async function DashboardPage() {
           body="Pick a template, write your message, add an image, send to the list."
         />
       </div>
+    </div>
+  );
+}
+
+function ChartCard({
+  title,
+  subtitle,
+  aside,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  aside?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-bg/10 bg-bg/4 p-5">
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <p className="font-display text-lg text-bg">{title}</p>
+          <p className="mt-0.5 text-[12px] text-bg/50">{subtitle}</p>
+        </div>
+        {aside}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Rate({ label, rate }: { label: string; rate: number }) {
+  return (
+    <div className="text-right">
+      <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-bg/45">
+        {label}
+      </p>
+      <p className="font-display text-xl text-bg">
+        {(rate * 100).toFixed(rate >= 0.1 ? 0 : 1)}%
+      </p>
     </div>
   );
 }
