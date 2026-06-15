@@ -87,6 +87,28 @@ export async function getAuditRecipients(
   return (data ?? []) as AuditRecipient[];
 }
 
+/** Fetch a few audit events by id (e.g. to recover a send's newsletter_id). */
+export async function getAuditByIds(
+  ids: string[]
+): Promise<{ id: string; subject: string | null; meta: Record<string, unknown> | null }[]> {
+  if (ids.length === 0) return [];
+  const db = supabaseAdmin();
+  const { data, error } = await db
+    .from("audit_log")
+    .select("id, subject, meta")
+    .in("id", ids)
+    .limit(1000);
+  if (error) {
+    console.error("[db] getAuditByIds failed:", error.message);
+    return [];
+  }
+  return (data ?? []) as {
+    id: string;
+    subject: string | null;
+    meta: Record<string, unknown> | null;
+  }[];
+}
+
 export async function listAuditEvents(limit = 200): Promise<AuditEvent[]> {
   const db = supabaseAdmin();
   const { data, error } = await db

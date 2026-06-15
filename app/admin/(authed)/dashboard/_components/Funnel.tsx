@@ -9,10 +9,10 @@ const ICONS: Record<string, typeof Send> = {
 };
 
 /**
- * Email funnel: one full-width row per stage with a gold proportion bar (its
- * width = share of the top stage). Full-width rows keep the value and percent
- * always readable; the shrinking bars give the funnel feel. Stages with no data
- * (e.g. Converted, which isn't tracked yet) render muted with a dash.
+ * Email funnel: one full-width row per stage. Each stage's percentage is a
+ * step-conversion vs the stage above it (Sent is vs the whole list), so every
+ * value is 0–100% and the gold bar width mirrors that percentage. The `hint`
+ * spells out the denominator (e.g. "of 55 sent").
  */
 export function Funnel({ stages }: { stages: FunnelStage[] }) {
   return (
@@ -43,12 +43,15 @@ export function Funnel({ stages }: { stages: FunnelStage[] }) {
                   {known ? s.value!.toLocaleString() : "-"}
                 </span>
                 {s.pct !== null && (
-                  <span className="text-[11px] font-medium text-bg/45">
+                  <span className="text-[12px] font-medium text-gold">
                     {Math.round(s.pct * 100)}%
                   </span>
                 )}
               </span>
             </div>
+            {s.hint && (
+              <p className="mt-1 text-[11px] text-bg/40">{s.hint}</p>
+            )}
             <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-bg/10">
               <div
                 className="h-full rounded-full"

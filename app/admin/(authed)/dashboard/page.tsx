@@ -4,8 +4,6 @@ import {
   Send,
   MailOpen,
   MousePointerClick,
-  Bell,
-  Calendar,
   ChevronRight,
   ArrowUpRight,
   ArrowDownRight,
@@ -18,21 +16,26 @@ import {
   getDashboard,
   getInteractionSeries,
   getEngagementSeries,
+  getGrowthSeries,
+  resolveRange,
   type DashboardData,
   type Kpi,
   type Series,
+  type GrowthSeries,
 } from "@/lib/db/analytics";
 import { listAuditEvents, type AuditEvent } from "@/lib/db/audit";
 import { listNewsletters, type Newsletter } from "@/lib/db/newsletters";
+import { listFailedSends, type FailedSend } from "@/lib/db/email-log";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import { TrendChart, type ChartLine } from "./_components/TrendChart";
 import { Sparkline } from "./_components/Sparkline";
 import { Funnel } from "./_components/Funnel";
+import { DateRangePicker } from "./_components/DateRangePicker";
+import { NotificationBell } from "./_components/NotificationBell";
+import { AudienceGrowth } from "./_components/AudienceGrowth";
 
 export const dynamic = "force-dynamic";
-
-const WINDOW_DAYS = 30;
 
 const SERIES_COLORS: Record<string, string> = {
   signups: "#d4a853",
@@ -62,31 +65,52 @@ const emptyDashboard: DashboardData = {
   rangeStart: "",
   rangeEnd: "",
   kpis: [],
-  growthDays: [],
-  growth: [],
   funnel: [],
   segments: [],
+  sentToday: 0,
+  failed: 0,
 };
 
-export default async function DashboardPage() {
+const emptyGrowth: GrowthSeries = { days: [], values: [] };
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string }>;
+}) {
+  const { from, to } = await searchParams;
+  const range = resolveRange(from, to);
   const configured = isSupabaseConfigured();
-  const [email, data, events, newsletters, interactions, engagement]: [
+  const [
+    email,
+    data,
+    events,
+    newsletters,
+    interactions,
+    engagement,
+    failures,
+    growth,
+  ]: [
     string | null,
     DashboardData,
     AuditEvent[],
     Newsletter[],
     Series,
     Series,
+    FailedSend[],
+    GrowthSeries,
   ] = configured
     ? await Promise.all([
         getAdminEmail(),
-        getDashboard(WINDOW_DAYS),
+        getDashboard(range),
         listAuditEvents(6),
         listNewsletters(),
-        getInteractionSeries(WINDOW_DAYS),
-        getEngagementSeries(WINDOW_DAYS),
+        getInteractionSeries(range),
+        getEngagementSeries(range),
+        listFailedSends(20),
+        getGrowthSeries(null),
       ])
-    : [null, emptyDashboard, [], [], emptySeries, emptySeries];
+    : [null, emptyDashboard, [], [], emptySeries, emptySeries, [], emptyGrowth];
 
   const name = email ? email.split("@")[0] : "there";
   const campaigns = newsletters
@@ -108,18 +132,12 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-2 rounded-xl border border-bg/12 bg-bg/4 px-3.5 py-2 text-[13px] text-bg/70">
-            <Calendar size={14} className="text-gold" />
-            {formatRange(data.rangeStart, data.rangeEnd)}
+          <span className="inline-flex items-center gap-1.5 rounded-xl border border-bg/12 bg-bg/4 px-3 py-2 text-[13px] text-bg/70">
+            <Send size={13} className="text-gold" />
+            <span className="font-medium text-bg">{data.sentToday}</span> sent today
           </span>
-          <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-bg/12 bg-bg/4 text-bg/70">
-            <Bell size={16} />
-            {events.length > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[9px] font-bold text-ink">
-                {events.length}
-              </span>
-            )}
-          </span>
+          <DateRangePicker from={range.from} to={range.to} />
+          <NotificationBell failures={configured ? failures : []} />
         </div>
       </div>
 
@@ -174,28 +192,11 @@ export default async function DashboardPage() {
 
       {/* Growth + Activity */}
       <div className="grid gap-4 lg:grid-cols-12">
-        <Panel
+        <AudienceGrowth
           className="lg:col-span-8"
-          title="Audience growth"
-          subtitle={`Subscriber total over the last ${WINDOW_DAYS} days`}
-        >
-          {data.growth.length > 0 ? (
-            <TrendChart
-              days={data.growthDays}
-              legend="last"
-              lines={[
-                {
-                  key: "subscribers",
-                  label: "Subscribers",
-                  values: data.growth,
-                  color: "#d4a853",
-                },
-              ]}
-            />
-          ) : (
-            <Empty />
-          )}
-        </Panel>
+          initial={growth}
+          initialKey="all"
+        />
 
         <Panel
           className="lg:col-span-4"
@@ -325,7 +326,7 @@ function KpiCard({ kpi }: { kpi: Kpi }) {
           <span className="text-bg/45">{kpi.note}</span>
         ) : null}
         {kpi.deltaPct !== null && (
-          <span className="text-bg/40">vs last {WINDOW_DAYS}d</span>
+          <span className="text-bg/40">vs prior period</span>
         )}
       </div>
       <div className="mt-3">
@@ -445,20 +446,6 @@ function formatKpi(kpi: Kpi): string {
   return kpi.value.toLocaleString();
 }
 
-function formatRange(start: string, end: string): string {
-  if (!start || !end) return `Last ${WINDOW_DAYS} days`;
-  const s = new Date(start + "T00:00:00Z");
-  const e = new Date(end + "T00:00:00Z");
-  const fmt = (d: Date, withYear: boolean) =>
-    d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: withYear ? "numeric" : undefined,
-      timeZone: "UTC",
-    });
-  return `${fmt(s, false)} - ${fmt(e, true)}`;
-}
-
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
     month: "short",
@@ -502,8 +489,8 @@ const PLACEHOLDER_KPIS: Kpi[] = [
 ];
 
 const PLACEHOLDER_SEGMENTS = [
-  { key: "pending", label: "New (pending)", value: 0 },
-  { key: "invited", label: "Invited", value: 0 },
+  { key: "pending", label: "Not contacted", value: 0 },
+  { key: "contacted", label: "Contacted", value: 0 },
   { key: "active", label: "Active", value: 0 },
   { key: "unsubscribed", label: "Unsubscribed", value: 0 },
 ];

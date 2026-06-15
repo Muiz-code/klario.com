@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getNewsletter, markNewsletterSent } from "@/lib/db/newsletters";
-import { listSignups } from "@/lib/db/signups";
+import { listSignups, markInvited } from "@/lib/db/signups";
 import { logEmails } from "@/lib/db/email-log";
 import { createAuditEvent } from "@/lib/db/audit";
 import { getAdminEmail } from "@/lib/supabase/server";
@@ -90,6 +90,14 @@ export async function POST(
   const results = await sendBatch(messages);
   const sent = results.filter((r) => r.ok).length;
   const failed = results.length - sent;
+
+  // Anyone still "pending" who was successfully emailed has now been contacted —
+  // advance them to "invited" so they stop showing as a new/uncontacted lead.
+  const okEmails = new Set(results.filter((r) => r.ok).map((r) => r.to));
+  const nowContacted = recipients
+    .filter((s) => s.status === "pending" && okEmails.has(s.email))
+    .map((s) => s.id);
+  if (nowContacted.length > 0) await markInvited(nowContacted);
 
   const auditId = await createAuditEvent({
     action: "newsletter",

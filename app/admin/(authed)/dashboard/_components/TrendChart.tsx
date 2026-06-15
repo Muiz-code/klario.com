@@ -31,7 +31,10 @@ function niceMax(value: number): number {
   if (value <= 5) return 5;
   const pow = Math.pow(10, Math.floor(Math.log10(value)));
   const n = value / pow;
-  const step = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+  // Pick the next "nice" step with ~5% headroom, so the line uses the chart
+  // height instead of floating low (e.g. 105 → 120, not 200).
+  const steps = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+  const step = steps.find((s) => s >= n * 1.05) ?? 10;
   return step * pow;
 }
 
@@ -87,8 +90,13 @@ export function TrendChart({
 
   const gridLines = [0, 0.25, 0.5, 0.75, 1];
 
-  // Tick labels: ~5 evenly spaced dates.
-  const tickIdx = n <= 1 ? [0] : [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * (n - 1)));
+  // Tick labels: up to ~5 evenly spaced dates, de-duplicated so short ranges
+  // (where the rounded indices collide) don't produce duplicate React keys.
+  const tickIdx = [
+    ...new Set(
+      n <= 1 ? [0] : [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * (n - 1)))
+    ),
+  ];
 
   const onMove = (e: React.PointerEvent<SVGSVGElement>) => {
     const el = svgRef.current;

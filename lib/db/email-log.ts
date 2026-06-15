@@ -27,18 +27,58 @@ export async function logEmails(
   if (error) console.error("[db] logEmails failed:", error.message);
 }
 
-/** Count of successfully sent emails in the last N days. */
-export async function sentCountSince(days: number): Promise<number> {
+export type FailedSend = {
+  id: string;
+  email: string;
+  type: string;
+  error: string | null;
+  sent_at: string;
+};
+
+export type FailedRow = {
+  id: string;
+  email: string;
+  type: string;
+  audit_id: string | null;
+};
+
+/** Look up failed send rows by id (for type-aware retry). */
+export async function getFailedByIds(ids: string[]): Promise<FailedRow[]> {
+  if (ids.length === 0) return [];
   const db = supabaseAdmin();
-  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-  const { count, error } = await db
+  const { data, error } = await db
     .from("email_log")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "sent")
-    .gte("sent_at", since);
+    .select("id, email, type, audit_id")
+    .in("id", ids)
+    .eq("status", "failed")
+    .limit(5000);
   if (error) {
-    console.error("[db] sentCountSince failed:", error.message);
-    return 0;
+    console.error("[db] getFailedByIds failed:", error.message);
+    return [];
   }
-  return count ?? 0;
+  return (data ?? []) as FailedRow[];
+}
+
+/** Delete email_log rows by id (used to clear resolved failures after retry). */
+export async function deleteEmailLogByIds(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const db = supabaseAdmin();
+  const { error } = await db.from("email_log").delete().in("id", ids);
+  if (error) console.error("[db] deleteEmailLogByIds failed:", error.message);
+}
+
+/** Most recent failed send attempts, newest first. */
+export async function listFailedSends(limit = 100): Promise<FailedSend[]> {
+  const db = supabaseAdmin();
+  const { data, error } = await db
+    .from("email_log")
+    .select("id, email, type, error, sent_at")
+    .eq("status", "failed")
+    .order("sent_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.error("[db] listFailedSends failed:", error.message);
+    return [];
+  }
+  return (data ?? []) as FailedSend[];
 }
