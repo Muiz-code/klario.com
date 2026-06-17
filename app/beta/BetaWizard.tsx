@@ -12,6 +12,7 @@ import {
   Home,
   Trophy,
   ShieldAlert,
+  Share2,
 } from "lucide-react";
 import styles from "./beta.module.css";
 
@@ -219,11 +220,30 @@ export function BetaWizard() {
       typeof window !== "undefined"
         ? `${window.location.origin}/beta?ref=${ref}`
         : `/beta?ref=${ref}`;
+    const shareText =
+      "I just joined the Klario beta, early access to a smarter way to handle money in Nigeria. Join with my link so we both move up the list, and the top referrers win cash before June 30.";
+    const shareFull = `${shareText} ${shareUrl}`;
     const copy = () => {
-      navigator.clipboard?.writeText(shareUrl).then(() => {
+      navigator.clipboard?.writeText(shareFull).then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1800);
       });
+    };
+    const share = async () => {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        try {
+          await navigator.share({
+            title: "Join me on the Klario beta",
+            text: shareText,
+            url: shareUrl,
+          });
+        } catch {
+          // Share sheet dismissed or unavailable; nothing to do.
+        }
+      } else {
+        // Desktop / unsupported: fall back to copying the full message.
+        copy();
+      }
     };
     return (
       <div className={styles.wrap}>
@@ -238,16 +258,22 @@ export function BetaWizard() {
             building Klario to kill. We&apos;ll be in touch when your spot opens.
           </p>
           <div className={styles.ref}>Your beta reference: {ref}</div>
+          <div className={styles.shareMsg}>
+            {shareText}{" "}
+            <span className={styles.shareLinkInline}>{shareUrl}</span>
+          </div>
           <div className={styles.shareRow}>
-            <span className={styles.shareLink}>{shareUrl}</span>
+            <button type="button" className={styles.shareBtn} onClick={share}>
+              <Share2 size={15} /> Share with friends
+            </button>
             <button type="button" className={styles.copyBtn} onClick={copy}>
               {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? "Copied" : "Copy invite link"}
+              {copied ? "Copied" : "Copy message"}
             </button>
           </div>
           <p className={styles.shareHint}>
-            Share your code so friends can skip the line. We&apos;ll know they
-            came from you.
+            Tap share to send it straight to WhatsApp or anywhere else. Friends
+            who join from your link are counted to you.
           </p>
 
           <div className={styles.contest}>
