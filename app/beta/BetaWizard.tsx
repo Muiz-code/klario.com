@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence } from "framer-motion";
+import { Loader } from "@/components/ui/Loader";
 import {
   ArrowRight,
   X,
@@ -59,6 +61,9 @@ const PRICE = [
 
 const EMAIL_RE = /.+@.+\..+/;
 
+// How long the branded loader shows for a referred visitor (ms).
+const LOADER_DURATION = 2000;
+
 type Answers = {
   name: string;
   email: string;
@@ -99,14 +104,19 @@ export function BetaWizard() {
   const [ref, setRef] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [booting, setBooting] = useState(false);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
-  // Prefill the referral code from a shared link (?ref=KLR-XXXXX).
+  // Prefill the referral code from a shared link (?ref=KLR-XXXXX), and show the
+  // branded loader briefly for referred visitors arriving from someone's link.
   useEffect(() => {
     const code = new URLSearchParams(window.location.search).get("ref");
     if (!code) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time URL read
     setA((p) => ({ ...p, referral: code.toUpperCase() }));
+    setBooting(true);
+    const t = setTimeout(() => setBooting(false), LOADER_DURATION);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -326,6 +336,7 @@ export function BetaWizard() {
 
   return (
     <div className={styles.wrap}>
+      <AnimatePresence>{booting && <Loader key="beta-loader" />}</AnimatePresence>
       <div className={styles.stage}>
         <div className={styles.top}>
           <div className={styles.brand}>
