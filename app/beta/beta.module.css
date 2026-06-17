@@ -30,10 +30,20 @@
   flex-direction: column;
 }
 .top {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
+  min-height: 28px;
   padding: 22px 0 0;
+}
+.logo {
+  position: absolute;
+  left: 50%;
+  top: 22px;
+  transform: translateX(-50%);
+  height: 26px;
+  width: auto;
 }
 .brand {
   display: flex;
@@ -80,7 +90,30 @@
   flex: 1;
   display: flex;
   align-items: center;
-  padding: 30px 0;
+  padding: 18px 0;
+}
+/* Welcome step (step 0) is the tallest; tighten it so it fits in one viewport. */
+.welcome .lead {
+  margin-bottom: 8px;
+}
+.welcome .eyebrow {
+  margin-bottom: 9px;
+}
+.welcome .problems {
+  margin: 14px 0 4px;
+  gap: 7px;
+}
+.welcome .prob {
+  padding: 10px 13px;
+}
+.welcome .prob p {
+  font-size: 13.5px;
+}
+.welcome .promise {
+  margin-top: 13px;
+}
+.welcome .nav {
+  padding: 14px 0 8px;
 }
 .card {
   width: 100%;

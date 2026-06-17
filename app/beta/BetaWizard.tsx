@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
 import { Loader } from "@/components/ui/Loader";
+import wordmark from "@/public/klarioLogoLight.png";
 import {
   ArrowRight,
   X,
@@ -104,19 +106,21 @@ export function BetaWizard() {
   const [ref, setRef] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [booting, setBooting] = useState(false);
+  const [booting, setBooting] = useState(true);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
-  // Prefill the referral code from a shared link (?ref=KLR-XXXXX), and show the
-  // branded loader briefly for referred visitors arriving from someone's link.
+  // Branded loader splash on every page load.
+  useEffect(() => {
+    const t = setTimeout(() => setBooting(false), LOADER_DURATION);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Prefill the referral code from a shared link (?ref=KLR-XXXXX).
   useEffect(() => {
     const code = new URLSearchParams(window.location.search).get("ref");
     if (!code) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time URL read
     setA((p) => ({ ...p, referral: code.toUpperCase() }));
-    setBooting(true);
-    const t = setTimeout(() => setBooting(false), LOADER_DURATION);
-    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -339,10 +343,13 @@ export function BetaWizard() {
       <AnimatePresence>{booting && <Loader key="beta-loader" />}</AnimatePresence>
       <div className={styles.stage}>
         <div className={styles.top}>
-          <div className={styles.brand}>
-            <div className={styles.dot}>K</div>
-            <div className={styles.nm}>Klario</div>
-          </div>
+          <Image
+            src={wordmark}
+            alt="Klario"
+            priority
+            sizes="120px"
+            className={styles.logo}
+          />
           <div className={styles.count} aria-live="polite">
             {counter}
           </div>
@@ -373,9 +380,9 @@ export function BetaWizard() {
     switch (step) {
       case 0:
         return (
-          <>
+          <div className={styles.welcome}>
             <div className={styles.lead}>
-              <Hand size={30} />
+              <Hand size={26} />
             </div>
             <div className={styles.eyebrow}>Private Beta · Nigeria</div>
             <div className={styles.qlabel}>
@@ -409,7 +416,7 @@ export function BetaWizard() {
               </button>
             </div>
             <div className={styles.skip}>8 questions · about 2 honest minutes</div>
-          </>
+          </div>
         );
 
       case 1:
