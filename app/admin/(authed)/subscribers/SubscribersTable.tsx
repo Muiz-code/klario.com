@@ -1,24 +1,35 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Trash2, Upload, Send, Copy, ScanSearch } from "lucide-react";
-import type { Signup, SignupStatus } from "@/lib/db/signups";
+import type { Signup } from "@/lib/db/signups";
 import type { DuplicateReport } from "@/lib/db/duplicates";
 import { normalizeEmail } from "@/lib/duplicates";
 import { ConfirmModal, type ConfirmState } from "../_components/Modal";
 
-const STATUS_FILTERS: { id: "all" | SignupStatus; label: string }[] = [
+// Display status reflects whether we've actually mailed someone, not just the
+// stored status field: "Mailed" = at least one email sent; "Pending" = none.
+type DisplayStatus = "pending" | "mailed" | "active" | "unsubscribed";
+
+const STATUS_LABEL: Record<DisplayStatus, string> = {
+  pending: "Unmailed",
+  mailed: "Mailed",
+  active: "Active",
+  unsubscribed: "Unsubscribed",
+};
+
+const STATUS_FILTERS: { id: "all" | DisplayStatus; label: string }[] = [
   { id: "all", label: "All" },
-  { id: "pending", label: "Pending" },
-  { id: "invited", label: "Invited" },
+  { id: "pending", label: "Unmailed" },
+  { id: "mailed", label: "Mailed" },
   { id: "active", label: "Active" },
   { id: "unsubscribed", label: "Unsubscribed" },
 ];
 
-const STATUS_STYLE: Record<SignupStatus, string> = {
+const STATUS_STYLE: Record<DisplayStatus, string> = {
   pending: "bg-amber-400/15 text-amber-200",
-  invited: "bg-blue-400/15 text-blue-200",
+  mailed: "bg-blue-400/15 text-blue-200",
   active: "bg-emerald-400/15 text-emerald-200",
   unsubscribed: "bg-red-400/15 text-red-200",
 };
@@ -26,16 +37,18 @@ const STATUS_STYLE: Record<SignupStatus, string> = {
 export function SubscribersTable({
   signups,
   crossListEmails = [],
+  mailedEmails = [],
 }: {
   signups: Signup[];
   crossListEmails?: string[];
+  mailedEmails?: string[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState<"all" | SignupStatus>("all");
+  const [status, setStatus] = useState<"all" | DisplayStatus>("all");
   const [dupOnly, setDupOnly] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -54,10 +67,24 @@ export function SubscribersTable({
   );
   const isDuplicate = (s: Signup) => crossSet.has(normalizeEmail(s.email));
 
+  // Everyone we've actually mailed (any non-failed send).
+  const mailedSet = useMemo(
+    () => new Set(mailedEmails.map(normalizeEmail)),
+    [mailedEmails]
+  );
+  const displayStatus = useCallback(
+    (s: Signup): DisplayStatus => {
+      if (s.status === "unsubscribed") return "unsubscribed";
+      if (s.status === "active") return "active";
+      return mailedSet.has(normalizeEmail(s.email)) ? "mailed" : "pending";
+    },
+    [mailedSet]
+  );
+
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return signups
-      .filter((s) => (status === "all" ? true : s.status === status))
+      .filter((s) => (status === "all" ? true : displayStatus(s) === status))
       .filter((s) => (dupOnly ? crossSet.has(normalizeEmail(s.email)) : true))
       .filter((s) => {
         if (!needle) return true;
@@ -67,7 +94,7 @@ export function SubscribersTable({
           (s.last_name || "").toLowerCase().includes(needle)
         );
       });
-  }, [signups, q, status, dupOnly, crossSet]);
+  }, [signups, q, status, dupOnly, crossSet, displayStatus]);
 
   const allVisibleSelected =
     filtered.length > 0 && filtered.every((s) => selected.has(s.id));
@@ -310,7 +337,7 @@ export function SubscribersTable({
           const count =
             f.id === "all"
               ? signups.length
-              : signups.filter((s) => s.status === f.id).length;
+              : signups.filter((s) => displayStatus(s) === f.id).length;
           const active = status === f.id;
           return (
             <button
@@ -460,8 +487,9 @@ export function SubscribersTable({
               </tr>
             ) : (
               filtered.map((s) => {
-                const invited = s.status === "invited";
-                const unsub = s.status === "unsubscribed";
+                const ds = displayStatus(s);
+                const mailed = ds === "mailed" || ds === "active";
+                const unsub = ds === "unsubscribed";
                 return (
                   <tr
                     key={s.id}
@@ -495,11 +523,10 @@ export function SubscribersTable({
                     <td className="px-4 py-3">
                       <span
                         className={
-                          "rounded-full px-2 py-0.5 text-[11px] capitalize " +
-                          STATUS_STYLE[s.status]
+                          "rounded-full px-2 py-0.5 text-[11px] " + STATUS_STYLE[ds]
                         }
                       >
-                        {s.status}
+                        {STATUS_LABEL[ds]}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-[12px] text-bg/55">
@@ -516,14 +543,14 @@ export function SubscribersTable({
                             onClick={() =>
                               requestSend({
                                 ids: [s.id],
-                                resend: invited,
+                                resend: mailed,
                                 label: s.email,
                               })
                             }
                             disabled={busy}
                             className="rounded-full border border-bg/15 px-2.5 py-1 text-[11px] text-bg/75 hover:border-gold/50 hover:text-bg disabled:opacity-40"
                           >
-                            {invited ? "Resend" : "Send invite"}
+                            {mailed ? "Resend" : "Send invite"}
                           </button>
                         )}
                         <button

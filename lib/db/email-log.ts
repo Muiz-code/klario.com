@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { normalizeEmail } from "@/lib/duplicates";
 
 export type EmailLogEntry = {
   email: string;
@@ -25,6 +26,30 @@ export async function logEmails(
     }))
   );
   if (error) console.error("[db] logEmails failed:", error.message);
+}
+
+/**
+ * Distinct (normalized) emails we have actually mailed — any send that wasn't
+ * an outright failure (sent / delivered / bounced / complained). Used to mark
+ * subscribers as "Mailed" vs "Pending" regardless of the stored status field.
+ */
+export async function getMailedEmails(): Promise<string[]> {
+  const db = supabaseAdmin();
+  const { data, error } = await db
+    .from("email_log")
+    .select("email")
+    .neq("status", "failed")
+    .limit(200000);
+  if (error) {
+    console.error("[db] getMailedEmails failed:", error.message);
+    return [];
+  }
+  const set = new Set<string>();
+  for (const r of data ?? []) {
+    const e = normalizeEmail(r.email as string | null);
+    if (e) set.add(e);
+  }
+  return [...set];
 }
 
 export type FailedSend = {

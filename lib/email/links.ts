@@ -37,3 +37,31 @@ export function unsubscribeUrl(email: string): string {
   const t = unsubscribeToken(email);
   return `${SITE.url}/api/unsubscribe?e=${e}&t=${t}`;
 }
+
+/**
+ * Beta email-verification links. Signed so a referral can only be counted once
+ * the referred person proves they own the inbox (kills disposable-email fraud).
+ * Distinct purpose prefix so it can't be swapped with an unsubscribe token.
+ */
+export function betaVerifyToken(email: string): string {
+  return createHmac("sha256", secret())
+    .update(`beta-verify:${email.trim().toLowerCase()}`)
+    .digest("hex")
+    .slice(0, 32);
+}
+
+export function verifyBetaToken(email: string, token: string): boolean {
+  const expected = betaVerifyToken(email);
+  if (expected.length !== token.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ token.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+export function betaVerifyUrl(email: string): string {
+  const e = encodeURIComponent(email.trim().toLowerCase());
+  const t = betaVerifyToken(email);
+  return `${SITE.url}/api/beta/verify?e=${e}&t=${t}`;
+}

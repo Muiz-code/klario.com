@@ -15,6 +15,7 @@ import {
   Inbox,
   Send,
   ScrollText,
+  ClipboardList,
   Crown,
   LogOut,
   Menu,
@@ -34,6 +35,7 @@ const primaryNav = [
 ];
 
 const toolsNav = [
+  { href: "/p@ss1/beta", label: "Beta responses", icon: ClipboardList },
   { href: "/p@ss1/submissions", label: "Submissions", icon: Inbox },
   { href: "/p@ss1/email", label: "Beta invite", icon: Send },
   { href: "/p@ss1/audit", label: "Audit log", icon: ScrollText },
@@ -55,8 +57,12 @@ export function AdminSidebar({ email }: { email: string }) {
   };
 
   const isActive = (href: string) => {
+    // usePathname() can return either the public "/p@ss1/..." URL or the
+    // rewritten "/admin/..." path, so match against both forms.
     const internal = href.replace("/p@ss1", "/admin");
-    return pathname === internal || pathname.startsWith(internal + "/");
+    const match = (base: string) =>
+      pathname === base || pathname.startsWith(base + "/");
+    return match(href) || match(internal);
   };
 
   const renderItem = (it: { href: string; label: string; icon: typeof Users }) => {
@@ -67,13 +73,17 @@ export function AdminSidebar({ email }: { email: string }) {
         <Link
           href={it.href}
           onClick={() => setOpen(false)}
+          aria-current={active ? "page" : undefined}
           className={
-            "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors " +
+            "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors " +
             (active
-              ? "bg-gold/12 text-gold"
+              ? "bg-gold/12 font-medium text-gold"
               : "text-bg/60 hover:bg-bg/5 hover:text-bg")
           }
         >
+          {active && (
+            <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-gold" />
+          )}
           <Icon size={17} strokeWidth={1.75} />
           {it.label}
         </Link>
