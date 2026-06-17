@@ -221,7 +221,7 @@ export function BetaWizard() {
         ? `${window.location.origin}/beta?ref=${ref}`
         : `/beta?ref=${ref}`;
     const shareText =
-      "I just joined the Klario beta, early access to a smarter way to handle money in Nigeria. Join with my link so we both move up the list, and the top referrers win cash before June 30.";
+      "I just joined the Klario beta, early access to a smarter way to handle money in Nigeria. Join with my link so we both move up the list. The referral contest closes June 30 and the top referrers win cash.";
     const shareFull = `${shareText} ${shareUrl}`;
     const copy = () => {
       navigator.clipboard?.writeText(shareFull).then(() => {
