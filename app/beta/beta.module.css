@@ -445,6 +445,90 @@
   margin-top: 14px;
   max-width: 380px;
 }
+.contest {
+  width: 100%;
+  max-width: 440px;
+  text-align: left;
+  border: 1px solid rgba(212, 168, 83, 0.3);
+  background: rgba(212, 168, 83, 0.06);
+  border-radius: 16px;
+  padding: 20px 22px;
+  margin-top: 30px;
+}
+.contestHead {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--gold);
+  font-family: var(--font-space), "Space Grotesk", sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 14px;
+}
+.prizes {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.prize {
+  flex: 1;
+  border: 1px solid rgba(236, 230, 216, 0.12);
+  border-radius: 11px;
+  padding: 10px 13px;
+}
+.prizeRank {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--creamDim);
+}
+.prizeAmt {
+  font-family: var(--font-space), "Space Grotesk", sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: #fff;
+  margin-top: 2px;
+}
+.contest p {
+  color: var(--creamDim);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: none;
+}
+.deadline {
+  color: var(--gold);
+  font-weight: 600;
+}
+.warn {
+  width: 100%;
+  max-width: 440px;
+  text-align: left;
+  display: flex;
+  gap: 11px;
+  border: 1px solid rgba(232, 136, 136, 0.25);
+  background: rgba(232, 136, 136, 0.06);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 14px;
+}
+.warn > svg {
+  color: #e88;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.warnBody {
+  color: var(--creamDim);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.warnBody strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13.5px;
+}
 .homeBtn {
   display: inline-flex;
   align-items: center;

@@ -2,7 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, X, Hand, PartyPopper, Copy, Check, Home } from "lucide-react";
+import {
+  ArrowRight,
+  X,
+  Hand,
+  PartyPopper,
+  Copy,
+  Check,
+  Home,
+  Trophy,
+  ShieldAlert,
+} from "lucide-react";
 import styles from "./beta.module.css";
 
 const TOTAL = 8; // numbered questions (welcome is step 0)
@@ -239,6 +249,41 @@ export function BetaWizard() {
             Share your code so friends can skip the line. We&apos;ll know they
             came from you.
           </p>
+
+          <div className={styles.contest}>
+            <div className={styles.contestHead}>
+              <Trophy size={17} /> Referral contest
+            </div>
+            <div className={styles.prizes}>
+              <div className={styles.prize}>
+                <div className={styles.prizeRank}>1st place</div>
+                <div className={styles.prizeAmt}>&#8358;30,000</div>
+              </div>
+              <div className={styles.prize}>
+                <div className={styles.prizeRank}>2nd place</div>
+                <div className={styles.prizeAmt}>&#8358;15,000</div>
+              </div>
+            </div>
+            <p>
+              The two people who refer the most friends win cash. Entries close{" "}
+              <span className={styles.deadline}>June 30</span>, so share your
+              link and get your friends on the list. Stick around for the
+              testing phase too, we&apos;re giving out more rewards to everyone
+              who helps us put Klario through its paces.
+            </p>
+          </div>
+
+          <div className={styles.warn}>
+            <ShieldAlert size={18} />
+            <div className={styles.warnBody}>
+              <strong>We check for fake referrals.</strong>
+              An AI system grades every signup and flags throwaway inboxes, fake
+              details, self-referrals, and accounts farmed from one device. Only
+              verified, real people count toward your total. Anything that looks
+              gamed is disqualified.
+            </div>
+          </div>
+
           <Link href="/" className={styles.homeBtn}>
             <Home size={16} />
             Back to home
