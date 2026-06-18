@@ -15,13 +15,13 @@ import {
   Copy,
   Check,
   Home,
-  Trophy,
+  Gift,
   ShieldAlert,
   Share2,
 } from "lucide-react";
 import styles from "./beta.module.css";
 
-const TOTAL = 8; // numbered questions (welcome is step 0)
+const TOTAL = 9; // numbered questions (welcome is step 0)
 const ADVANCE_MS = 250;
 
 const METHOD = [
@@ -62,6 +62,9 @@ const PRICE = [
   "I'll pay if it actually saves me money",
 ];
 const PRICE_OTHER = "Others (name your price)";
+const OCCUPATIONS = ["Student", "Business owner", "Employed", "Freelancer"];
+// Only students are invited to the referral program.
+const STUDENT = "Student";
 
 const EMAIL_RE = /.+@.+\..+/;
 
@@ -74,6 +77,7 @@ type Answers = {
   phone: string;
   referral: string;
   method: string | null;
+  occupation: string | null;
   pain: string[];
   sheetlife: string | null;
   trust: number | null;
@@ -88,6 +92,7 @@ const EMPTY: Answers = {
   phone: "",
   referral: "",
   method: null,
+  occupation: null,
   pain: [],
   sheetlife: null,
   trust: null,
@@ -161,6 +166,8 @@ export function BetaWizard() {
         return a.features.length > 0;
       case 7:
         return !!a.price;
+      case 8:
+        return !!a.occupation;
       default:
         return true;
     }
@@ -189,7 +196,10 @@ export function BetaWizard() {
   };
 
   // Single-select / scale: highlight, then auto-advance so the choice registers.
-  const pickSingle = (key: "method" | "sheetlife" | "price", value: string) => {
+  const pickSingle = (
+    key: "method" | "sheetlife" | "price" | "occupation",
+    value: string
+  ) => {
     setA((p) => ({ ...p, [key]: value }));
     setMiss(false);
     const cur = step;
@@ -237,6 +247,7 @@ export function BetaWizard() {
           phone: a.phone,
           referral: a.referral,
           method: a.method,
+          occupation: a.occupation,
           pain: a.pain,
           sheetlife: a.sheetlife,
           trust: a.trust,
@@ -266,8 +277,9 @@ export function BetaWizard() {
       typeof window !== "undefined"
         ? `${window.location.origin}/beta?ref=${ref}`
         : `/beta?ref=${ref}`;
+    const isStudent = a.occupation === STUDENT;
     const shareText =
-      "I just joined the Klario beta, early access to a smarter way to handle money in Nigeria. Join with my link so we both move up the list. The referral contest closes June 30 and the top referrers win cash.";
+      "I just joined the Klario beta, early access to a smarter way to handle money in Nigeria. Join with my link so we both get in early.";
     const shareFull = `${shareText} ${shareUrl}`;
     const copy = () => {
       navigator.clipboard?.writeText(shareFull).then(() => {
@@ -304,57 +316,47 @@ export function BetaWizard() {
             building Klario to kill. We&apos;ll be in touch when your spot opens.
           </p>
           <div className={styles.ref}>Your beta reference: {ref}</div>
-          <div className={styles.shareMsg}>
-            {shareText}{" "}
-            <span className={styles.shareLinkInline}>{shareUrl}</span>
-          </div>
-          <div className={styles.shareRow}>
-            <button type="button" className={styles.shareBtn} onClick={share}>
-              <Share2 size={15} /> Share with friends
-            </button>
-            <button type="button" className={styles.copyBtn} onClick={copy}>
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? "Copied" : "Copy message"}
-            </button>
-          </div>
-          <p className={styles.shareHint}>
-            Tap share to send it straight to WhatsApp or anywhere else. Friends
-            who join from your link are counted to you.
-          </p>
 
-          <div className={styles.contest}>
-            <div className={styles.contestHead}>
-              <Trophy size={17} /> Referral contest
-            </div>
-            <div className={styles.prizes}>
-              <div className={styles.prize}>
-                <div className={styles.prizeRank}>1st place</div>
-                <div className={styles.prizeAmt}>&#8358;30,000</div>
+          {isStudent && (
+            <>
+              <div className={styles.perk}>
+                <Gift size={16} />
+                <div className={styles.warnBody}>
+                  <strong>Students: refer 10 friends, get &#8358;500 airtime</strong>
+                  Or convert it to cash. Share your link, and once 10 of your
+                  invites join and confirm their email, we&apos;ll reach out to
+                  send it.
+                </div>
               </div>
-              <div className={styles.prize}>
-                <div className={styles.prizeRank}>2nd place</div>
-                <div className={styles.prizeAmt}>&#8358;15,000</div>
+              <div className={styles.shareMsg}>
+                {shareText}{" "}
+                <span className={styles.shareLinkInline}>{shareUrl}</span>
               </div>
-            </div>
-            <p>
-              The two people who refer the most friends win cash. Entries close{" "}
-              <span className={styles.deadline}>June 30</span>, so share your
-              link and get your friends on the list. Stick around for the
-              testing phase too, we&apos;re giving out more rewards to everyone
-              who helps us put Klario through its paces.
-            </p>
-          </div>
-
-          <div className={styles.warn}>
-            <ShieldAlert size={18} />
-            <div className={styles.warnBody}>
-              <strong>We check for fake referrals.</strong>
-              An AI system grades every signup and flags throwaway inboxes, fake
-              details, self-referrals, and accounts farmed from one device. Only
-              verified, real people count toward your total. Anything that looks
-              gamed is disqualified.
-            </div>
-          </div>
+              <div className={styles.shareRow}>
+                <button type="button" className={styles.shareBtn} onClick={share}>
+                  <Share2 size={15} /> Share with friends
+                </button>
+                <button type="button" className={styles.copyBtn} onClick={copy}>
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                  {copied ? "Copied" : "Copy message"}
+                </button>
+              </div>
+              <p className={styles.shareHint}>
+                Tap share to send it straight to WhatsApp or anywhere else.
+                Friends who join from your link count toward your 10.
+              </p>
+              <div className={styles.warn}>
+                <ShieldAlert size={18} />
+                <div className={styles.warnBody}>
+                  <strong>We check for fake referrals.</strong>
+                  An AI system grades every signup and flags throwaway inboxes,
+                  fake details, self-referrals, and accounts farmed from one
+                  device. Only verified, real people count toward your 10.
+                  Anything that looks gamed is disqualified.
+                </div>
+              </div>
+            </>
+          )}
 
           <Link href="/" className={styles.homeBtn}>
             <Home size={16} />
@@ -405,23 +407,27 @@ export function BetaWizard() {
                 <li>You must be 18 or older and resident in Nigeria.</li>
                 <li>
                   Staff of Raavon Limited and Klario, and their immediate family,
-                  can take part but cannot win contest prizes.
+                  can take part but cannot earn referral rewards.
                 </li>
                 <li>
                   One person, one entry. Use your own real name, email, and phone
                   number.
                 </li>
               </ul>
-              <h4>The referral contest</h4>
+              <h4>The referral reward (students)</h4>
               <ul>
-                <li>The contest closes June 30, 2026.</li>
                 <li>
-                  The two people with the most verified referrals win cash:
-                  &#8358;30,000 for 1st place and &#8358;15,000 for 2nd.
+                  The referral reward is for students. Refer 10 people who join
+                  and confirm their email, and you get &#8358;500 airtime, or
+                  convert it to cash.
                 </li>
                 <li>
                   A referral only counts when your friend joins from your link and
                   confirms their email.
+                </li>
+                <li>
+                  Non-students are welcome in the beta but are not part of the
+                  referral reward.
                 </li>
               </ul>
               <h4>Fair play</h4>
@@ -433,14 +439,14 @@ export function BetaWizard() {
                 </li>
                 <li>
                   We screen every entry automatically, including AI checks.
-                  Klario&apos;s decision on eligibility and winners is final.
+                  Klario&apos;s decision on eligibility and rewards is final.
                 </li>
               </ul>
-              <h4>Prizes, testing &amp; privacy</h4>
+              <h4>Reward, testing &amp; privacy</h4>
               <ul>
                 <li>
-                  Winners are contacted on the email or phone they gave us and
-                  paid in Naira.
+                  Rewards are sent to the email or phone you gave us, as airtime
+                  or cash in Naira.
                 </li>
                 <li>
                   We may invite you to test the app and offer more rewards during
@@ -566,7 +572,7 @@ export function BetaWizard() {
                 I&apos;m in, ask away <ArrowRight size={16} />
               </button>
             </div>
-            <div className={styles.skip}>8 questions · about 2 honest minutes</div>
+            <div className={styles.skip}>9 questions · about 2 honest minutes</div>
           </div>
         );
 
@@ -711,9 +717,19 @@ export function BetaWizard() {
         return priceStep();
 
       case 8:
+        return single(
+          "08 · about you",
+          "Which of these sounds most like you?",
+          "This tailors your experience. Students get an extra perk.",
+          "occupation",
+          OCCUPATIONS,
+          a.occupation
+        );
+
+      case 9:
         return (
           <>
-            <div className={styles.eyebrow}>08 · last one, promise</div>
+            <div className={styles.eyebrow}>09 · last one, promise</div>
             <div className={styles.qlabel}>
               In one line: what would make money feel less stressful?
             </div>
@@ -780,7 +796,7 @@ export function BetaWizard() {
     eyebrow: string,
     qlabel: string,
     qhint: string | null,
-    key: "method" | "sheetlife" | "price",
+    key: "method" | "sheetlife" | "price" | "occupation",
     options: string[],
     selected: string | null
   ) {

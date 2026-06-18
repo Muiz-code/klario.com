@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { DOWNLOAD } from "@/lib/constants";
-import { openBetaModal } from "@/components/ui/BetaModal";
 import { cn } from "@/lib/utils";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -75,14 +75,13 @@ export function Download() {
           transition={{ duration: 0.6, delay: 0.3, ease }}
           className="flex w-full max-w-sm items-center justify-center gap-2 sm:w-auto sm:max-w-none sm:gap-3"
         >
-          <button
-            type="button"
-            onClick={openBetaModal}
+          <Link
+            href="/beta"
             className="inline-flex items-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-medium text-ink transition-all hover:scale-[1.02] hover:shadow-[0_12px_40px_-8px_rgba(212,168,83,0.55)]"
           >
             <Sparkles size={15} />
             Join the beta
-          </button>
+          </Link>
         </motion.div>
 
         <motion.form

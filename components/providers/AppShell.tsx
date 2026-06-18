@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Loader } from "@/components/ui/Loader";
 import { NewsletterPopup } from "@/components/ui/NewsletterPopup";
-import { BetaModal } from "@/components/ui/BetaModal";
 
 const LOADER_DURATION = 2000;
 
@@ -34,7 +33,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <AnimatePresence>{!ready && <Loader key="loader" />}</AnimatePresence>
       {ready && children}
       {ready && <NewsletterPopup />}
-      {ready && <BetaModal />}
     </>
   );
 }

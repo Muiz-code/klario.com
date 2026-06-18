@@ -5,6 +5,7 @@
  */
 import { COLORS, wrapDocument, escapeHtml } from "./brand";
 import { betaVerifyUrl } from "./links";
+import { SITE } from "@/lib/constants";
 
 const F = "Helvetica,Arial,sans-serif";
 
@@ -14,10 +15,42 @@ export function renderBetaConfirmation(opts: {
   name?: string | null;
   ref: string;
   email: string;
+  occupation?: string | null;
 }): RenderedEmail {
   const name = (opts.name || "").trim() || "there";
   const ref = opts.ref;
   const verifyUrl = betaVerifyUrl(opts.email);
+  const referralUrl = `${SITE.url}/beta?ref=${encodeURIComponent(ref)}`;
+  const isStudent = (opts.occupation || "").toLowerCase() === "student";
+
+  // The referral reward is for students only.
+  const referralBlock = isStudent
+    ? `
+  <tr>
+    <td class="px" style="padding:18px 40px 6px 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLORS.cardAlt};border:1px solid ${COLORS.border};border-radius:14px;">
+        <tr>
+          <td style="padding:18px 22px;">
+            <p style="margin:0 0 6px 0;font-family:${F};font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${COLORS.gold};">
+              Students: refer and earn
+            </p>
+            <p style="margin:0 0 12px 0;font-family:${F};font-size:15px;line-height:1.6;color:${COLORS.text};">
+              Refer 10 friends who join and confirm their email, and you get
+              &#8358;500 airtime, or convert it to cash. Share your invite link
+              to start.
+            </p>
+            <p style="margin:0 0 4px 0;font-family:${F};font-size:12px;letter-spacing:0.5px;text-transform:uppercase;color:${COLORS.textDim};">
+              Your invite link
+            </p>
+            <p style="margin:0;font-family:${F};font-size:15px;font-weight:700;word-break:break-all;">
+              <a href="${referralUrl}" style="color:${COLORS.gold};text-decoration:none;">${escapeHtml(referralUrl)}</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>`
+    : "";
 
   const inner = `
   <tr>
@@ -74,6 +107,9 @@ export function renderBetaConfirmation(opts: {
     </td>
   </tr>
 
+  <!-- Referral (students only) -->
+  ${referralBlock}
+
   <!-- Sign off -->
   <tr>
     <td class="px" style="padding:24px 40px 36px 40px;">
@@ -104,7 +140,14 @@ We read every single one, and the money problems you just told us about are exac
 Your beta reference: ${ref}
 
 Confirm your email to lock in your spot: ${verifyUrl}
-
+${
+  isStudent
+    ? `
+Students: refer 10 friends who join and confirm their email, and you get NGN 500 airtime (or convert it to cash).
+Your invite link: ${referralUrl}
+`
+    : ""
+}
 Talk soon,
 The Klario team
 Klario, a Raavon Limited venture · Lagos, Nigeria`;

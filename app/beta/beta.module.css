@@ -45,29 +45,6 @@
   height: 26px;
   width: auto;
 }
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-.dot {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
-  background: var(--gold);
-  display: grid;
-  place-items: center;
-  color: var(--noir);
-  font-family: var(--font-space), "Space Grotesk", sans-serif;
-  font-weight: 700;
-  font-size: 16px;
-}
-.nm {
-  font-family: var(--font-space), "Space Grotesk", sans-serif;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  font-size: 15px;
-}
 .count {
   font-family: var(--font-jetbrains), monospace;
   font-size: 12px;
@@ -643,19 +620,6 @@
   flex-wrap: wrap;
   max-width: 100%;
 }
-.shareLink {
-  font-family: var(--font-jetbrains), monospace;
-  font-size: 12px;
-  color: var(--creamDim);
-  background: var(--noir2);
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 8px 12px;
-  max-width: 280px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .copyBtn {
   display: inline-flex;
   align-items: center;
@@ -684,60 +648,22 @@
   margin-top: 14px;
   max-width: 380px;
 }
-.contest {
+.perk {
   width: 100%;
   max-width: 440px;
   text-align: left;
-  border: 1px solid rgba(212, 168, 83, 0.3);
-  background: rgba(212, 168, 83, 0.06);
-  border-radius: 16px;
-  padding: 20px 22px;
-  margin-top: 30px;
-}
-.contestHead {
   display: flex;
-  align-items: center;
-  gap: 9px;
+  gap: 11px;
+  border: 1px solid rgba(212, 168, 83, 0.32);
+  background: rgba(212, 168, 83, 0.07);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 26px;
+}
+.perk > svg {
   color: var(--gold);
-  font-family: var(--font-space), "Space Grotesk", sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  margin-bottom: 14px;
-}
-.prizes {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-.prize {
-  flex: 1;
-  border: 1px solid rgba(236, 230, 216, 0.12);
-  border-radius: 11px;
-  padding: 10px 13px;
-}
-.prizeRank {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--creamDim);
-}
-.prizeAmt {
-  font-family: var(--font-space), "Space Grotesk", sans-serif;
-  font-weight: 700;
-  font-size: 20px;
-  color: #fff;
-  margin-top: 2px;
-}
-.contest p {
-  color: var(--creamDim);
-  font-size: 13px;
-  line-height: 1.55;
-  margin: 0;
-  max-width: none;
-}
-.deadline {
-  color: var(--gold);
-  font-weight: 600;
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 .warn {
   width: 100%;

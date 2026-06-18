@@ -26,7 +26,12 @@ export async function POST(
 
   const result = await sendTransactional({
     to: row.email,
-    email: renderBetaConfirmation({ name: row.name, ref: row.ref, email: row.email }),
+    email: renderBetaConfirmation({
+      name: row.name,
+      ref: row.ref,
+      email: row.email,
+      occupation: row.occupation,
+    }),
     replyTo: RESEND_REPLY_TO,
     tags: [{ name: "type", value: "beta_response" }],
   });

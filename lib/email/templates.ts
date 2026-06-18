@@ -45,43 +45,6 @@ export function newsletterWelcome(opts: { firstName?: string }): Email {
   );
 }
 
-export function betaConfirmation(opts: {
-  firstName?: string;
-  device?: string;
-  banks?: string;
-}): Email {
-  const name = opts.firstName?.trim() || "there";
-  const banks = opts.banks?.trim();
-  return build(
-    {
-      preheader: "Your Klario beta request is in. We'll reach out when your wave opens.",
-      eyebrow: "Beta request received",
-      heading: `Thanks, ${name}. You're in the queue.`,
-      intro:
-        "We received your beta access request and added you to our review list. We onboard testers in small waves to keep feedback tight, so it may take a little time, but every applicant gets a reply.",
-      cta: { label: "Visit Klario", href: SITE.url },
-      steps: [
-        {
-          title: "We review your submission",
-          body: `We'll match testers against the wave we're opening next${banks ? ` and prioritise testers who use ${escapeForBody(banks)}` : ""}.`,
-        },
-        {
-          title: "You get your invite",
-          body: `When your wave opens, you'll receive ${opts.device === "Android" ? "an APK download" : opts.device === "iOS" ? "a TestFlight" : "a TestFlight or APK"} link with onboarding steps and what we'd love feedback on.`,
-        },
-        {
-          title: "Founding-tester perk",
-          body: "Beta testers who complete the feedback loop get one free month of Money Manager at launch.",
-        },
-      ],
-      closing:
-        "Look out for an email from hello@klario.finance in the coming weeks. In the meantime, follow us on social for build updates and product previews.",
-      tagline: { lead: "Your money,", emphasis: "finally in your hands." },
-    },
-    "Your Klario beta request is in"
-  );
-}
-
 export function ambassadorConfirmation(opts: {
   firstName?: string;
   role?: "student" | "staff";
@@ -166,10 +129,6 @@ export function internalNotification(opts: {
     .join("\n");
 
   return { subject, html, text };
-}
-
-function escapeForBody(s: string) {
-  return s.replace(/[<>]/g, "");
 }
 
 function escapeAttr(s: string) {

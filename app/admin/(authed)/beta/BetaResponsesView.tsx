@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   BadgeCheck,
   Sparkles,
+  UserPlus,
 } from "lucide-react";
 import type { BetaResponse } from "@/lib/db/betaResponses";
 import { canonicalEmail } from "@/lib/duplicates";
@@ -23,7 +24,38 @@ export type Summary = {
   topFeatures: { label: string; count: number }[];
 };
 
-type SortKey = "created_at" | "name" | "email" | "trust" | "confirmation_sent";
+type SortKey = "created_at" | "name" | "email" | "trust" | "confirmation_sent" | "ai";
+
+type FilterKey =
+  | "all"
+  | "flagged"
+  | "highrisk"
+  | "unverified"
+  | "verified"
+  | "referred";
+
+const FILTER_TABS: { key: FilterKey; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "flagged", label: "Flagged" },
+  { key: "highrisk", label: "High AI risk" },
+  { key: "unverified", label: "Unverified" },
+  { key: "verified", label: "Verified" },
+  { key: "referred", label: "Referred" },
+];
+
+const PROFESSIONS = ["Student", "Business owner", "Employed", "Freelancer"];
+// Referral reward: ₦500 airtime per 10 verified referrals (students only).
+const REFERRAL_GOAL = 10;
+const REFERRAL_REWARD = 500;
+const naira = (n: number) => `₦${n.toLocaleString()}`;
+
+type FlagKind = "ip" | "device" | "alias" | "mutual";
+type DetailedFlag = {
+  kind: FlagKind;
+  label: string;
+  /** Other responses that share this signal with the flagged row. */
+  related: BetaResponse[];
+};
 
 function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -49,60 +81,142 @@ export function BetaResponsesView({
   const [open, setOpen] = useState<BetaResponse | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [info, setInfo] = useState<{ title: string; message: string; ok?: boolean } | null>(null);
+  const [cluster, setCluster] = useState<{ title: string; rows: BetaResponse[] } | null>(null);
+  const [filter, setFilter] = useState<FilterKey>("all");
   const [pending, startTransition] = useTransition();
+
+  // Keep the data live: refresh when the tab regains focus and every 15s while
+  // visible, so verified-referral counts update without a manual reload.
+  useEffect(() => {
+    const refresh = () => startTransition(() => router.refresh());
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") refresh();
+    }, 15000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      clearInterval(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const byId = useMemo(
     () => new Map(responses.map((r) => [r.id, r])),
     [responses]
   );
-  // Referral counts — verified only (unverified referrals don't count).
+  // Referral counts — every resolved referral counts (no email confirmation needed).
   const referralCounts = useMemo(() => {
     const m = new Map<string, number>();
     for (const r of responses) {
-      if (r.referred_by_id && r.verified) {
+      if (r.referred_by_id) {
         m.set(r.referred_by_id, (m.get(r.referred_by_id) ?? 0) + 1);
       }
     }
     return m;
   }, [responses]);
-  // How many responses share each IP (clustering signal).
-  const ipCounts = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const r of responses) if (r.ip) m.set(r.ip, (m.get(r.ip) ?? 0) + 1);
-    return m;
-  }, [responses]);
-  // How many responses share each device fingerprint.
-  const fpCounts = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const r of responses)
-      if (r.fingerprint) m.set(r.fingerprint, (m.get(r.fingerprint) ?? 0) + 1);
-    return m;
-  }, [responses]);
-  // How many responses collapse to the same canonical inbox (alias reuse).
-  const aliasCounts = useMemo(() => {
-    const m = new Map<string, number>();
+  // Occupation breakdown for the professions card.
+  const professionCounts = useMemo(() => {
+    const list = PROFESSIONS.map((label) => ({ label, count: 0 }));
+    let other = 0;
     for (const r of responses) {
-      const c = canonicalEmail(r.email);
-      if (c) m.set(c, (m.get(c) ?? 0) + 1);
+      const o = (r.occupation || "").trim();
+      if (!o) continue;
+      const hit = list.find((p) => p.label === o);
+      if (hit) hit.count++;
+      else other++;
     }
-    return m;
+    return other ? [...list, { label: "Other", count: other }] : list;
   }, [responses]);
-
-  const flagsFor = (r: BetaResponse): string[] => {
-    const f: string[] = [];
-    const ipN = r.ip ? ipCounts.get(r.ip) ?? 0 : 0;
-    if (ipN >= 2) f.push(`Shared IP (${ipN} sign-ups)`);
-    const fpN = r.fingerprint ? fpCounts.get(r.fingerprint) ?? 0 : 0;
-    if (fpN >= 2) f.push(`Same device (${fpN} sign-ups)`);
-    const aliasN = aliasCounts.get(canonicalEmail(r.email)) ?? 0;
-    if (aliasN > 1) f.push(`Email alias reuse (${aliasN})`);
+  // Referral leaderboard: top referrers by referral count + reward earned.
+  const leaderboard = useMemo(() => {
+    const arr: { r: BetaResponse; count: number }[] = [];
+    for (const [id, count] of referralCounts) {
+      const r = byId.get(id);
+      if (r && count > 0) arr.push({ r, count });
+    }
+    arr.sort((a, b) => b.count - a.count);
+    return arr.slice(0, 10);
+  }, [referralCounts, byId]);
+  // Fraud flags for a row, each carrying the other rows that share the signal so
+  // the admin can click through to see exactly who clusters together.
+  const detailedFlagsFor = (r: BetaResponse): DetailedFlag[] => {
+    const out: DetailedFlag[] = [];
+    if (r.ip) {
+      const related = responses.filter((x) => x.id !== r.id && x.ip === r.ip);
+      if (related.length >= 1)
+        out.push({
+          kind: "ip",
+          label: `Shared IP (${related.length + 1} sign-ups)`,
+          related,
+        });
+    }
+    if (r.fingerprint) {
+      const related = responses.filter(
+        (x) => x.id !== r.id && x.fingerprint === r.fingerprint
+      );
+      if (related.length >= 1)
+        out.push({
+          kind: "device",
+          label: `Same device (${related.length + 1} sign-ups)`,
+          related,
+        });
+    }
+    const canon = canonicalEmail(r.email);
+    const aliasRelated = responses.filter(
+      (x) => x.id !== r.id && canonicalEmail(x.email) === canon
+    );
+    if (aliasRelated.length >= 1)
+      out.push({
+        kind: "alias",
+        label: `Email alias reuse (${aliasRelated.length + 1})`,
+        related: aliasRelated,
+      });
     if (r.referred_by_id) {
       const ref = byId.get(r.referred_by_id);
-      if (ref && ref.referred_by_id === r.id) f.push("Mutual referral");
+      if (ref && ref.referred_by_id === r.id)
+        out.push({ kind: "mutual", label: "Mutual referral", related: [ref] });
     }
-    return f;
+    return out;
   };
-  const flaggedCount = responses.filter((r) => flagsFor(r).length > 0).length;
+  const flagsFor = (r: BetaResponse): string[] =>
+    detailedFlagsFor(r).map((f) => f.label);
+  // Precompute which rows are flagged once, so filtering/counting is cheap.
+  const flaggedSet = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of responses) if (detailedFlagsFor(r).length > 0) s.add(r.id);
+    return s;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [responses]);
+  const flaggedCount = flaggedSet.size;
+  const highRiskCount = responses.filter((r) => r.ai_level === "high").length;
+
+  const matchesFilter = (r: BetaResponse): boolean => {
+    switch (filter) {
+      case "flagged":
+        return flaggedSet.has(r.id);
+      case "highrisk":
+        return r.ai_level === "high";
+      case "unverified":
+        return !r.verified;
+      case "verified":
+        return r.verified;
+      case "referred":
+        return !!r.referred_by_id;
+      default:
+        return true;
+    }
+  };
+  const tabCounts: Record<FilterKey, number> = {
+    all: responses.length,
+    flagged: flaggedCount,
+    highrisk: highRiskCount,
+    unverified: responses.filter((r) => !r.verified).length,
+    verified: responses.filter((r) => r.verified).length,
+    referred: responses.filter((r) => !!r.referred_by_id).length,
+  };
 
   const getVal = (r: BetaResponse, key: SortKey): string | number => {
     switch (key) {
@@ -116,12 +230,15 @@ export function BetaResponsesView({
         return (r.name || "").toLowerCase();
       case "email":
         return r.email.toLowerCase();
+      case "ai":
+        return r.ai_risk ?? -1;
     }
   };
 
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
     const filtered = responses.filter((r) => {
+      if (!matchesFilter(r)) return false;
       if (!needle) return true;
       return (
         r.email.toLowerCase().includes(needle) ||
@@ -137,7 +254,8 @@ export function BetaResponsesView({
       if (av > bv) return 1 * dir;
       return 0;
     });
-  }, [responses, q, sort]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [responses, q, sort, filter, flaggedSet]);
 
   const toggleSort = (key: SortKey) =>
     setSort((s) =>
@@ -166,7 +284,32 @@ export function BetaResponsesView({
   const [scanning, setScanning] = useState<Set<string>>(new Set());
   const [scanAll, setScanAll] = useState(false);
   const uncheckedCount = responses.filter((r) => !r.ai_checked_at).length;
-  const highRiskCount = responses.filter((r) => r.ai_level === "high").length;
+  const [syncing, setSyncing] = useState(false);
+
+  const syncAudience = async () => {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/admin/beta/sync-audience", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        setInfo({
+          title: "Audience synced",
+          message: data.added
+            ? `Added ${data.added} missing email${data.added === 1 ? "" : "s"} to the audience.`
+            : "Everyone is already on the audience list.",
+          ok: true,
+        });
+      } else {
+        setInfo({
+          title: "Sync failed",
+          message: data.error || "Could not sync the audience.",
+          ok: false,
+        });
+      }
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const scanOne = async (id: string) => {
     setScanning((s) => new Set(s).add(id));
@@ -227,7 +370,7 @@ export function BetaResponsesView({
 
   const exportCsv = () => {
     const cols = [
-      "ref", "created_at", "name", "email", "phone", "method", "pain",
+      "ref", "created_at", "name", "email", "phone", "occupation", "method", "pain",
       "sheetlife", "trust", "features", "price", "dream", "confirmation_sent",
       "verified", "verified_at", "ip", "fingerprint", "referred_by_ref",
       "ai_risk", "ai_level", "ai_reasons", "user_agent", "referrer",
@@ -239,7 +382,7 @@ export function BetaResponsesView({
     };
     const lines = responses.map((r) =>
       [
-        r.ref, r.created_at, r.name, r.email, r.phone, r.method, r.pain,
+        r.ref, r.created_at, r.name, r.email, r.phone, r.occupation, r.method, r.pain,
         r.sheetlife, r.trust, r.features, r.price, r.dream, r.confirmation_sent,
         r.verified, r.verified_at, r.ip, r.fingerprint, r.referred_by_ref,
         r.ai_risk, r.ai_level, r.ai_reasons, r.user_agent, r.referrer,
@@ -288,6 +431,114 @@ export function BetaResponsesView({
         </div>
       </div>
 
+      {/* Professions + referral leaderboard, side by side */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-bg/10 bg-bg/4 p-5">
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-bg/45">
+            Professions
+          </p>
+          <ol className="mt-3 flex flex-col gap-2 text-[13px] text-bg/75">
+            {professionCounts.map((p) => (
+              <li key={p.label} className="flex items-center gap-1.5">
+                <span className="line-clamp-1">{p.label}</span>
+                <span className="ml-auto shrink-0 text-bg/45">{p.count}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div className="rounded-2xl border border-bg/10 bg-bg/4 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-bg/45">
+              Referral leaderboard
+            </p>
+            <p className="text-[11px] text-bg/40">
+              {naira(REFERRAL_REWARD)} airtime / {REFERRAL_GOAL} referrals
+            </p>
+          </div>
+          {leaderboard.length === 0 ? (
+            <p className="mt-3 text-[13px] text-bg/45">No referrals yet.</p>
+          ) : (
+          <ol className="mt-3 flex flex-col gap-1">
+            {leaderboard.map((e, i) => {
+              const amount =
+                Math.floor(e.count / REFERRAL_GOAL) * REFERRAL_REWARD;
+              const isStudent =
+                (e.r.occupation || "").toLowerCase() === "student";
+              return (
+                <li key={e.r.id}>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(e.r)}
+                    className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-bg/5"
+                  >
+                    <span className="w-5 shrink-0 text-center font-display text-sm text-gold">
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm text-bg/90">
+                        {e.r.name || e.r.email}
+                      </div>
+                      <div className="truncate text-[12px] text-bg/50">
+                        {e.r.email}
+                        {!isStudent && " · not a student"}
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="text-sm text-bg/90">
+                        {e.count} ref{e.count === 1 ? "" : "s"}
+                      </div>
+                      <div className="text-[12px] text-gold">
+                        {isStudent ? naira(amount) : `${naira(amount)} (n/a)`}
+                      </div>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+          )}
+        </div>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex flex-wrap items-center gap-2">
+        {FILTER_TABS.map((t) => {
+          const active = filter === t.key;
+          const danger = t.key === "highrisk";
+          const warn = t.key === "flagged";
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setFilter(t.key)}
+              className={
+                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] transition " +
+                (active
+                  ? danger
+                    ? "bg-red-400/20 text-red-200 ring-1 ring-red-400/40 font-medium"
+                    : warn
+                    ? "bg-amber-400/20 text-amber-200 ring-1 ring-amber-400/40 font-medium"
+                    : "bg-gold text-ink font-medium"
+                  : "border border-bg/15 text-bg/65 hover:border-bg/30 hover:text-bg")
+              }
+            >
+              {warn && <AlertTriangle size={12} />}
+              {danger && <Sparkles size={12} />}
+              {t.label}
+              <span
+                className={
+                  "rounded-full px-1.5 text-[11px] " +
+                  (active ? "bg-ink/15" : "bg-bg/10")
+                }
+              >
+                {tabCounts[t.key]}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-2 rounded-xl border border-bg/15 bg-bg/4 px-3 py-2 text-sm">
@@ -300,16 +551,6 @@ export function BetaResponsesView({
             className="w-full min-w-0 bg-transparent text-bg placeholder:text-bg/40 focus:outline-none sm:w-72"
           />
         </label>
-        {flaggedCount > 0 && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-[12px] text-amber-200">
-            <AlertTriangle size={13} /> {flaggedCount} flagged
-          </span>
-        )}
-        {highRiskCount > 0 && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-400/30 bg-red-400/10 px-3 py-1.5 text-[12px] text-red-200">
-            <Sparkles size={13} /> {highRiskCount} high AI risk
-          </span>
-        )}
         <button
           type="button"
           onClick={scanAllUnchecked}
@@ -329,6 +570,19 @@ export function BetaResponsesView({
         </button>
         <button
           type="button"
+          onClick={syncAudience}
+          disabled={syncing || !responses.length}
+          className="inline-flex items-center gap-1.5 rounded-full border border-bg/15 px-3 py-1.5 text-[12px] text-bg/70 hover:border-bg/30 hover:text-bg disabled:opacity-40"
+        >
+          {syncing ? (
+            <RotateCw size={12} className="animate-spin" />
+          ) : (
+            <UserPlus size={12} />
+          )}
+          {syncing ? "Syncing…" : "Sync to audience"}
+        </button>
+        <button
+          type="button"
           onClick={exportCsv}
           disabled={!responses.length}
           className="rounded-full border border-bg/15 px-3 py-1.5 text-[12px] text-bg/70 hover:border-bg/30 hover:text-bg disabled:opacity-40"
@@ -339,13 +593,14 @@ export function BetaResponsesView({
 
       {/* Table */}
       <div className="overflow-x-auto rounded-2xl border border-bg/10">
-        <table className="w-full min-w-[980px] text-sm">
+        <table className="w-full min-w-[1100px] text-sm">
           <thead className="border-b border-bg/10 bg-bg/4 text-left text-[11px] uppercase tracking-[0.14em] text-bg/45">
             <tr>
               <SortTh label="Date" k="created_at" sort={sort} onSort={toggleSort} />
               <SortTh label="Name" k="name" sort={sort} onSort={toggleSort} />
               <SortTh label="Email" k="email" sort={sort} onSort={toggleSort} />
               <th className="px-4 py-3 font-medium">Phone</th>
+              <th className="px-4 py-3 font-medium">Referred by</th>
               <th className="px-4 py-3 font-medium">Method</th>
               <th className="px-4 py-3 font-medium">Pain</th>
               <SortTh label="Trust" k="trust" sort={sort} onSort={toggleSort} />
@@ -353,15 +608,17 @@ export function BetaResponsesView({
               <th className="px-4 py-3 font-medium">Ref</th>
               <SortTh label="Sent" k="confirmation_sent" sort={sort} onSort={toggleSort} />
               <th className="px-4 py-3 font-medium">Verified</th>
-              <th className="px-4 py-3 font-medium">AI risk</th>
+              <SortTh label="AI risk" k="ai" sort={sort} onSort={toggleSort} />
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={13} className="px-4 py-10 text-center text-bg/45">
-                  No responses yet.
+                <td colSpan={14} className="px-4 py-10 text-center text-bg/45">
+                  {responses.length === 0
+                    ? "No responses yet."
+                    : "No responses match this filter."}
                 </td>
               </tr>
             ) : (
@@ -377,6 +634,16 @@ export function BetaResponsesView({
                   <td className="px-4 py-3 text-bg/80">{r.name || "-"}</td>
                   <td className="px-4 py-3 text-bg/85">{r.email}</td>
                   <td className="px-4 py-3 text-bg/60">{r.phone || "-"}</td>
+                  <td className="max-w-[160px] truncate px-4 py-3 text-[12px] text-bg/60">
+                    {(() => {
+                      const by = r.referred_by_id
+                        ? byId.get(r.referred_by_id)
+                        : null;
+                      return by
+                        ? by.name || by.email
+                        : r.referred_by_ref || "-";
+                    })()}
+                  </td>
                   <td className="max-w-[180px] truncate px-4 py-3 text-[12px] text-bg/60">
                     {r.method || "-"}
                   </td>
@@ -454,12 +721,24 @@ export function BetaResponsesView({
           r={open}
           referrer={open.referred_by_id ? byId.get(open.referred_by_id) ?? null : null}
           referralCount={referralCounts.get(open.id) ?? 0}
-          flags={flagsFor(open)}
+          flags={detailedFlagsFor(open)}
           onClose={() => setOpen(null)}
           onResend={() => resend(open)}
           resending={busy === open.id || pending}
           onAnalyze={() => scanOne(open.id)}
           analyzing={scanning.has(open.id)}
+          onShowCluster={(f) => setCluster({ title: f.label, rows: f.related })}
+        />
+      )}
+      {cluster && (
+        <ClusterModal
+          title={cluster.title}
+          rows={cluster.rows}
+          onClose={() => setCluster(null)}
+          onOpenRow={(row) => {
+            setCluster(null);
+            setOpen(row);
+          }}
         />
       )}
       <InfoModal state={info} onClose={() => setInfo(null)} />
@@ -544,16 +823,18 @@ function Drawer({
   resending,
   onAnalyze,
   analyzing,
+  onShowCluster,
 }: {
   r: BetaResponse;
   referrer: BetaResponse | null;
   referralCount: number;
-  flags: string[];
+  flags: DetailedFlag[];
   onClose: () => void;
   onResend: () => void;
   resending: boolean;
   onAnalyze: () => void;
   analyzing: boolean;
+  onShowCluster: (f: DetailedFlag) => void;
 }) {
   const referredBy = r.referred_by_ref
     ? `${r.referred_by_ref}${referrer ? ` (${referrer.email})` : " (not found)"}`
@@ -575,7 +856,20 @@ function Drawer({
     [
       "Fraud flags",
       flags.length ? (
-        <span key="f" className="text-amber-300">{flags.join(" · ")}</span>
+        <div key="f" className="flex flex-wrap gap-1.5">
+          {flags.map((f) => (
+            <button
+              key={f.kind}
+              type="button"
+              onClick={() => f.related.length > 0 && onShowCluster(f)}
+              disabled={f.related.length === 0}
+              className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-[12px] text-amber-200 enabled:hover:bg-amber-400/20 enabled:cursor-pointer"
+            >
+              {f.label}
+              {f.related.length > 0 && <ChevronRight size={12} />}
+            </button>
+          ))}
+        </div>
       ) : (
         <span key="f" className="text-emerald-300">None</span>
       ),
@@ -610,8 +904,9 @@ function Drawer({
     ["Name", r.name || "-"],
     ["Email", r.email],
     ["Phone", r.phone || "-"],
+    ["Occupation", r.occupation || "-"],
     ["Referred by", referredBy],
-    ["Verified referrals", referralCount],
+    ["Referrals", referralCount],
     ["How they track money", r.method || "-"],
     ["Biggest pains", r.pain.length ? r.pain.join(", ") : "-"],
     ["Spreadsheet lifespan", r.sheetlife || "-"],
@@ -633,8 +928,11 @@ function Drawer({
       >
         <header className="flex items-start justify-between gap-4 border-b border-bg/10 px-6 py-5">
           <div className="min-w-0">
-            <h2 className="font-display truncate text-xl text-bg">{r.email}</h2>
-            <p className="mt-1 text-[12px] text-bg/55">
+            <h2 className="font-display truncate text-xl text-bg">
+              {r.name || r.email}
+            </h2>
+            <p className="mt-1 truncate text-[12px] text-bg/55">
+              {r.name ? `${r.email} · ` : ""}
               {r.confirmation_sent ? "Confirmation sent" : "Confirmation pending"}
             </p>
           </div>
@@ -694,6 +992,82 @@ function Drawer({
           </div>
         </footer>
       </aside>
+    </>
+  );
+}
+
+function ClusterModal({
+  title,
+  rows,
+  onClose,
+  onOpenRow,
+}: {
+  title: string;
+  rows: BetaResponse[];
+  onClose: () => void;
+  onOpenRow: (row: BetaResponse) => void;
+}) {
+  return (
+    <>
+      <div
+        onClick={onClose}
+        className="fixed inset-0 z-[60] bg-ink/70 backdrop-blur-sm"
+        aria-hidden
+      />
+      <div className="fixed inset-0 z-[61] flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
+          className="flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-bg/12 bg-[#0d0e12] shadow-2xl"
+        >
+          <header className="flex items-center justify-between gap-3 border-b border-bg/10 px-5 py-4">
+            <div className="min-w-0">
+              <h3 className="font-display truncate text-lg text-bg">{title}</h3>
+              <p className="mt-0.5 text-[12px] text-bg/55">
+                {rows.length} sign-up{rows.length === 1 ? "" : "s"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="text-bg/55 hover:text-bg"
+            >
+              <X size={18} />
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto p-2">
+            {rows.length === 0 ? (
+              <p className="px-3 py-6 text-center text-[13px] text-bg/45">
+                Nothing to show.
+              </p>
+            ) : (
+              rows.map((row) => (
+                <button
+                  key={row.id}
+                  type="button"
+                  onClick={() => onOpenRow(row)}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-bg/5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm text-bg/90">{row.email}</div>
+                    <div className="mt-0.5 truncate text-[12px] text-bg/50">
+                      {row.name || "No name"} · {fmtDate(row.created_at)}
+                    </div>
+                  </div>
+                  {row.verified ? (
+                    <BadgeCheck size={15} className="shrink-0 text-emerald-300" />
+                  ) : (
+                    <span className="shrink-0 text-[11px] text-bg/40">Unverified</span>
+                  )}
+                  <ChevronRight size={14} className="shrink-0 text-bg/40" />
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
     </>
   );
 }

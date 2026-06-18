@@ -75,6 +75,7 @@ export async function POST(req: Request) {
 
   // Single-selects + free text.
   const method = clean(body.method, 80);
+  const occupation = clean(body.occupation, 40) ?? null;
   const sheetlife = clean(body.sheetlife, 80);
   const price = clean(body.price, 80);
   const name = clean(body.name, 80) ?? null;
@@ -120,6 +121,7 @@ export async function POST(req: Request) {
     email,
     phone,
     method,
+    occupation,
     pain,
     sheetlife,
     trust,
@@ -143,19 +145,27 @@ export async function POST(req: Request) {
   // Add them to the audience list too (name + email + date), so they show up as
   // a subscriber to be mailed. New = "unmailed" until a send goes out.
   const { firstName, lastName } = splitName(name ?? undefined);
-  await upsertSignup({
-    email,
-    first_name: firstName ?? null,
-    last_name: lastName ?? null,
-    source: "beta",
-    phone: phone ?? undefined,
-  });
+  await upsertSignup(
+    {
+      email,
+      first_name: firstName ?? null,
+      last_name: lastName ?? null,
+      source: "beta",
+      phone: phone ?? undefined,
+    },
+    { touch: true }
+  );
 
   // Confirmation email — non-blocking for the user's success screen.
   try {
     const result = await sendTransactional({
       to: email,
-      email: renderBetaConfirmation({ name: row.name, ref: row.ref, email }),
+      email: renderBetaConfirmation({
+        name: row.name,
+        ref: row.ref,
+        email,
+        occupation: row.occupation,
+      }),
       replyTo: RESEND_REPLY_TO,
       tags: [{ name: "type", value: "beta_response" }],
     });

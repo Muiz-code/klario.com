@@ -31,8 +31,15 @@ export type SignupInput = {
  * Insert or update a subscriber by email. Never downgrades an existing status
  * (e.g. an already-invited person who refills a form stays invited). Returns
  * the row, or null on error.
+ *
+ * `opts.touch` bumps `created_at` to now so a returning subscriber visibly
+ * resurfaces at the top of the (newest-first) audience list, instead of the
+ * update silently doing nothing when there are no gaps to fill.
  */
-export async function upsertSignup(input: SignupInput): Promise<Signup | null> {
+export async function upsertSignup(
+  input: SignupInput,
+  opts?: { touch?: boolean }
+): Promise<Signup | null> {
   const email = input.email.trim().toLowerCase();
   const db = supabaseAdmin();
 
@@ -50,6 +57,7 @@ export async function upsertSignup(input: SignupInput): Promise<Signup | null> {
     if (!existing.phone && input.phone) patch.phone = input.phone;
     if (!existing.device && input.device) patch.device = input.device;
     if (!existing.banks && input.banks) patch.banks = input.banks;
+    if (opts?.touch) patch.created_at = new Date().toISOString();
     if (Object.keys(patch).length === 0) return existing as Signup;
     const { data, error } = await db
       .from("beta_signups")

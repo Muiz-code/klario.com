@@ -9,6 +9,8 @@ export type BetaResponse = {
   email: string;
   phone: string | null;
   method: string | null;
+  /** What they do: "Student" | "Business owner" | "Employed" | "Freelancer". */
+  occupation: string | null;
   pain: string[];
   sheetlife: string | null;
   trust: number | null;
@@ -41,6 +43,7 @@ export type BetaResponseInput = {
   email: string;
   phone?: string | null;
   method?: string | null;
+  occupation?: string | null;
   pain?: string[];
   sheetlife?: string | null;
   trust?: number | null;
@@ -111,6 +114,7 @@ export async function upsertBetaResponse(
     name: input.name ?? null,
     phone: input.phone ?? null,
     method: input.method ?? null,
+    occupation: input.occupation ?? null,
     pain: input.pain ?? [],
     sheetlife: input.sheetlife ?? null,
     trust: input.trust ?? null,

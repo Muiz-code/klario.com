@@ -7,7 +7,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Logo } from "./Logo";
 import { SITE, FOOTER } from "@/lib/constants";
-import { openBetaModal } from "@/components/ui/BetaModal";
 import { cn } from "@/lib/utils";
 
 const socialIcons: Record<string, React.ReactNode> = {
@@ -108,9 +107,9 @@ function FooterLinkItem({ link }: { link: FooterLink }) {
     "text-sm text-bg/70 transition-colors hover:text-gold";
   if (link.action === "beta") {
     return (
-      <button type="button" onClick={openBetaModal} className={cls}>
+      <Link href="/beta" className={cls}>
         {link.label}
-      </button>
+      </Link>
     );
   }
   return (
@@ -136,14 +135,13 @@ export function Footer() {
           </h2>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={openBetaModal}
+            <Link
+              href="/beta"
               className="inline-flex items-center gap-2 rounded-2xl bg-bg px-6 py-3.5 text-sm font-medium text-ink transition-all hover:scale-[1.02] hover:bg-bg/90 md:rounded-full"
             >
               {FOOTER.cta.primary}
               <ArrowRight size={14} />
-            </button>
+            </Link>
             <a
               href={FOOTER.cta.secondaryHref}
               className="inline-flex items-center gap-2 rounded-2xl border border-bg/20 bg-bg/4 px-6 py-3.5 text-sm font-medium text-bg backdrop-blur-sm transition-all hover:border-bg/40 hover:bg-bg/10 md:rounded-full"

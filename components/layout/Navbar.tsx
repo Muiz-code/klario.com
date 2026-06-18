@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/Button";
 import { Logo } from "./Logo";
 import { useScrolled } from "@/hooks/useScrolled";
 import { NAV_LINKS } from "@/lib/constants";
-import { openBetaModal } from "@/components/ui/BetaModal";
 import { cn } from "@/lib/utils";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -43,7 +42,7 @@ export function Navbar({ theme = "auto" }: { theme?: "auto" | "light" }) {
           <Logo onDark={onDark} />
 
           <div className="flex justify-end">
-            <Button onClick={openBetaModal} size="md">
+            <Button href="/beta" size="md">
               Get Started
             </Button>
           </div>
@@ -96,13 +95,7 @@ export function Navbar({ theme = "auto" }: { theme?: "auto" | "light" }) {
               transition={{ delay: 0.08 + NAV_LINKS.length * 0.07, duration: 0.45, ease }}
               className="mt-6"
             >
-              <Button
-                size="lg"
-                onClick={() => {
-                  setOpen(false);
-                  openBetaModal();
-                }}
-              >
+              <Button href="/beta" size="lg" onClick={() => setOpen(false)}>
                 Get Started
               </Button>
             </motion.div>
