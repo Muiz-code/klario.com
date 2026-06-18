@@ -156,7 +156,7 @@ export function BetaResponsesView({
       if (r && count > 0) arr.push({ r, count });
     }
     arr.sort((a, b) => b.count - a.count);
-    return arr.slice(0, 10);
+    return arr.slice(0, 5);
   }, [referralCounts, byId]);
   // Fraud flags for a row, each carrying the other rows that share the signal so
   // the admin can click through to see exactly who clusters together.
@@ -635,13 +635,14 @@ export function BetaResponsesView({
 
       {/* Table */}
       <div className="overflow-x-auto rounded-2xl border border-bg/10">
-        <table className="w-full min-w-[1100px] text-sm">
+        <table className="w-full min-w-[1180px] text-sm">
           <thead className="border-b border-bg/10 bg-bg/4 text-left text-[11px] uppercase tracking-[0.14em] text-bg/45">
             <tr>
               <SortTh label="Date" k="created_at" sort={sort} onSort={toggleSort} />
               <SortTh label="Name" k="name" sort={sort} onSort={toggleSort} />
               <SortTh label="Email" k="email" sort={sort} onSort={toggleSort} />
               <th className="px-4 py-3 font-medium">Phone</th>
+              <th className="px-4 py-3 font-medium">Occupation</th>
               <th className="px-4 py-3 font-medium">Referred by</th>
               <th className="px-4 py-3 font-medium">Method</th>
               <th className="px-4 py-3 font-medium">Pain</th>
@@ -657,7 +658,7 @@ export function BetaResponsesView({
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={14} className="px-4 py-10 text-center text-bg/45">
+                <td colSpan={15} className="px-4 py-10 text-center text-bg/45">
                   {responses.length === 0
                     ? "No responses yet."
                     : "No responses match this filter."}
@@ -676,6 +677,9 @@ export function BetaResponsesView({
                   <td className="px-4 py-3 text-bg/80">{r.name || "-"}</td>
                   <td className="px-4 py-3 text-bg/85">{r.email}</td>
                   <td className="px-4 py-3 text-bg/60">{r.phone || "-"}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-[12px] text-bg/70">
+                    {r.occupation || "-"}
+                  </td>
                   <td className="max-w-[160px] truncate px-4 py-3 text-[12px] text-bg/60">
                     {(() => {
                       const by = r.referred_by_id
