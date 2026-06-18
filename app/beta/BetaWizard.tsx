@@ -55,11 +55,12 @@ const FEATURES = [
 ];
 const PRICE = [
   "Free, always, forever, please",
-  "₦500 to ₦1,000",
-  "₦1,000 to ₦2,500",
-  "₦2,500+ if it's that good",
+  "₦2,500 to ₦4,000",
+  "₦4,000 to ₦5,500",
+  "₦5,500 to ₦7,000",
   "I'll pay if it actually saves me money",
 ];
+const PRICE_OTHER = "Others (name your price)";
 
 const EMAIL_RE = /.+@.+\..+/;
 
@@ -107,6 +108,7 @@ export function BetaWizard() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [booting, setBooting] = useState(true);
+  const [priceOther, setPriceOther] = useState(false);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   // Branded loader splash on every page load.
@@ -175,6 +177,18 @@ export function BetaWizard() {
     setMiss(false);
     const cur = step;
     setTimeout(() => setStep((s) => (s === cur && s < TOTAL ? s + 1 : s)), ADVANCE_MS);
+  };
+  // Price tier picked: clear any custom value, store the tier, auto-advance.
+  const pickPrice = (value: string) => {
+    setPriceOther(false);
+    pickSingle("price", value);
+  };
+  // "Others" picked: reveal the custom input and wait for them to type (no auto-advance).
+  const pickPriceOther = () => {
+    setMiss(false);
+    setPriceOther(true);
+    setA((p) => ({ ...p, price: "" }));
+    setTimeout(() => firstInputRef.current?.focus(), 60);
   };
   const pickScale = (value: number) => {
     setA((p) => ({ ...p, trust: value }));
@@ -557,14 +571,7 @@ export function BetaWizard() {
         );
 
       case 7:
-        return single(
-          "07 · the money question (ironic, we know)",
-          "If Klario did all that, what feels fair per month?",
-          null,
-          "price",
-          PRICE,
-          a.price
-        );
+        return priceStep();
 
       case 8:
         return (
@@ -660,6 +667,70 @@ export function BetaWizard() {
             </button>
           ))}
         </div>
+        {miss && <div className={styles.miss}>Pick one to continue.</div>}
+        {navRow()}
+      </>
+    );
+  }
+
+  // Price step: tiered options plus an "Others" choice that reveals a naira input.
+  function priceStep() {
+    const otherDigits = priceOther ? (a.price || "").replace(/\D/g, "") : "";
+    return (
+      <>
+        <div className={styles.eyebrow}>07 · the money question (ironic, we know)</div>
+        <div className={styles.qlabel}>
+          If Klario did all that, what feels fair per month?
+        </div>
+        <div className={styles.qhint}>Most people land between ₦2,500 and ₦7,000.</div>
+        <div className={styles.opts} role="radiogroup" aria-label="Fair monthly price">
+          {PRICE.map((o) => {
+            const sel = !priceOther && a.price === o;
+            return (
+              <button
+                key={o}
+                type="button"
+                role="radio"
+                aria-checked={sel}
+                className={cx(styles.opt, sel && styles.sel)}
+                onClick={() => pickPrice(o)}
+              >
+                <span className={styles.mark} />
+                <span className={styles.txt}>{o}</span>
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={priceOther}
+            className={cx(styles.opt, priceOther && styles.sel)}
+            onClick={pickPriceOther}
+          >
+            <span className={styles.mark} />
+            <span className={styles.txt}>{PRICE_OTHER}</span>
+          </button>
+        </div>
+        {priceOther && (
+          <div className={styles.priceOther}>
+            <span className={styles.priceCur}>₦</span>
+            <input
+              ref={firstInputRef}
+              type="text"
+              inputMode="numeric"
+              aria-label="Your fair monthly price in naira"
+              placeholder="e.g. 3500"
+              value={otherDigits}
+              onChange={(e) => {
+                const d = e.target.value.replace(/\D/g, "").slice(0, 6);
+                setMiss(false);
+                setA((p) => ({ ...p, price: d ? `₦${d}` : "" }));
+              }}
+              className={styles.priceInput}
+            />
+            <span className={styles.priceUnit}>/month</span>
+          </div>
+        )}
         {miss && <div className={styles.miss}>Pick one to continue.</div>}
         {navRow()}
       </>
