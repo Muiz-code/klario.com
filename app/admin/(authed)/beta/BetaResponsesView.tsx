@@ -32,7 +32,21 @@ type FilterKey =
   | "highrisk"
   | "unverified"
   | "verified"
-  | "referred";
+  | "referred"
+  | "student"
+  | "business"
+  | "employed"
+  | "freelancer";
+
+const PROFESSIONS = ["Student", "Business owner", "Employed", "Freelancer"];
+
+// Profession filter keys → the occupation value they match.
+const OCCUPATION_FILTER: Partial<Record<FilterKey, string>> = {
+  student: "Student",
+  business: "Business owner",
+  employed: "Employed",
+  freelancer: "Freelancer",
+};
 
 const FILTER_TABS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "All" },
@@ -41,9 +55,11 @@ const FILTER_TABS: { key: FilterKey; label: string }[] = [
   { key: "unverified", label: "Unverified" },
   { key: "verified", label: "Verified" },
   { key: "referred", label: "Referred" },
+  { key: "student", label: "Student" },
+  { key: "business", label: "Business owner" },
+  { key: "employed", label: "Employed" },
+  { key: "freelancer", label: "Freelancer" },
 ];
-
-const PROFESSIONS = ["Student", "Business owner", "Employed", "Freelancer"];
 // Referral reward: ₦500 airtime per 10 referrals (students only), pro-rated.
 const REFERRAL_GOAL = 10;
 const REFERRAL_REWARD = 500;
@@ -196,6 +212,8 @@ export function BetaResponsesView({
   const highRiskCount = responses.filter((r) => r.ai_level === "high").length;
 
   const matchesFilter = (r: BetaResponse): boolean => {
+    const occ = OCCUPATION_FILTER[filter];
+    if (occ) return (r.occupation || "") === occ;
     switch (filter) {
       case "flagged":
         return flaggedSet.has(r.id);
@@ -211,6 +229,8 @@ export function BetaResponsesView({
         return true;
     }
   };
+  const countOcc = (label: string) =>
+    responses.filter((r) => r.occupation === label).length;
   const tabCounts: Record<FilterKey, number> = {
     all: responses.length,
     flagged: flaggedCount,
@@ -218,6 +238,10 @@ export function BetaResponsesView({
     unverified: responses.filter((r) => !r.verified).length,
     verified: responses.filter((r) => r.verified).length,
     referred: responses.filter((r) => !!r.referred_by_id).length,
+    student: countOcc("Student"),
+    business: countOcc("Business owner"),
+    employed: countOcc("Employed"),
+    freelancer: countOcc("Freelancer"),
   };
 
   // Detail for the clicked referrer: who they invited, each one's fraud flags,

@@ -113,6 +113,7 @@ export function BetaWizard() {
   const [ref, setRef] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [alreadyFilled, setAlreadyFilled] = useState(false);
   const [booting, setBooting] = useState(true);
   const [priceOther, setPriceOther] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -263,6 +264,7 @@ export function BetaWizard() {
         setError(data.error || "Something went wrong. Please try again.");
         return;
       }
+      if (data.alreadyFilled) setAlreadyFilled(true);
       setRef(data.ref as string);
     } catch {
       setError("Network error. Please try again.");
@@ -309,11 +311,13 @@ export function BetaWizard() {
           <div className={styles.big}>
             <PartyPopper />
           </div>
-          <h2>You&apos;re on the list.</h2>
+          <h2>
+            {alreadyFilled ? "You're already on the list." : "You're on the list."}
+          </h2>
           <p>
-            Thanks for being honest about your money. That&apos;s harder than it
-            sounds. The problems you just described are the exact ones we&apos;re
-            building Klario to kill. We&apos;ll be in touch when your spot opens.
+            {alreadyFilled
+              ? "Looks like you joined before, so we kept your original spot and reference. No need to fill it again."
+              : "Thanks for being honest about your money. That's harder than it sounds. The problems you just described are the exact ones we're building Klario to kill. We'll be in touch when your spot opens."}
           </p>
           <div className={styles.ref}>Your beta reference: {ref}</div>
 
@@ -355,6 +359,9 @@ export function BetaWizard() {
                   Anything that looks gamed is disqualified.
                 </div>
               </div>
+              <Link href="/beta/leaderboard" className={styles.copyBtn}>
+                See the leaderboard <ArrowRight size={14} />
+              </Link>
             </>
           )}
 

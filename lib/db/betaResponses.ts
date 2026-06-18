@@ -63,6 +63,23 @@ export function normalizeRef(raw: string): string {
   return raw.trim().toUpperCase();
 }
 
+/** Look up an existing response by email (to detect a repeat submission). */
+export async function getBetaResponseByEmail(
+  email: string
+): Promise<BetaResponse | null> {
+  const db = supabaseAdmin();
+  const { data, error } = await db
+    .from("beta_responses")
+    .select("*")
+    .eq("email", normalizeEmail(email))
+    .maybeSingle();
+  if (error) {
+    console.error("[db] getBetaResponseByEmail failed:", error.message);
+    return null;
+  }
+  return (data as BetaResponse) ?? null;
+}
+
 export async function getBetaResponseByRef(
   ref: string
 ): Promise<BetaResponse | null> {

@@ -45,6 +45,9 @@ export function renderBetaConfirmation(opts: {
             <p style="margin:0;font-family:${F};font-size:15px;font-weight:700;word-break:break-all;">
               <a href="${referralUrl}" style="color:${COLORS.gold};text-decoration:none;">${escapeHtml(referralUrl)}</a>
             </p>
+            <p style="margin:12px 0 0 0;font-family:${F};font-size:13px;line-height:1.5;color:${COLORS.textDim};">
+              Track your spot on the <a href="${SITE.url}/beta/leaderboard" style="color:${COLORS.gold};text-decoration:none;">referral leaderboard</a>.
+            </p>
           </td>
         </tr>
       </table>
@@ -145,6 +148,7 @@ ${
     ? `
 Students: refer 10 friends who join and confirm their email, and you get NGN 500 airtime (or convert it to cash).
 Your invite link: ${referralUrl}
+Track your spot on the leaderboard: ${SITE.url}/beta/leaderboard
 `
     : ""
 }

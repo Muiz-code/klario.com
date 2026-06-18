@@ -362,7 +362,12 @@ export function SubscribersTable({
         {crossSet.size > 0 && (
           <button
             type="button"
-            onClick={() => setDupOnly((v) => !v)}
+            onClick={() => {
+              const next = !dupOnly;
+              setDupOnly(next);
+              // Show duplicates across every status, so the count matches the rows.
+              if (next) setStatus("all");
+            }}
             title="Subscribers whose email also appears in the submissions log"
             className={
               "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] transition-colors " +

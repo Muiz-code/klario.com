@@ -6,6 +6,7 @@ import {
   upsertBetaResponse,
   markConfirmationSent,
   countRecentByIp,
+  getBetaResponseByEmail,
 } from "@/lib/db/betaResponses";
 import { renderBetaConfirmation } from "@/lib/email/betaResponse";
 import { sendTransactional } from "@/lib/email/send";
@@ -62,6 +63,17 @@ export async function POST(req: Request) {
       { error: "Please use a permanent email address so we can let you in." },
       { status: 400 }
     );
+  }
+
+  // Already filled before? Warn instead of silently overwriting their answers.
+  const prior = await getBetaResponseByEmail(email);
+  if (prior && prior.ref) {
+    return NextResponse.json({
+      ok: true,
+      ref: prior.ref,
+      alreadyFilled: true,
+      occupation: prior.occupation,
+    });
   }
 
   // Per-IP velocity limit.
