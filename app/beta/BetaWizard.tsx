@@ -109,6 +109,8 @@ export function BetaWizard() {
   const [copied, setCopied] = useState(false);
   const [booting, setBooting] = useState(true);
   const [priceOther, setPriceOther] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   // Branded loader splash on every page load.
@@ -169,6 +171,20 @@ export function BetaWizard() {
       return;
     }
     if (step < TOTAL) goNext();
+  };
+
+  // Welcome screen: must accept the terms before the questions begin.
+  const startQuiz = () => {
+    if (!agreed) {
+      setMiss(true);
+      return;
+    }
+    advance();
+  };
+  const acceptTerms = () => {
+    setAgreed(true);
+    setMiss(false);
+    setShowTerms(false);
   };
 
   // Single-select / scale: highlight, then auto-advance so the choice registers.
@@ -355,6 +371,98 @@ export function BetaWizard() {
   return (
     <div className={styles.wrap}>
       <AnimatePresence>{booting && <Loader key="beta-loader" />}</AnimatePresence>
+      {showTerms && (
+        <div
+          className={styles.termsOverlay}
+          onClick={() => setShowTerms(false)}
+        >
+          <div
+            className={styles.termsModal}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Terms and conditions"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.termsHead}>
+              <h3>Terms &amp; conditions</h3>
+              <button
+                type="button"
+                onClick={() => setShowTerms(false)}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className={styles.termsBody}>
+              <p>
+                By joining the Klario beta and referral contest, you agree to the
+                following.
+              </p>
+              <h4>Who can take part</h4>
+              <ul>
+                <li>You must be 18 or older and resident in Nigeria.</li>
+                <li>
+                  Staff of Raavon Limited and Klario, and their immediate family,
+                  can take part but cannot win contest prizes.
+                </li>
+                <li>
+                  One person, one entry. Use your own real name, email, and phone
+                  number.
+                </li>
+              </ul>
+              <h4>The referral contest</h4>
+              <ul>
+                <li>The contest closes June 30, 2026.</li>
+                <li>
+                  The two people with the most verified referrals win cash:
+                  &#8358;30,000 for 1st place and &#8358;15,000 for 2nd.
+                </li>
+                <li>
+                  A referral only counts when your friend joins from your link and
+                  confirms their email.
+                </li>
+              </ul>
+              <h4>Fair play</h4>
+              <ul>
+                <li>
+                  Fake signups, throwaway or disposable emails, self-referrals,
+                  bots, and accounts farmed from one device or network are
+                  disqualified.
+                </li>
+                <li>
+                  We screen every entry automatically, including AI checks.
+                  Klario&apos;s decision on eligibility and winners is final.
+                </li>
+              </ul>
+              <h4>Prizes, testing &amp; privacy</h4>
+              <ul>
+                <li>
+                  Winners are contacted on the email or phone they gave us and
+                  paid in Naira.
+                </li>
+                <li>
+                  We may invite you to test the app and offer more rewards during
+                  the testing phase.
+                </li>
+                <li>
+                  We use your answers to build and improve Klario and may contact
+                  you about the beta. We may update these terms, and continuing to
+                  take part means you accept the changes.
+                </li>
+              </ul>
+            </div>
+            <div className={styles.termsFoot}>
+              <button
+                type="button"
+                className={styles.termsAgree}
+                onClick={acceptTerms}
+              >
+                I agree
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className={styles.stage}>
         <div className={styles.top}>
           <Image
@@ -424,8 +532,35 @@ export function BetaWizard() {
               </b>{" "}
               No typing, no formulas, no Sunday-night spreadsheet guilt.
             </p>
+            <label className={styles.agree}>
+              <input
+                type="checkbox"
+                className={styles.agreeBox}
+                checked={agreed}
+                onChange={(e) => {
+                  setAgreed(e.target.checked);
+                  setMiss(false);
+                }}
+              />
+              <span>
+                I&apos;m 18 or older and I agree to the{" "}
+                <button
+                  type="button"
+                  className={styles.termsLink}
+                  onClick={() => setShowTerms(true)}
+                >
+                  terms &amp; conditions
+                </button>
+                .
+              </span>
+            </label>
+            {miss && (
+              <div className={styles.miss}>
+                Please accept the terms to continue.
+              </div>
+            )}
             <div className={styles.nav}>
-              <button type="button" className={cx(styles.btn, styles.grow)} onClick={advance}>
+              <button type="button" className={cx(styles.btn, styles.grow)} onClick={startQuiz}>
                 I&apos;m in, ask away <ArrowRight size={16} />
               </button>
             </div>
