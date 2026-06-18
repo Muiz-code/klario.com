@@ -44,9 +44,10 @@ const FILTER_TABS: { key: FilterKey; label: string }[] = [
 ];
 
 const PROFESSIONS = ["Student", "Business owner", "Employed", "Freelancer"];
-// Referral reward: ₦500 airtime per 10 verified referrals (students only).
+// Referral reward: ₦500 airtime per 10 referrals (students only), pro-rated.
 const REFERRAL_GOAL = 10;
 const REFERRAL_REWARD = 500;
+const PER_REFERRAL = REFERRAL_REWARD / REFERRAL_GOAL; // ₦50 per referral
 const naira = (n: number) => `₦${n.toLocaleString()}`;
 
 type FlagKind = "ip" | "device" | "alias" | "mutual";
@@ -82,6 +83,7 @@ export function BetaResponsesView({
   const [busy, setBusy] = useState<string | null>(null);
   const [info, setInfo] = useState<{ title: string; message: string; ok?: boolean } | null>(null);
   const [cluster, setCluster] = useState<{ title: string; rows: BetaResponse[] } | null>(null);
+  const [referrer, setReferrer] = useState<BetaResponse | null>(null);
   const [filter, setFilter] = useState<FilterKey>("all");
   const [pending, startTransition] = useTransition();
 
@@ -217,6 +219,23 @@ export function BetaResponsesView({
     verified: responses.filter((r) => r.verified).length,
     referred: responses.filter((r) => !!r.referred_by_id).length,
   };
+
+  // Detail for the clicked referrer: who they invited, each one's fraud flags,
+  // and whether the referrer looks valid (low share of flagged/high-risk invitees).
+  // Declared after detailedFlagsFor so it isn't referenced before initialization.
+  const referrerData = useMemo(() => {
+    if (!referrer) return null;
+    const invitees = responses.filter((x) => x.referred_by_id === referrer.id);
+    const enriched = invitees.map((row) => ({ row, flags: detailedFlagsFor(row) }));
+    const flaggedN = enriched.filter((e) => e.flags.length > 0).length;
+    const highRiskN = invitees.filter((x) => x.ai_level === "high").length;
+    const count = invitees.length;
+    const badShare = count > 0 ? (flaggedN + highRiskN) / count : 0;
+    const valid = count > 0 && badShare < 0.4;
+    const amount = count * PER_REFERRAL;
+    return { enriched, count, flaggedN, highRiskN, valid, amount };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [referrer, responses]);
 
   const getVal = (r: BetaResponse, key: SortKey): string | number => {
     switch (key) {
@@ -461,15 +480,14 @@ export function BetaResponsesView({
           ) : (
           <ol className="mt-3 flex flex-col gap-1">
             {leaderboard.map((e, i) => {
-              const amount =
-                Math.floor(e.count / REFERRAL_GOAL) * REFERRAL_REWARD;
+              const amount = e.count * PER_REFERRAL;
               const isStudent =
                 (e.r.occupation || "").toLowerCase() === "student";
               return (
                 <li key={e.r.id}>
                   <button
                     type="button"
-                    onClick={() => setOpen(e.r)}
+                    onClick={() => setReferrer(e.r)}
                     className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-bg/5"
                   >
                     <span className="w-5 shrink-0 text-center font-display text-sm text-gold">
@@ -738,6 +756,22 @@ export function BetaResponsesView({
           onOpenRow={(row) => {
             setCluster(null);
             setOpen(row);
+          }}
+        />
+      )}
+      {referrer && referrerData && (
+        <ReferrerModal
+          referrer={referrer}
+          data={referrerData}
+          onClose={() => setReferrer(null)}
+          onOpenRow={(row) => {
+            setReferrer(null);
+            setOpen(row);
+          }}
+          onViewProfile={() => {
+            const r = referrer;
+            setReferrer(null);
+            setOpen(r);
           }}
         />
       )}
@@ -1066,6 +1100,141 @@ function ClusterModal({
               ))
             )}
           </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ReferrerModal({
+  referrer,
+  data,
+  onClose,
+  onOpenRow,
+  onViewProfile,
+}: {
+  referrer: BetaResponse;
+  data: {
+    enriched: { row: BetaResponse; flags: DetailedFlag[] }[];
+    count: number;
+    flaggedN: number;
+    highRiskN: number;
+    valid: boolean;
+    amount: number;
+  };
+  onClose: () => void;
+  onOpenRow: (row: BetaResponse) => void;
+  onViewProfile: () => void;
+}) {
+  return (
+    <>
+      <div
+        onClick={onClose}
+        className="fixed inset-0 z-[60] bg-ink/70 backdrop-blur-sm"
+        aria-hidden
+      />
+      <div className="fixed inset-0 z-[61] flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Referrer detail"
+          className="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-bg/12 bg-[#0d0e12] shadow-2xl"
+        >
+          <header className="border-b border-bg/10 px-5 py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="font-display truncate text-lg text-bg">
+                  {referrer.name || referrer.email}
+                </h3>
+                <p className="mt-0.5 truncate text-[12px] text-bg/50">
+                  {referrer.email}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="shrink-0 text-bg/55 hover:text-bg"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span
+                className={
+                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[12px] " +
+                  (data.valid
+                    ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
+                    : "border-red-400/30 bg-red-400/10 text-red-200")
+                }
+              >
+                {data.valid ? (
+                  <BadgeCheck size={13} />
+                ) : (
+                  <AlertTriangle size={13} />
+                )}
+                {data.valid ? "Looks valid" : "Suspicious referrals"}
+              </span>
+              <span className="rounded-full bg-bg/10 px-2.5 py-1 text-[12px] text-bg/70">
+                {data.count} invited
+              </span>
+              {data.flaggedN > 0 && (
+                <span className="rounded-full bg-amber-400/10 px-2.5 py-1 text-[12px] text-amber-200">
+                  {data.flaggedN} flagged
+                </span>
+              )}
+              <span className="rounded-full bg-gold/10 px-2.5 py-1 text-[12px] text-gold">
+                {naira(data.amount)} earned
+              </span>
+            </div>
+          </header>
+          <div className="flex-1 overflow-y-auto p-2">
+            {data.enriched.length === 0 ? (
+              <p className="px-3 py-6 text-center text-[13px] text-bg/45">
+                No invitees yet.
+              </p>
+            ) : (
+              data.enriched.map(({ row, flags }) => (
+                <button
+                  key={row.id}
+                  type="button"
+                  onClick={() => onOpenRow(row)}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-bg/5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm text-bg/90">{row.email}</div>
+                    <div className="mt-0.5 truncate text-[12px] text-bg/50">
+                      {row.name || "No name"} · {fmtDate(row.created_at)}
+                    </div>
+                  </div>
+                  {row.ai_checked_at && (
+                    <RiskBadge level={row.ai_level} risk={row.ai_risk} />
+                  )}
+                  {flags.length > 0 && (
+                    <span
+                      className="inline-flex items-center gap-0.5 text-[12px] text-amber-300"
+                      title={flags.map((f) => f.label).join(", ")}
+                    >
+                      <AlertTriangle size={13} /> {flags.length}
+                    </span>
+                  )}
+                  {row.verified && (
+                    <BadgeCheck size={15} className="shrink-0 text-emerald-300" />
+                  )}
+                  <ChevronRight size={14} className="shrink-0 text-bg/40" />
+                </button>
+              ))
+            )}
+          </div>
+          <footer className="border-t border-bg/10 px-5 py-3">
+            <button
+              type="button"
+              onClick={onViewProfile}
+              className="text-[12px] text-bg/70 hover:text-bg"
+            >
+              Open full profile
+            </button>
+          </footer>
         </div>
       </div>
     </>
