@@ -15,6 +15,29 @@ export function normalizeEmail(email: string | null | undefined): string {
 }
 
 /**
+ * Aggressive canonical form for fraud comparison: collapses provider aliasing so
+ * one inbox can't masquerade as many. Strips a "+tag" suffix for every provider,
+ * and removes dots in the local part for Gmail (which ignores them). So
+ * `john.doe+contest@gmail.com` and `johndoe@gmail.com` resolve to the same key.
+ * Use this for fraud clustering only, never as the address we actually email.
+ */
+export function canonicalEmail(email: string | null | undefined): string {
+  const e = normalizeEmail(email);
+  const at = e.lastIndexOf("@");
+  if (at < 1) return e;
+  let local = e.slice(0, at);
+  let domain = e.slice(at + 1);
+
+  const plus = local.indexOf("+");
+  if (plus >= 0) local = local.slice(0, plus);
+
+  if (domain === "googlemail.com") domain = "gmail.com";
+  if (domain === "gmail.com") local = local.replace(/\./g, "");
+
+  return local ? `${local}@${domain}` : e;
+}
+
+/**
  * Count how many times each (normalized) email occurs. Blank emails are
  * ignored. Returns a Map keyed by the normalized email.
  */

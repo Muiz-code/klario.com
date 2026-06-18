@@ -6,6 +6,7 @@ import {
   type BetaResponse,
 } from "@/lib/db/betaResponses";
 import { assessFraud, isAiConfigured, type FraudInput } from "@/lib/ai/fraud";
+import { canonicalEmail } from "@/lib/duplicates";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -15,6 +16,11 @@ const SCAN_ALL_LIMIT = 40;
 
 function buildSignals(r: BetaResponse, all: BetaResponse[]) {
   const ipCount = r.ip ? all.filter((x) => x.ip === r.ip).length : 0;
+  const fpCount = r.fingerprint
+    ? all.filter((x) => x.fingerprint === r.fingerprint).length
+    : 0;
+  const canon = canonicalEmail(r.email);
+  const aliasCount = all.filter((x) => canonicalEmail(x.email) === canon).length;
   const referralCount = all.filter(
     (x) => x.referred_by_id === r.id && x.verified
   ).length;
@@ -25,6 +31,8 @@ function buildSignals(r: BetaResponse, all: BetaResponse[]) {
   }
   return {
     sharedIpCount: ipCount,
+    sameDeviceCount: fpCount,
+    aliasReuse: aliasCount > 1,
     mutualReferral: mutual,
     verified: r.verified,
     referralCount,

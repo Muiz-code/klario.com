@@ -81,6 +81,7 @@ export async function POST(req: Request) {
   const phone = clean(body.phone, 40) ?? null;
   const dream = clean(body.dream, 2000) ?? null;
   const referredByRef = clean(body.referral, 20) ?? null;
+  const fingerprint = clean(body.fingerprint, 64) ?? null;
 
   // Multi-selects (capped) + 1–5 scale.
   const pain = cleanArray(body.pain, 2);
@@ -129,6 +130,7 @@ export async function POST(req: Request) {
     referrer,
     referredByRef,
     ip,
+    fingerprint,
   });
 
   if (!row || !row.ref) {

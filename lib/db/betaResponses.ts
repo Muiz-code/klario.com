@@ -24,6 +24,8 @@ export type BetaResponse = {
   referred_by_id: string | null;
   /** Submitter IP, for same-IP fraud clustering. */
   ip: string | null;
+  /** Coarse device hash, for same-device fraud clustering. */
+  fingerprint: string | null;
   /** Whether they confirmed their email. Referrals only count when verified. */
   verified: boolean;
   verified_at: string | null;
@@ -50,6 +52,7 @@ export type BetaResponseInput = {
   /** Raw referral code typed by the respondent (e.g. "KLR-AB3CD"). */
   referredByRef?: string | null;
   ip?: string | null;
+  fingerprint?: string | null;
 };
 
 /** Normalize a typed referral code to the canonical KLR-XXXXX shape. */
@@ -119,6 +122,7 @@ export async function upsertBetaResponse(
     referred_by_ref: referredByRef,
     referred_by_id: referredById,
     ip: input.ip ?? null,
+    fingerprint: input.fingerprint ?? null,
   };
 
   const { data: existing } = await db

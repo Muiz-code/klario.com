@@ -17,6 +17,10 @@ const MODEL = "claude-haiku-4-5";
 export type FraudSignals = {
   /** How many responses share this submitter's IP. */
   sharedIpCount: number;
+  /** How many responses share this submitter's device fingerprint. */
+  sameDeviceCount: number;
+  /** Email collapses to the same inbox as another signup (gmail dot/plus tricks). */
+  aliasReuse: boolean;
   /** A↔B both claim each other as referrer. */
   mutualReferral: boolean;
   /** Did they confirm their email? */
@@ -65,7 +69,7 @@ You will be given ONE waitlist response: the person's free-text questionnaire an
 
 Weigh:
 - Answer quality: gibberish, contradictory, empty-but-required, copy-paste/templated, or nonsensical answers raise risk. Thoughtful, specific, locally-plausible answers lower it.
-- Signals: many signups sharing one IP, mutual (reciprocal) referrals, and being unverified all raise risk. A verified email lowers it.
+- Signals: many signups sharing one IP or one device fingerprint, an email that reuses another signup's inbox via aliasing tricks, mutual (reciprocal) referrals, and being unverified all raise risk. A verified email lowers it. Several signups on the same device is a strong sock-puppet signal.
 - Coherence: do the answers hang together as a real person with a real money problem?
 
 Do NOT penalize: non-native English, short-but-genuine answers, a missing phone number, or simply being referred by someone. Being referred is normal; referral FARMING patterns are the concern.
@@ -111,6 +115,8 @@ function buildUserContent(input: FraudInput): string {
     "",
     "SIGNALS",
     `signups sharing this IP: ${s.sharedIpCount}`,
+    `signups sharing this device: ${s.sameDeviceCount}`,
+    `email reuses another signup's inbox (alias trick): ${s.aliasReuse ? "yes" : "no"}`,
     `mutual/reciprocal referral: ${s.mutualReferral ? "yes" : "no"}`,
     `email verified: ${s.verified ? "yes" : "no"}`,
     `was referred by a code: ${s.wasReferred ? "yes" : "no"}`,

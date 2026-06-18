@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { BetaResponse } from "@/lib/db/betaResponses";
+import { canonicalEmail } from "@/lib/duplicates";
 import { InfoModal } from "../_components/Modal";
 
 export type Summary = {
@@ -70,11 +71,31 @@ export function BetaResponsesView({
     for (const r of responses) if (r.ip) m.set(r.ip, (m.get(r.ip) ?? 0) + 1);
     return m;
   }, [responses]);
+  // How many responses share each device fingerprint.
+  const fpCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of responses)
+      if (r.fingerprint) m.set(r.fingerprint, (m.get(r.fingerprint) ?? 0) + 1);
+    return m;
+  }, [responses]);
+  // How many responses collapse to the same canonical inbox (alias reuse).
+  const aliasCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of responses) {
+      const c = canonicalEmail(r.email);
+      if (c) m.set(c, (m.get(c) ?? 0) + 1);
+    }
+    return m;
+  }, [responses]);
 
   const flagsFor = (r: BetaResponse): string[] => {
     const f: string[] = [];
     const ipN = r.ip ? ipCounts.get(r.ip) ?? 0 : 0;
-    if (ipN > 2) f.push(`Shared IP (${ipN} sign-ups)`);
+    if (ipN >= 2) f.push(`Shared IP (${ipN} sign-ups)`);
+    const fpN = r.fingerprint ? fpCounts.get(r.fingerprint) ?? 0 : 0;
+    if (fpN >= 2) f.push(`Same device (${fpN} sign-ups)`);
+    const aliasN = aliasCounts.get(canonicalEmail(r.email)) ?? 0;
+    if (aliasN > 1) f.push(`Email alias reuse (${aliasN})`);
     if (r.referred_by_id) {
       const ref = byId.get(r.referred_by_id);
       if (ref && ref.referred_by_id === r.id) f.push("Mutual referral");
@@ -208,8 +229,8 @@ export function BetaResponsesView({
     const cols = [
       "ref", "created_at", "name", "email", "phone", "method", "pain",
       "sheetlife", "trust", "features", "price", "dream", "confirmation_sent",
-      "verified", "verified_at", "ip", "referred_by_ref", "ai_risk", "ai_level",
-      "ai_reasons", "user_agent", "referrer",
+      "verified", "verified_at", "ip", "fingerprint", "referred_by_ref",
+      "ai_risk", "ai_level", "ai_reasons", "user_agent", "referrer",
     ];
     const esc = (v: unknown) => {
       const s =
@@ -220,8 +241,8 @@ export function BetaResponsesView({
       [
         r.ref, r.created_at, r.name, r.email, r.phone, r.method, r.pain,
         r.sheetlife, r.trust, r.features, r.price, r.dream, r.confirmation_sent,
-        r.verified, r.verified_at, r.ip, r.referred_by_ref, r.ai_risk, r.ai_level,
-        r.ai_reasons, r.user_agent, r.referrer,
+        r.verified, r.verified_at, r.ip, r.fingerprint, r.referred_by_ref,
+        r.ai_risk, r.ai_level, r.ai_reasons, r.user_agent, r.referrer,
       ]
         .map(esc)
         .join(",")
@@ -585,6 +606,7 @@ function Drawer({
         ] as [string, React.ReactNode][])
       : []),
     ["IP address", r.ip || "-"],
+    ["Device fingerprint", r.fingerprint || "-"],
     ["Name", r.name || "-"],
     ["Email", r.email],
     ["Phone", r.phone || "-"],
@@ -628,7 +650,7 @@ function Drawer({
                 <dt className="text-[11px] font-medium uppercase tracking-[0.18em] text-bg/45">
                   {k}
                 </dt>
-                <dd className="mt-1 whitespace-pre-wrap break-words text-sm text-bg/85">
+                <dd className="mt-1 whitespace-pre-wrap wrap-break-word text-sm text-bg/85">
                   {v}
                 </dd>
               </div>

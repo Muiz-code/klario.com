@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
 import { Loader } from "@/components/ui/Loader";
+import { deviceFingerprint } from "@/lib/fingerprint";
 import wordmark from "@/public/klarioLogoLight.png";
 import {
   ArrowRight,
@@ -243,6 +244,7 @@ export function BetaWizard() {
           price: a.price,
           dream: a.dream,
           referrer: typeof document !== "undefined" ? document.referrer : "",
+          fingerprint: deviceFingerprint(),
         }),
       });
       const data = await res.json().catch(() => ({}));
