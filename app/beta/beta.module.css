@@ -331,14 +331,31 @@
   resize: vertical;
   margin-top: 24px;
 }
+.wishInput {
+  width: 100%;
+  margin-top: 12px;
+  background: var(--noir2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 13px 15px;
+  color: var(--cream);
+  font-family: var(--font-manrope), "Manrope", sans-serif;
+  font-size: 14px;
+}
 .fields input:focus,
-.textarea:focus {
+.textarea:focus,
+.wishInput:focus {
   outline: none;
   border-color: var(--gold);
 }
 .fields input::placeholder,
-.textarea::placeholder {
+.textarea::placeholder,
+.wishInput::placeholder {
   color: #5e5e6a;
+}
+.wishInput:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
 }
 .nav {
   display: flex;

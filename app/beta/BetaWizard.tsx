@@ -82,6 +82,7 @@ type Answers = {
   sheetlife: string | null;
   trust: number | null;
   features: string[];
+  notes: Record<string, string>;
   price: string | null;
   dream: string;
 };
@@ -97,6 +98,7 @@ const EMPTY: Answers = {
   sheetlife: null,
   trust: null,
   features: [],
+  notes: {},
   price: null,
   dream: "",
 };
@@ -151,24 +153,26 @@ export function BetaWizard() {
     setStep((s) => Math.max(s - 1, 0));
   };
 
+  // A typed "other" note also satisfies its question.
+  const hasNote = (key: string) => !!a.notes[key]?.trim();
   const valid = (s: number): boolean => {
     switch (s) {
       case 1:
         return EMAIL_RE.test(a.email.trim());
       case 2:
-        return !!a.method;
+        return !!a.method || hasNote("method");
       case 3:
-        return a.pain.length > 0;
+        return a.pain.length > 0 || hasNote("pain");
       case 4:
-        return !!a.sheetlife;
+        return !!a.sheetlife || hasNote("sheetlife");
       case 5:
-        return a.trust !== null;
+        return a.trust !== null || hasNote("trust");
       case 6:
-        return a.features.length > 0;
+        return a.features.length > 0 || hasNote("features");
       case 7:
         return !!a.price;
       case 8:
-        return !!a.occupation;
+        return !!a.occupation || hasNote("occupation");
       default:
         return true;
     }
@@ -233,6 +237,9 @@ export function BetaWizard() {
       return { ...p, [key]: next };
     });
   };
+  // Free-text "other" per question, stored under notes[key].
+  const setNote = (key: string, value: string) =>
+    setA((p) => ({ ...p, notes: { ...p.notes, [key]: value } }));
 
   const submit = async () => {
     if (submitting) return;
@@ -253,6 +260,7 @@ export function BetaWizard() {
           sheetlife: a.sheetlife,
           trust: a.trust,
           features: a.features,
+          notes: a.notes,
           price: a.price,
           dream: a.dream,
           referrer: typeof document !== "undefined" ? document.referrer : "",
@@ -704,7 +712,10 @@ export function BetaWizard() {
               <span>Over my dead body</span>
               <span>Take it, it&apos;s fine</span>
             </div>
-            {miss && <div className={styles.miss}>Tap a number to continue.</div>}
+            {noteInput("trust")}
+            {miss && (
+              <div className={styles.miss}>Tap a number, or type your own.</div>
+            )}
             {navRow()}
           </>
         );
@@ -799,6 +810,20 @@ export function BetaWizard() {
     );
   }
 
+  // Optional free-text "other" box shown under a question's options.
+  function noteInput(key: string) {
+    return (
+      <input
+        type="text"
+        className={styles.wishInput}
+        aria-label="Add your own"
+        placeholder="Other? Add your own thought (optional)"
+        value={a.notes[key] ?? ""}
+        onChange={(e) => setNote(key, e.target.value)}
+      />
+    );
+  }
+
   function single(
     eyebrow: string,
     qlabel: string,
@@ -827,7 +852,10 @@ export function BetaWizard() {
             </button>
           ))}
         </div>
-        {miss && <div className={styles.miss}>Pick one to continue.</div>}
+        {noteInput(key)}
+        {miss && (
+          <div className={styles.miss}>Pick one, or type your own, to continue.</div>
+        )}
         {navRow()}
       </>
     );
@@ -928,7 +956,10 @@ export function BetaWizard() {
             );
           })}
         </div>
-        {miss && <div className={styles.miss}>Choose at least one.</div>}
+        {noteInput(key)}
+        {miss && (
+          <div className={styles.miss}>Choose one, or type your own.</div>
+        )}
         {navRow()}
       </>
     );

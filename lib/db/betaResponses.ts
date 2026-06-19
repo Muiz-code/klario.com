@@ -15,6 +15,8 @@ export type BetaResponse = {
   sheetlife: string | null;
   trust: number | null;
   features: string[];
+  /** Free-text "other" the respondent typed per question (key -> text). */
+  notes: Record<string, string>;
   price: string | null;
   dream: string | null;
   user_agent: string | null;
@@ -48,6 +50,7 @@ export type BetaResponseInput = {
   sheetlife?: string | null;
   trust?: number | null;
   features?: string[];
+  notes?: Record<string, string>;
   price?: string | null;
   dream?: string | null;
   user_agent?: string | null;
@@ -136,6 +139,7 @@ export async function upsertBetaResponse(
     sheetlife: input.sheetlife ?? null,
     trust: input.trust ?? null,
     features: input.features ?? [],
+    notes: input.notes ?? {},
     price: input.price ?? null,
     dream: input.dream ?? null,
     user_agent: input.user_agent ?? null,

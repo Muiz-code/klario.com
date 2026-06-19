@@ -40,6 +40,16 @@ type FilterKey =
 
 const PROFESSIONS = ["Student", "Business owner", "Employed", "Freelancer"];
 
+// Readable labels for the free-text "other" notes captured per question.
+const NOTE_LABELS: Record<string, string> = {
+  method: "How they track money",
+  pain: "Biggest pains",
+  sheetlife: "Spreadsheet lifespan",
+  trust: "Bank-link comfort",
+  features: "Wishlist",
+  occupation: "Occupation",
+};
+
 // Profession filter keys → the occupation value they match.
 const OCCUPATION_FILTER: Partial<Record<FilterKey, string>> = {
   student: "Student",
@@ -414,7 +424,7 @@ export function BetaResponsesView({
   const exportCsv = () => {
     const cols = [
       "ref", "created_at", "name", "email", "phone", "occupation", "method", "pain",
-      "sheetlife", "trust", "features", "price", "dream", "confirmation_sent",
+      "sheetlife", "trust", "features", "notes", "price", "dream", "confirmation_sent",
       "verified", "verified_at", "ip", "fingerprint", "referred_by_ref",
       "ai_risk", "ai_level", "ai_reasons", "user_agent", "referrer",
     ];
@@ -426,7 +436,12 @@ export function BetaResponsesView({
     const lines = responses.map((r) =>
       [
         r.ref, r.created_at, r.name, r.email, r.phone, r.occupation, r.method, r.pain,
-        r.sheetlife, r.trust, r.features, r.price, r.dream, r.confirmation_sent,
+        r.sheetlife, r.trust, r.features,
+        Object.entries(r.notes || {})
+          .filter(([, v]) => v)
+          .map(([k, v]) => `${NOTE_LABELS[k] ?? k}: ${v}`)
+          .join(" | "),
+        r.price, r.dream, r.confirmation_sent,
         r.verified, r.verified_at, r.ip, r.fingerprint, r.referred_by_ref,
         r.ai_risk, r.ai_level, r.ai_reasons, r.user_agent, r.referrer,
       ]
@@ -974,6 +989,22 @@ function Drawer({
     ["Spreadsheet lifespan", r.sheetlife || "-"],
     ["Bank-link comfort (1 to 5)", r.trust ?? "-"],
     ["Wanted features", r.features.length ? r.features.join(", ") : "-"],
+    [
+      "Other thoughts (typed)",
+      (() => {
+        const entries = Object.entries(r.notes || {}).filter(([, v]) => v);
+        if (entries.length === 0) return "-";
+        return (
+          <ul key="notes" className="ml-4 list-disc space-y-1">
+            {entries.map(([k, v]) => (
+              <li key={k}>
+                <span className="text-bg/45">{NOTE_LABELS[k] ?? k}:</span> {v}
+              </li>
+            ))}
+          </ul>
+        );
+      })(),
+    ],
     ["Fair price / month", r.price || "-"],
     ["What would make money less stressful", r.dream || "-"],
     ["Came from (web referrer)", r.referrer || "-"],

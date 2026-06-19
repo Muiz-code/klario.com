@@ -35,6 +35,29 @@ function cleanArray(value: unknown, max: number): string[] {
   return [...new Set(out)].slice(0, max);
 }
 
+// Free-text "other" per question. Only known keys, trimmed and length-capped.
+const NOTE_KEYS = [
+  "method",
+  "pain",
+  "sheetlife",
+  "trust",
+  "features",
+  "occupation",
+];
+function cleanNotes(value: unknown): Record<string, string> {
+  if (!value || typeof value !== "object") return {};
+  const src = value as Record<string, unknown>;
+  const out: Record<string, string> = {};
+  for (const k of NOTE_KEYS) {
+    const v = src[k];
+    if (typeof v === "string") {
+      const s = v.trim().slice(0, 500);
+      if (s) out[k] = s;
+    }
+  }
+  return out;
+}
+
 /**
  * Public beta questionnaire submission. Validates server-side, upserts by email,
  * and sends the confirmation email. The email never blocks success: if Resend
@@ -93,6 +116,7 @@ export async function POST(req: Request) {
   const name = clean(body.name, 80) ?? null;
   const phone = clean(body.phone, 40) ?? null;
   const dream = clean(body.dream, 2000) ?? null;
+  const notes = cleanNotes(body.notes);
   const referredByRef = clean(body.referral, 20) ?? null;
   const fingerprint = clean(body.fingerprint, 64) ?? null;
 
@@ -138,6 +162,7 @@ export async function POST(req: Request) {
     sheetlife,
     trust,
     features,
+    notes,
     price,
     dream,
     user_agent: userAgent,
