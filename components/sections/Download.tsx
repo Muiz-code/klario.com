@@ -52,8 +52,8 @@ export function Download() {
           transition={{ duration: 0.7, ease }}
           className="font-display text-[1.65rem] leading-[1.1] capitalize sm:text-4xl md:text-5xl lg:text-[4.5rem]"
         >
-          <span className="block whitespace-nowrap">{DOWNLOAD.heading}</span>
-          <span className="block whitespace-nowrap italic text-gold">
+          <span className="block lg:whitespace-nowrap">{DOWNLOAD.heading}</span>
+          <span className="block italic text-gold lg:whitespace-nowrap">
             {DOWNLOAD.emphasis}
           </span>
         </motion.h2>

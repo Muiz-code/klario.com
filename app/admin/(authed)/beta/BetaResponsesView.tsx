@@ -598,7 +598,7 @@ export function BetaResponsesView({
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
-        <label className="flex items-center gap-2 rounded-xl border border-bg/15 bg-bg/4 px-3 py-2 text-sm">
+        <label className="flex w-full items-center gap-2 rounded-xl border border-bg/15 bg-bg/4 px-3 py-2 text-sm sm:w-auto">
           <Search size={14} className="text-bg/45" />
           <input
             type="search"
@@ -1049,7 +1049,7 @@ function Drawer({
           </dl>
         </div>
 
-        <footer className="flex items-center justify-between gap-3 border-t border-bg/10 px-6 py-4">
+        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-bg/10 px-6 py-4">
           <a href={`mailto:${r.email}`} className="text-[12px] text-bg/70 hover:text-bg">
             Reply by email
           </a>

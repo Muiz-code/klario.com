@@ -493,6 +493,8 @@
   color: var(--cream);
 }
 .termsBody {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 16px 20px;
   font-size: 13.5px;
@@ -853,6 +855,9 @@
   font-family: var(--font-jetbrains), monospace;
   font-size: 11px;
   color: var(--creamDim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .lbCount {
   flex-shrink: 0;
@@ -891,4 +896,26 @@
 }
 .lbCta:hover {
   filter: brightness(1.06);
+}
+
+/* Narrow-phone polish: tighter side padding and scale buttons. */
+@media (max-width: 380px) {
+  .stage {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .lbStage {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .scale {
+    gap: 5px;
+  }
+  .scaleBtn {
+    padding: 13px 0;
+    font-size: 16px;
+  }
+  .opt {
+    padding: 12px 13px;
+  }
 }
