@@ -491,7 +491,7 @@ export function BetaResponsesView({
 
       {/* Professions + referral leaderboard, side by side */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-bg/10 bg-bg/4 p-5">
+        <div className="min-w-0 rounded-2xl border border-bg/10 bg-bg/4 p-5">
           <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-bg/45">
             Professions
           </p>
@@ -505,8 +505,8 @@ export function BetaResponsesView({
           </ol>
         </div>
 
-        <div className="rounded-2xl border border-bg/10 bg-bg/4 p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-bg/10 bg-bg/4 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
             <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-bg/45">
               Referral leaderboard
             </p>
@@ -527,7 +527,7 @@ export function BetaResponsesView({
                   <button
                     type="button"
                     onClick={() => setReferrer(e.r)}
-                    className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-bg/5"
+                    className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left hover:bg-bg/5"
                   >
                     <span className="w-5 shrink-0 text-center font-display text-sm text-gold">
                       {i + 1}
@@ -541,12 +541,14 @@ export function BetaResponsesView({
                         {!isStudent && " · not a student"}
                       </div>
                     </div>
-                    <div className="shrink-0 text-right">
-                      <div className="text-sm text-bg/90">
+                    <div className="shrink-0 whitespace-nowrap text-right">
+                      <div className="text-[13px] text-bg/90 sm:text-sm">
                         {e.count} ref{e.count === 1 ? "" : "s"}
                       </div>
-                      <div className="text-[12px] text-gold">
-                        {isStudent ? naira(amount) : `${naira(amount)} (n/a)`}
+                      <div className="text-[11px] text-gold sm:text-[12px]">
+                        {isStudent
+                          ? naira(amount)
+                          : `${naira(amount)} · n/a`}
                       </div>
                     </div>
                   </button>
