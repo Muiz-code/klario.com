@@ -54,6 +54,7 @@ export async function POST(req: Request) {
         email: c.email,
         first_name: c.firstName ?? null,
         last_name: c.lastName ?? null,
+        phone: c.phone ?? null,
       })),
       "import"
     );
