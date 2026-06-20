@@ -1,6 +1,8 @@
 import { galleryTemplates } from "@/lib/email/gallery";
 import { listCustomTemplates } from "@/lib/db/templates";
 import { listSignups } from "@/lib/db/signups";
+import { getMailedEmails } from "@/lib/db/email-log";
+import { normalizeEmail } from "@/lib/duplicates";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import { ComposeStudio } from "./ComposeStudio";
 
@@ -8,17 +10,23 @@ export const dynamic = "force-dynamic";
 
 export default async function ComposePage() {
   const configured = isSupabaseConfigured();
-  const [custom, signups] = configured
-    ? await Promise.all([listCustomTemplates(), listSignups({ limit: 50000 })])
-    : [[], []];
+  const [custom, signups, mailedEmails] = configured
+    ? await Promise.all([
+        listCustomTemplates(),
+        listSignups({ limit: 50000 }),
+        getMailedEmails(),
+      ])
+    : [[], [], [] as string[]];
   // Saved templates first, then the built-in starters.
   const templates = [...custom, ...galleryTemplates()];
+  // "New" = never sent any mail (not in the email log), matching the audience
+  // page's "Unmailed". "Existing" = already mailed.
+  const mailedSet = new Set(mailedEmails.map(normalizeEmail));
+  const active = signups.filter((s) => s.status !== "unsubscribed");
   const counts = {
-    all: signups.filter((s) => s.status !== "unsubscribed").length,
-    new: signups.filter((s) => s.status === "pending").length,
-    existing: signups.filter(
-      (s) => s.status === "invited" || s.status === "active"
-    ).length,
+    all: active.length,
+    new: active.filter((s) => !mailedSet.has(normalizeEmail(s.email))).length,
+    existing: active.filter((s) => mailedSet.has(normalizeEmail(s.email))).length,
   };
 
   // Lightweight list for the "choose people" picker (exclude unsubscribed).

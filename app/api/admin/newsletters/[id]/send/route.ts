@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getNewsletter, markNewsletterSent } from "@/lib/db/newsletters";
 import { listSignups, markInvited } from "@/lib/db/signups";
-import { logEmails } from "@/lib/db/email-log";
+import { logEmails, getMailedEmails } from "@/lib/db/email-log";
+import { normalizeEmail } from "@/lib/duplicates";
 import { createAuditEvent } from "@/lib/db/audit";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { unsubscribeUrl } from "@/lib/email/links";
@@ -18,8 +19,8 @@ type Segment = "all" | "new" | "existing";
  *   { segment?: "all" | "new" | "existing" }  -> send to that audience, or
  *   { emails?: string[] }                     -> send to these specific people
  *
- * Segments: all = everyone not unsubscribed; new = pending; existing =
- * invited or active. An explicit emails[] takes priority over segment.
+ * Segments: all = everyone not unsubscribed; new = never mailed (not in the
+ * email log); existing = already mailed. An explicit emails[] takes priority.
  */
 export async function POST(
   req: Request,
@@ -54,14 +55,20 @@ export async function POST(
     );
   }
 
-  const all = await listSignups({ limit: 50000 });
+  const [all, mailedEmails] = await Promise.all([
+    listSignups({ limit: 50000 }),
+    getMailedEmails(),
+  ]);
+  // "New" = never sent any mail (not in the email log); "existing" = already
+  // mailed. Keeps this consistent with the audience page and the compose counts.
+  const mailedSet = new Set(mailedEmails.map(normalizeEmail));
   const emailSet = emails ? new Set(emails) : null;
   const recipients = all.filter((s) => {
     if (s.status === "unsubscribed") return false;
     if (emailSet) return emailSet.has(s.email.toLowerCase());
-    if (segment === "new") return s.status === "pending";
-    if (segment === "existing")
-      return s.status === "invited" || s.status === "active";
+    const mailed = mailedSet.has(normalizeEmail(s.email));
+    if (segment === "new") return !mailed;
+    if (segment === "existing") return mailed;
     return true;
   });
 
