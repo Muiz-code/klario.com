@@ -29,14 +29,14 @@ export default async function ComposePage() {
     existing: active.filter((s) => mailedSet.has(normalizeEmail(s.email))).length,
   };
 
-  // Lightweight list for the "choose people" picker (exclude unsubscribed).
-  const people = signups
-    .filter((s) => s.status !== "unsubscribed")
-    .map((s) => ({
-      email: s.email,
-      name: [s.first_name, s.last_name].filter(Boolean).join(" "),
-      status: s.status,
-    }));
+  // Lightweight list for the picker (exclude unsubscribed). `mailed` lets the
+  // client filter to the "new" (unmailed) or "existing" (mailed) segment.
+  const people = active.map((s) => ({
+    email: s.email,
+    name: [s.first_name, s.last_name].filter(Boolean).join(" "),
+    status: s.status,
+    mailed: mailedSet.has(normalizeEmail(s.email)),
+  }));
 
   return (
     <div className="flex flex-col gap-6">

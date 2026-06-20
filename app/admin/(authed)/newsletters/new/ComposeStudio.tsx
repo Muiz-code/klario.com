@@ -27,7 +27,7 @@ function plainText(html: string): string {
 type Mode = "write" | "html";
 type Segment = "all" | "new" | "existing" | "choose";
 type Counts = { all: number; new: number; existing: number };
-type Person = { email: string; name: string; status: string };
+type Person = { email: string; name: string; status: string; mailed: boolean };
 
 const SEGMENTS: { id: Segment; label: string; hint: string }[] = [
   { id: "all", label: "All subscribers", hint: "Everyone except unsubscribed" },
@@ -54,6 +54,7 @@ export function ComposeStudio({
   const [segment, setSegment] = useState<Segment>("all");
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [pickerQuery, setPickerQuery] = useState("");
+  const [selectCount, setSelectCount] = useState(100);
 
   // Write-mode fields
   const [bodyHtml, setBodyHtml] = useState("");
@@ -128,17 +129,29 @@ export function ComposeStudio({
   }, [mode, bodyHtml, subject, ctaLabel, ctaHref, rawHtml]);
 
   const chosenList = people.filter((p) => chosen.has(p.email));
+
+  // The people in the currently selected segment.
+  const segmentPeople = useMemo(() => {
+    if (segment === "new") return people.filter((p) => !p.mailed);
+    if (segment === "existing") return people.filter((p) => p.mailed);
+    return people; // all / choose
+  }, [people, segment]);
+
+  // Whole-segment size (server-authoritative for all/new/existing).
+  const segmentTotal = segment === "choose" ? people.length : counts[segment];
+  // What actually sends: a refined selection if any, else the whole segment
+  // (choose always requires an explicit selection).
   const audienceCount =
-    segment === "choose" ? chosen.size : counts[segment];
+    chosen.size > 0 ? chosen.size : segment === "choose" ? 0 : segmentTotal;
 
   const filteredPeople = useMemo(() => {
     const q = pickerQuery.trim().toLowerCase();
-    if (!q) return people;
-    return people.filter(
+    if (!q) return segmentPeople;
+    return segmentPeople.filter(
       (p) =>
         p.email.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)
     );
-  }, [people, pickerQuery]);
+  }, [segmentPeople, pickerQuery]);
 
   const togglePerson = (email: string) => {
     setChosen((prev) => {
@@ -147,6 +160,27 @@ export function ComposeStudio({
       else next.add(email);
       return next;
     });
+  };
+
+  // Quick-select N of the segment: first, last, or random.
+  const clampN = () =>
+    Math.max(1, Math.min(selectCount || 0, segmentPeople.length));
+  const selectFirst = () =>
+    setChosen(new Set(segmentPeople.slice(0, clampN()).map((p) => p.email)));
+  const selectLast = () =>
+    setChosen(new Set(segmentPeople.slice(-clampN()).map((p) => p.email)));
+  const selectRandom = () => {
+    const pool = [...segmentPeople];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    setChosen(new Set(pool.slice(0, clampN()).map((p) => p.email)));
+  };
+  const changeSegment = (s: Segment) => {
+    setSegment(s);
+    setChosen(new Set());
+    setPickerQuery("");
   };
 
   const pickTemplate = (t: GalleryTemplate) => {
@@ -204,9 +238,7 @@ export function ComposeStudio({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          segment === "choose"
-            ? { emails: [...chosen] }
-            : { segment }
+          chosen.size > 0 ? { emails: [...chosen] } : { segment }
         ),
       });
       const sData = await sendRes.json().catch(() => ({}));
@@ -245,10 +277,14 @@ export function ComposeStudio({
             This email will be sent to{" "}
             <span className="font-semibold text-bg">{audienceCount}</span>{" "}
             recipient{audienceCount === 1 ? "" : "s"}
-            {segment === "choose" ? "" : ` (${seg.label.toLowerCase()})`}. This
-            cannot be undone.
+            {segment === "choose"
+              ? ""
+              : chosen.size > 0
+              ? ` (a selection from ${seg.label.toLowerCase()})`
+              : ` (${seg.label.toLowerCase()})`}
+            . This cannot be undone.
           </p>
-          {segment === "choose" ? (
+          {chosen.size > 0 ? (
             <div className="max-h-52 overflow-y-auto rounded-lg border border-bg/12 bg-bg/4 p-2">
               {chosenList.map((p) => (
                 <div
@@ -389,7 +425,7 @@ export function ComposeStudio({
                   <button
                     key={s.id}
                     type="button"
-                    onClick={() => setSegment(s.id)}
+                    onClick={() => changeSegment(s.id)}
                     className={
                       "rounded-xl border p-3 text-left transition-colors " +
                       (active
@@ -411,18 +447,28 @@ export function ComposeStudio({
               })}
             </div>
 
-            {segment === "choose" && (
-              <PeoplePicker
-                people={filteredPeople}
-                total={people.length}
-                chosen={chosen}
-                query={pickerQuery}
-                setQuery={setPickerQuery}
-                toggle={togglePerson}
-                selectAll={() => setChosen(new Set(filteredPeople.map((p) => p.email)))}
-                clearAll={() => setChosen(new Set())}
-              />
-            )}
+            <p className="text-[11px] text-bg/45">
+              {chosen.size > 0
+                ? `Sending to a selection of ${chosen.size} of ${segmentTotal}.`
+                : segment === "choose"
+                ? "Pick recipients below, or use First / Last / Random."
+                : `Sending to all ${segmentTotal}. Refine below if you want a subset.`}
+            </p>
+            <PeoplePicker
+              people={filteredPeople}
+              total={segmentPeople.length}
+              chosen={chosen}
+              query={pickerQuery}
+              setQuery={setPickerQuery}
+              toggle={togglePerson}
+              selectAll={() => setChosen(new Set(filteredPeople.map((p) => p.email)))}
+              clearAll={() => setChosen(new Set())}
+              count={selectCount}
+              setCount={setSelectCount}
+              onFirst={selectFirst}
+              onLast={selectLast}
+              onRandom={selectRandom}
+            />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -620,6 +666,11 @@ function PeoplePicker({
   toggle,
   selectAll,
   clearAll,
+  count,
+  setCount,
+  onFirst,
+  onLast,
+  onRandom,
 }: {
   people: Person[];
   total: number;
@@ -629,9 +680,38 @@ function PeoplePicker({
   toggle: (email: string) => void;
   selectAll: () => void;
   clearAll: () => void;
+  count: number;
+  setCount: (n: number) => void;
+  onFirst: () => void;
+  onLast: () => void;
+  onRandom: () => void;
 }) {
+  const quickBtn =
+    "shrink-0 rounded-lg border border-bg/15 px-2.5 py-1.5 text-[11px] text-bg/75 hover:border-gold/50 hover:text-bg disabled:opacity-40";
   return (
     <div className="mt-1 rounded-xl border border-bg/12 bg-bg/4 p-3">
+      {/* Quick select */}
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <span className="text-[11px] text-bg/50">Select</span>
+        <input
+          type="number"
+          min={1}
+          max={total || 1}
+          value={count}
+          onChange={(e) => setCount(Math.max(0, Number(e.target.value) || 0))}
+          className="w-20 rounded-lg border border-bg/15 bg-bg/4 px-2 py-1.5 text-[12px] text-bg focus:border-gold/60 focus:outline-none"
+          aria-label="How many to select"
+        />
+        <button type="button" onClick={onFirst} disabled={total === 0} className={quickBtn}>
+          First
+        </button>
+        <button type="button" onClick={onLast} disabled={total === 0} className={quickBtn}>
+          Last
+        </button>
+        <button type="button" onClick={onRandom} disabled={total === 0} className={quickBtn}>
+          Random
+        </button>
+      </div>
       <div className="flex items-center gap-2">
         <input
           type="search"
