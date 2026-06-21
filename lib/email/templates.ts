@@ -49,9 +49,13 @@ export function ambassadorConfirmation(opts: {
   firstName?: string;
   role?: "student" | "staff";
   institution?: string;
+  level?: string;
 }): Email {
   const name = opts.firstName?.trim() || "there";
-  const where = opts.institution ? ` at ${opts.institution}` : "";
+  const place = opts.institution
+    ? `${opts.institution}${opts.level ? ` (${opts.level})` : ""}`
+    : "";
+  const where = place ? ` at ${place}` : "";
   return build(
     {
       preheader: "Your Klario ambassador application is in. We'll respond within 7 days.",

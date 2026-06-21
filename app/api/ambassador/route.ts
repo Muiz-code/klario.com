@@ -33,6 +33,8 @@ export async function POST(req: Request) {
   const roleRaw = clean(body.role, 12);
   const role: "student" | "staff" | undefined =
     roleRaw === "student" || roleRaw === "staff" ? roleRaw : undefined;
+  // Level only applies to students.
+  const level = role === "student" ? clean(body.level, 40) : undefined;
   const { firstName, lastName } = splitName(name);
 
   await Promise.all([
@@ -50,6 +52,7 @@ export async function POST(req: Request) {
       phone,
       role,
       institution,
+      level,
       why,
     }),
   ]);
@@ -57,13 +60,13 @@ export async function POST(req: Request) {
   const [confirm, notify] = await Promise.all([
     sendTransactional({
       to: email,
-      email: ambassadorConfirmation({ firstName, role, institution }),
+      email: ambassadorConfirmation({ firstName, role, institution, level }),
       tags: [{ name: "type", value: "ambassador_confirmation" }],
     }),
     notifyAdmin(
       internalNotification({
         kind: "Ambassador",
-        payload: { role, name, email, phone, institution, why },
+        payload: { role, name, email, phone, institution, level, why },
       })
     ),
   ]);

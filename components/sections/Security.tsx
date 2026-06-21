@@ -48,15 +48,17 @@ export function Security() {
             <motion.article
               key={c.title}
               variants={cardVariant}
-              className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-bg/10 bg-bg/[0.03] p-6 transition-all duration-500 hover:border-emerald-400/40 hover:bg-bg/[0.05] hover:shadow-[0_24px_60px_-30px_rgba(0,255,135,0.45)]"
+              className="glass-card group relative flex flex-col gap-4 overflow-hidden rounded-2xl p-6 transition-all duration-500 hover:border-emerald-400/40 hover:shadow-[0_24px_60px_-30px_rgba(0,255,135,0.45)]"
             >
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-400 transition-colors group-hover:bg-emerald-400/20">
+              <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-emerald-400/10 text-emerald-400 transition-colors group-hover:bg-emerald-400/20">
                 <Icon size={20} strokeWidth={1.75} />
               </span>
-              <h3 className="font-display text-lg text-bg md:text-xl">
+              <h3 className="relative font-display text-lg text-bg md:text-xl">
                 {c.title}
               </h3>
-              <p className="text-[14px] leading-relaxed text-bg/65">{c.body}</p>
+              <p className="relative text-[14px] leading-relaxed text-bg/65">
+                {c.body}
+              </p>
             </motion.article>
           );
         })}

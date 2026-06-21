@@ -28,7 +28,7 @@ export function IconCard({
     <motion.article
       variants={item}
       className={cn(
-        "group relative flex h-full flex-col gap-5 overflow-hidden rounded-2xl border border-border-gold/60 bg-card/60 p-7 transition-all duration-500 hover:border-gold hover:bg-card hover:shadow-[0_24px_60px_-30px_rgba(212,168,83,0.45)]",
+        "glass-card-dark group relative flex h-full flex-col gap-5 overflow-hidden rounded-2xl p-7 transition-all duration-500 hover:border-gold hover:shadow-[0_24px_60px_-30px_rgba(212,168,83,0.45)]",
         className
       )}
     >

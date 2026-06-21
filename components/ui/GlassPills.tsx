@@ -16,9 +16,6 @@ const pillVariant = (i: number): Variants => ({
   },
 });
 
-const chrome =
-  "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(170,170,182,0.28) 7%, rgba(48,48,58,0.55) 32%, rgba(18,18,24,0.88) 50%, rgba(52,52,62,0.62) 68%, rgba(180,180,192,0.32) 93%, rgba(255,255,255,0.74) 100%)";
-
 export function GlassPills({
   count = 6,
   className,
@@ -34,6 +31,8 @@ export function GlassPills({
         className
       )}
     >
+      {/* Pills use the same static .glass-card style as the Security cards — no
+          backdrop-filter, so there's nothing to re-sample on scroll (no jank). */}
       <div className="flex" style={{ perspective: 1200 }}>
         {Array.from({ length: count }).map((_, i) => (
           <motion.div
@@ -41,16 +40,30 @@ export function GlassPills({
             initial="hidden"
             animate="visible"
             variants={pillVariant(i)}
-            className="relative h-[68vh] max-h-[680px] w-[140px] rounded-full md:w-[200px]"
+            className="glass-card relative h-[68vh] max-h-[680px] w-[140px] overflow-hidden rounded-full md:w-[200px]"
             style={{
               marginLeft: i === 0 ? 0 : -10,
-              background: chrome,
-              border: "1px solid rgba(255,255,255,0.28)",
-              boxShadow:
-                "inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(255,255,255,0.45)",
               willChange: "transform, opacity",
             }}
-          />
+          >
+            {/* Glossy specular highlight along the top edge. */}
+            <span
+              className="absolute inset-x-2 top-2 h-12 rounded-full"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.5), transparent)",
+                filter: "blur(5px)",
+              }}
+            />
+            {/* Bright vertical rim light down one side, like curved glass. */}
+            <span
+              className="absolute inset-y-6 left-2 w-px"
+              style={{
+                background:
+                  "linear-gradient(180deg, transparent, rgba(255,255,255,0.4), transparent)",
+              }}
+            />
+          </motion.div>
         ))}
       </div>
     </div>

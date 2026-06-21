@@ -25,9 +25,10 @@ export function Faq() {
           return (
             <li
               key={f.q}
+              style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)" }}
               className={cn(
-                "overflow-hidden rounded-2xl border bg-card/40 transition-colors",
-                isOpen ? "border-gold" : "border-border-gold/60 hover:border-gold/80"
+                "glass-card-dark overflow-hidden rounded-2xl transition-colors",
+                isOpen ? "border-gold" : "hover:border-gold/80"
               )}
             >
               <button

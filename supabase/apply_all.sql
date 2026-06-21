@@ -40,11 +40,14 @@ create table if not exists public.submissions (
   device       text,
   role         text,
   institution  text,
+  level        text,
   why          text,
   topic        text,
   message      text,
   created_at   timestamptz not null default now()
 );
+-- Backfill for databases created before `level` existed.
+alter table public.submissions add column if not exists level text;
 create index if not exists submissions_kind_idx     on public.submissions (kind);
 create index if not exists submissions_created_idx   on public.submissions (created_at desc);
 

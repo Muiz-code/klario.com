@@ -79,7 +79,9 @@ export function TrendChart({
     Math.max(1, ...lines.flatMap((l) => l.values))
   );
 
-  const x = (i: number) => PAD.left + (n <= 1 ? 0 : (i / (n - 1)) * plotW);
+  // A single day is centered (a lone point at the far left looks broken).
+  const x = (i: number) =>
+    n <= 1 ? PAD.left + plotW / 2 : PAD.left + (i / (n - 1)) * plotW;
   const y = (v: number) => PAD.top + plotH - (v / maxVal) * plotH;
 
   const linePath = (values: number[]) =>
@@ -146,19 +148,25 @@ export function TrendChart({
           />
         ))}
 
-        {/* Areas + lines */}
+        {/* Areas + lines (a single day has no line to draw, so show a dot) */}
         {lines.map((l) => (
           <g key={l.key}>
-            <path d={areaPath(l.values)} fill={`url(#grad-${uid}-${l.key})`} />
-            <path
-              d={linePath(l.values)}
-              fill="none"
-              stroke={l.color}
-              strokeWidth={2}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              vectorEffect="non-scaling-stroke"
-            />
+            {n > 1 && (
+              <path d={areaPath(l.values)} fill={`url(#grad-${uid}-${l.key})`} />
+            )}
+            {n === 1 ? (
+              <circle cx={x(0)} cy={y(l.values[0])} r={4} fill={l.color} />
+            ) : (
+              <path
+                d={linePath(l.values)}
+                fill="none"
+                stroke={l.color}
+                strokeWidth={2}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+              />
+            )}
           </g>
         ))}
 
@@ -195,7 +203,9 @@ export function TrendChart({
             key={i}
             x={x(i)}
             y={H - 6}
-            textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"}
+            textAnchor={
+              n === 1 ? "middle" : i === 0 ? "start" : i === n - 1 ? "end" : "middle"
+            }
             className="fill-current"
             fontSize={11}
             opacity={0.4}

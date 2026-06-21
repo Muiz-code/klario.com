@@ -84,10 +84,10 @@ export function Pricing() {
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.6, delay: i * 0.08, ease }}
               className={cn(
-                "relative flex flex-col rounded-2xl border p-7 transition-all duration-500",
+                "glass-card-dark relative flex flex-col rounded-2xl p-7 transition-all duration-500",
                 featured
-                  ? "border-gold bg-card shadow-[0_28px_80px_-30px_rgba(212,168,83,0.45)] lg:scale-[1.04]"
-                  : "border-border-gold/60 bg-card/50 hover:border-gold"
+                  ? "border-gold shadow-[0_28px_80px_-30px_rgba(212,168,83,0.45)] lg:scale-[1.04]"
+                  : "hover:border-gold"
               )}
             >
               {featured && (

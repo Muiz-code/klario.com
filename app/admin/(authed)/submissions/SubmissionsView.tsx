@@ -61,6 +61,7 @@ export function SubmissionsView({
           s.banks,
           s.device,
           s.institution,
+          s.level,
           s.why,
           s.topic,
           s.message,
@@ -84,6 +85,7 @@ export function SubmissionsView({
       "device",
       "role",
       "institution",
+      "level",
       "why",
       "topic",
       "message",
@@ -106,6 +108,7 @@ export function SubmissionsView({
         s.device,
         s.role,
         s.institution,
+        s.level,
         s.why,
         s.topic,
         s.message,
@@ -244,7 +247,9 @@ export function SubmissionsView({
                   s.kind === "beta"
                     ? [s.device, s.banks].filter(Boolean).join(" · ")
                     : s.kind === "ambassador"
-                      ? [s.role, s.institution].filter(Boolean).join(" · ")
+                      ? [s.role, s.institution, s.level]
+                          .filter(Boolean)
+                          .join(" · ")
                       : [s.topic, s.message?.slice(0, 60)].filter(Boolean).join(" · ");
                 return (
                   <tr
@@ -342,6 +347,7 @@ function DetailDrawer({
             ["Phone", s.phone],
             ["Role", s.role],
             ["Institution", s.institution],
+            ["Level", s.level],
             ["Why", s.why],
           ]
         : [

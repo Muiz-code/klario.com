@@ -12,6 +12,7 @@ export type Submission = {
   device: string | null;
   role: string | null;
   institution: string | null;
+  level: string | null;
   why: string | null;
   topic: string | null;
   message: string | null;
@@ -33,6 +34,7 @@ export async function saveSubmission(
     device: input.device ?? null,
     role: input.role ?? null,
     institution: input.institution ?? null,
+    level: input.level ?? null,
     why: input.why ?? null,
     topic: input.topic ?? null,
     message: input.message ?? null,

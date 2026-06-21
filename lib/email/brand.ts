@@ -1,4 +1,4 @@
-import { SITE } from "@/lib/constants";
+import { SITE, FOOTER } from "@/lib/constants";
 
 /**
  * Shared email brand system: one gold-on-charcoal palette, one logo header, and
@@ -61,8 +61,16 @@ export function emailFooterRows(opts?: {
           ? `<p style="margin:0 0 14px 0;font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:1.7;color:${COLORS.muted};">${escapeHtml(reason)}</p>`
           : ""
       }
-      <p style="margin:0 0 16px 0;font-family:Helvetica,Arial,sans-serif;font-size:12px;">
+      <p style="margin:0 0 12px 0;font-family:Helvetica,Arial,sans-serif;font-size:12px;">
         <a href="${escapeAttr(SITE.url)}" style="color:${COLORS.gold};text-decoration:none;font-weight:600;">klario.finance</a>
+      </p>
+      <p style="margin:0 0 16px 0;font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:1.7;color:${COLORS.muted};">
+        Follow us ${FOOTER.social
+          .map(
+            (s) =>
+              `&nbsp;&middot;&nbsp; <a href="${escapeAttr(s.href)}" style="color:${COLORS.gold};text-decoration:none;">${escapeHtml(s.label.split(" / ")[0])}</a>`
+          )
+          .join("")}
       </p>
       <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:${COLORS.muted};">
         ${showUnsub ? `<a href="${escapeAttr(unsubHref)}" style="color:${COLORS.muted};text-decoration:underline;">Unsubscribe</a> &nbsp;&middot;&nbsp; ` : ""}<a href="${escapeAttr(SITE.url)}/privacy" style="color:${COLORS.muted};text-decoration:underline;">Privacy</a>

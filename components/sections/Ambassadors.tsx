@@ -32,6 +32,15 @@ const inputCls =
 
 const labelCls = "text-xs font-medium uppercase tracking-[0.14em] text-body/65";
 
+const LEVELS = [
+  "100 Level",
+  "200 Level",
+  "300 Level",
+  "400 Level",
+  "500 Level",
+  "Postgraduate",
+];
+
 export function Ambassadors() {
   const [role, setRole] = useState<Role>("student");
   const [state, setState] = useState<Submit>("idle");
@@ -40,11 +49,18 @@ export function Ambassadors() {
     email: "",
     phone: "",
     institution: "",
+    level: "",
     why: "",
   });
 
-  const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm((p) => ({ ...p, [k]: e.target.value }));
+  const update =
+    (k: keyof typeof form) =>
+    (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) =>
+      setForm((p) => ({ ...p, [k]: e.target.value }));
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +79,10 @@ export function Ambassadors() {
     }
   };
 
+  // Ambassador applications are paused — show a "coming soon" panel instead of
+  // the form. Flip to false to re-open the program.
+  const COMING_SOON = true;
+
   return (
     <Section
       id="ambassadors"
@@ -72,6 +92,24 @@ export function Ambassadors() {
       intro={AMBASSADORS.intro}
       className="bg-surface"
     >
+      {COMING_SOON ? (
+        <div className="glass-card-dark mx-auto flex max-w-xl flex-col items-center gap-4 rounded-3xl p-10 text-center md:p-14">
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gold-dim text-gold">
+            <GraduationCap size={26} strokeWidth={1.75} />
+          </span>
+          <span className="rounded-full border border-border-gold bg-gold-dim px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-gold">
+            Coming soon
+          </span>
+          <h3 className="font-display text-2xl text-ink md:text-3xl">
+            Ambassador applications open soon
+          </h3>
+          <p className="max-w-md text-sm leading-relaxed text-body/70">
+            We&apos;re putting the finishing touches on the Klario Ambassador
+            program. Check back shortly to apply, earn, and help Nigerians get
+            clarity on their money.
+          </p>
+        </div>
+      ) : (
       <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {AMBASSADORS.perks.map((p) => {
@@ -79,7 +117,7 @@ export function Ambassadors() {
             return (
               <li
                 key={p.title}
-                className="flex flex-col gap-3 rounded-2xl border border-border-gold/60 bg-bg p-5"
+                className="glass-card-dark flex flex-col gap-3 rounded-2xl p-5"
               >
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gold-dim text-gold">
                   <Icon size={18} strokeWidth={1.75} />
@@ -91,7 +129,7 @@ export function Ambassadors() {
           })}
         </ul>
 
-        <div className="rounded-3xl border border-border-gold bg-bg p-7 shadow-[0_24px_60px_-30px_rgba(13,13,14,0.18)] md:p-8">
+        <div className="glass-card-dark rounded-3xl p-7 md:p-8">
           <AnimatePresence mode="wait">
             {state === "done" ? (
               <motion.div
@@ -209,6 +247,26 @@ export function Ambassadors() {
                   </Field>
                 </div>
 
+                {role === "student" && (
+                  <Field label="What level are you?">
+                    <select
+                      required
+                      value={form.level}
+                      onChange={update("level")}
+                      className={cn(inputCls, form.level ? "" : "text-body/40")}
+                    >
+                      <option value="" disabled>
+                        Select your level
+                      </option>
+                      {LEVELS.map((l) => (
+                        <option key={l} value={l} className="text-ink">
+                          {l}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+
                 <Field label="Why you'd be a great ambassador">
                   <textarea
                     required
@@ -237,6 +295,7 @@ export function Ambassadors() {
           </AnimatePresence>
         </div>
       </div>
+      )}
     </Section>
   );
 }

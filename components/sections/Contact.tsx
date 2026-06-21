@@ -54,7 +54,7 @@ export function Contact() {
         <div className="flex flex-col gap-6">
           <a
             href={`mailto:${CONTACT.email}`}
-            className="group flex items-center gap-4 rounded-2xl border border-border-gold/60 bg-card/50 p-5 transition-colors hover:border-gold"
+            className="glass-card-dark group flex items-center gap-4 rounded-2xl p-5 transition-colors hover:border-gold"
           >
             <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gold-dim text-gold">
               <Mail size={18} strokeWidth={1.75} />
@@ -77,7 +77,7 @@ export function Contact() {
           </p>
         </div>
 
-        <div className="rounded-3xl border border-border-gold bg-bg p-7 shadow-[0_24px_60px_-30px_rgba(13,13,14,0.18)] md:p-8">
+        <div className="glass-card-dark rounded-3xl p-7 md:p-8">
           <AnimatePresence mode="wait">
             {state === "done" ? (
               <motion.div

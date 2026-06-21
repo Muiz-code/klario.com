@@ -70,7 +70,7 @@ export const FOOTER = {
     },
     {
       label: "LinkedIn",
-      href: "https://ng.linkedin.com/in/klario-finance-7b55a140a",
+      href: "https://www.linkedin.com/company/klariofinance",
       icon: "Linkedin",
     },
   ],
