@@ -39,6 +39,23 @@ const STATUS_FILTERS: { id: "all" | DisplayStatus; label: string }[] = [
   { id: "unsubscribed", label: "Unsubscribed" },
 ];
 
+type DupRecord = {
+  type: "subscriber" | "submission";
+  id: string;
+  email: string;
+  title: string;
+  detail: string;
+  date: string;
+};
+
+type ResolveState = {
+  email: string;
+  records: DupRecord[];
+  keep: string;
+  loading: boolean;
+  busy: boolean;
+};
+
 const STATUS_STYLE: Record<DisplayStatus, string> = {
   pending: "bg-amber-400/15 text-amber-200",
   mailed: "bg-blue-400/15 text-blue-200",
@@ -79,6 +96,7 @@ export function SubscribersTable({
   const [report, setReport] = useState<DuplicateReport | null>(null);
   const [scanning, setScanning] = useState(false);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
+  const [resolve, setResolve] = useState<ResolveState | null>(null);
 
   // Subscribers whose email also shows up in the public submissions log.
   const crossSet = useMemo(
@@ -308,6 +326,50 @@ export function SubscribersTable({
       confirmLabel: "Merge duplicates",
       onConfirm: runMerge,
     });
+
+  const openResolve = async (s: Signup) => {
+    setResolve({
+      email: s.email,
+      records: [],
+      keep: `subscriber:${s.id}`,
+      loading: true,
+      busy: false,
+    });
+    try {
+      const res = await fetch(
+        `/api/admin/duplicates/records?email=${encodeURIComponent(s.email)}`
+      );
+      const data = await res.json().catch(() => ({ records: [] }));
+      setResolve((r) =>
+        r ? { ...r, records: data.records ?? [], loading: false } : r
+      );
+    } catch {
+      setResolve((r) => (r ? { ...r, loading: false } : r));
+    }
+  };
+
+  const doResolve = async () => {
+    if (!resolve) return;
+    setResolve({ ...resolve, busy: true });
+    const remove = resolve.records
+      .filter((r) => `${r.type}:${r.id}` !== resolve.keep)
+      .map((r) => ({ type: r.type, id: r.id }));
+    const res = await fetch("/api/admin/duplicates/resolve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ remove }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setResolve(null);
+    if (res.ok) {
+      setNotice(
+        `Resolved. Removed ${data.removed} duplicate record${data.removed === 1 ? "" : "s"}.`
+      );
+      refresh();
+    } else {
+      setNotice(data.error || "Could not resolve.");
+    }
+  };
 
   const requestRemove = (s: Signup) => {
     setConfirmState({
@@ -677,6 +739,7 @@ export function SubscribersTable({
                 const failed = isFailed(s);
                 const bounced = isBounced(s);
                 const problem = failed || bounced;
+                const dup = isDuplicate(s);
                 return (
                   <tr
                     key={s.id}
@@ -803,6 +866,16 @@ export function SubscribersTable({
                             {mailed || problem ? "Resend" : "Send invite"}
                           </button>
                         )}
+                        {dup && (
+                          <button
+                            type="button"
+                            onClick={() => openResolve(s)}
+                            disabled={busy}
+                            className="rounded-full border border-amber-400/40 px-2.5 py-1 text-[11px] text-amber-200 hover:border-amber-400/70 disabled:opacity-40"
+                          >
+                            Resolve
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => requestRemove(s)}
@@ -833,6 +906,106 @@ export function SubscribersTable({
         onClose={() => setConfirmState(null)}
         loading={busy}
       />
+
+      {resolve && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4 backdrop-blur-sm"
+          onClick={() => !resolve.busy && setResolve(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg rounded-2xl border border-bg/15 bg-[#0d0e12] p-5"
+          >
+            <h2 className="font-display text-lg text-bg">Resolve duplicate</h2>
+            <p className="mt-1 text-[13px] text-bg/55">
+              <span className="text-bg/80">{resolve.email}</span> appears in more
+              than one record. Pick the one to keep; the rest are deleted.
+            </p>
+
+            <div className="mt-4 flex max-h-[50vh] flex-col gap-2 overflow-y-auto">
+              {resolve.loading ? (
+                <p className="py-6 text-center text-[13px] text-bg/45">
+                  Loading records...
+                </p>
+              ) : resolve.records.length === 0 ? (
+                <p className="py-6 text-center text-[13px] text-bg/45">
+                  No records found.
+                </p>
+              ) : (
+                resolve.records.map((r) => {
+                  const key = `${r.type}:${r.id}`;
+                  const on = resolve.keep === key;
+                  return (
+                    <label
+                      key={key}
+                      className={
+                        "flex cursor-pointer items-start gap-3 rounded-xl border p-3 " +
+                        (on
+                          ? "border-gold/60 bg-gold/5"
+                          : "border-bg/12 bg-bg/4 hover:border-bg/25")
+                      }
+                    >
+                      <input
+                        type="radio"
+                        name="keep-record"
+                        checked={on}
+                        onChange={() => setResolve({ ...resolve, keep: key })}
+                        className="mt-0.5 accent-gold"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-[13px] text-bg/85">
+                            {r.title}
+                          </span>
+                          <span
+                            className={
+                              "shrink-0 rounded-full px-1.5 py-0.5 text-[10px] capitalize " +
+                              (r.type === "subscriber"
+                                ? "bg-blue-400/15 text-blue-200"
+                                : "bg-bg/10 text-bg/60")
+                            }
+                          >
+                            {r.type}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 truncate text-[11px] text-bg/50">
+                          {r.detail}
+                        </p>
+                        <p className="text-[10px] text-bg/35">
+                          {new Date(r.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setResolve(null)}
+                disabled={resolve.busy}
+                className="rounded-full border border-bg/15 px-4 py-2 text-sm text-bg/75 hover:text-bg disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={doResolve}
+                disabled={
+                  resolve.busy || resolve.loading || resolve.records.length <= 1
+                }
+                className="rounded-full bg-gold px-4 py-2 text-sm font-medium text-ink hover:scale-[1.01] disabled:opacity-50"
+              >
+                {resolve.busy
+                  ? "Resolving..."
+                  : `Keep selected, remove ${Math.max(0, resolve.records.length - 1)}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
