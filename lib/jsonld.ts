@@ -127,3 +127,59 @@ export function legalBreadcrumbJsonLd(slug: string, title: string) {
     ],
   };
 }
+
+export function blogBreadcrumbJsonLd(slug: string, title: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE.url,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Blog",
+        item: `${SITE.url}/blog`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: title,
+        item: `${SITE.url}/blog/${slug}`,
+      },
+    ],
+  };
+}
+
+export function blogArticleJsonLd(post: {
+  slug: string;
+  title: string;
+  excerpt: string;
+  publishedAtIso: string;
+  author: { name: string };
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: post.publishedAtIso,
+    author: {
+      "@type": "Organization",
+      name: post.author.name,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: SITE.legalName,
+      url: SITE.url,
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${SITE.url}/blog/${post.slug}`,
+    },
+  };
+}

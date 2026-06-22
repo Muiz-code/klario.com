@@ -196,7 +196,7 @@ function TemplateCard({
           <div className="min-w-0">
             <p className="truncate font-medium text-bg">{t.name}</p>
             <p className="mt-0.5 text-[12px] leading-relaxed text-bg/55">
-              {t.description || "—"}
+              {t.description || "-"}
             </p>
           </div>
           {onDelete && (
@@ -253,7 +253,7 @@ function PreviewModal({
           <div className="min-w-0">
             <h2 className="font-display text-lg text-bg">{template.name}</h2>
             <p className="truncate text-[12px] text-bg/50">
-              {template.description || "—"}
+              {template.description || "-"}
             </p>
           </div>
           <div className="flex items-center gap-2">

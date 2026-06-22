@@ -119,8 +119,8 @@ function AutomationCard({ automation }: { automation: Automation }) {
         const r = data.result;
         setNotice(
           r.attempted === 0
-            ? "Ran — no eligible subscribers right now."
-            : `Ran — sent ${r.sent}, failed ${r.failed}.`
+            ? "Ran - no eligible subscribers right now."
+            : `Ran - sent ${r.sent}, failed ${r.failed}.`
         );
         router.refresh();
       }

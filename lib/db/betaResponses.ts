@@ -185,7 +185,7 @@ export async function upsertBetaResponse(
       console.error("[db] upsertBetaResponse insert failed:", error.message);
       return null;
     }
-    // ref collided — loop and try a new one.
+    // ref collided - loop and try a new one.
   }
   console.error("[db] upsertBetaResponse: could not allocate a unique ref");
   return null;

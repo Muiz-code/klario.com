@@ -16,8 +16,8 @@ type TrendChartProps = {
   height?: number;
   /**
    * What the legend shows next to each series:
-   * - "sum" (default): total of all points — right for per-day counts.
-   * - "last": the final point — right for a cumulative/running total.
+   * - "sum" (default): total of all points - right for per-day counts.
+   * - "last": the final point - right for a cumulative/running total.
    * - "none": no number.
    */
   legend?: "sum" | "last" | "none";

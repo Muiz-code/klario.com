@@ -2,7 +2,18 @@
 
 import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Trash2, Upload, Send, Copy, ScanSearch } from "lucide-react";
+import {
+  Search,
+  Trash2,
+  Upload,
+  Send,
+  Copy,
+  ScanSearch,
+  Pencil,
+  AlertTriangle,
+  Check,
+  X,
+} from "lucide-react";
 import type { Signup } from "@/lib/db/signups";
 import type { DuplicateReport } from "@/lib/db/duplicates";
 import { normalizeEmail } from "@/lib/duplicates";
@@ -38,10 +49,14 @@ export function SubscribersTable({
   signups,
   crossListEmails = [],
   mailedEmails = [],
+  failedEmails = [],
+  bouncedEmails = [],
 }: {
   signups: Signup[];
   crossListEmails?: string[];
   mailedEmails?: string[];
+  failedEmails?: string[];
+  bouncedEmails?: string[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -50,6 +65,10 @@ export function SubscribersTable({
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | DisplayStatus>("all");
   const [dupOnly, setDupOnly] = useState(false);
+  const [failedOnly, setFailedOnly] = useState(false);
+  const [bouncedOnly, setBouncedOnly] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editEmail, setEditEmail] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -66,6 +85,19 @@ export function SubscribersTable({
     [crossListEmails]
   );
   const isDuplicate = (s: Signup) => crossSet.has(normalizeEmail(s.email));
+
+  // Subscribers whose mail didn't make it: failed = never left; bounced =
+  // rejected by the recipient's server. Neither was later delivered.
+  const failedSet = useMemo(
+    () => new Set(failedEmails.map(normalizeEmail)),
+    [failedEmails]
+  );
+  const bouncedSet = useMemo(
+    () => new Set(bouncedEmails.map(normalizeEmail)),
+    [bouncedEmails]
+  );
+  const isFailed = (s: Signup) => failedSet.has(normalizeEmail(s.email));
+  const isBounced = (s: Signup) => bouncedSet.has(normalizeEmail(s.email));
 
   // Everyone we've actually mailed (any non-failed send).
   const mailedSet = useMemo(
@@ -86,6 +118,8 @@ export function SubscribersTable({
     return signups
       .filter((s) => (status === "all" ? true : displayStatus(s) === status))
       .filter((s) => (dupOnly ? crossSet.has(normalizeEmail(s.email)) : true))
+      .filter((s) => (failedOnly ? failedSet.has(normalizeEmail(s.email)) : true))
+      .filter((s) => (bouncedOnly ? bouncedSet.has(normalizeEmail(s.email)) : true))
       .filter((s) => {
         if (!needle) return true;
         return (
@@ -94,7 +128,18 @@ export function SubscribersTable({
           (s.last_name || "").toLowerCase().includes(needle)
         );
       });
-  }, [signups, q, status, dupOnly, crossSet, displayStatus]);
+  }, [
+    signups,
+    q,
+    status,
+    dupOnly,
+    failedOnly,
+    bouncedOnly,
+    crossSet,
+    failedSet,
+    bouncedSet,
+    displayStatus,
+  ]);
 
   const allVisibleSelected =
     filtered.length > 0 && filtered.every((s) => selected.has(s.id));
@@ -242,6 +287,32 @@ export function SubscribersTable({
     else setNotice("Could not delete.");
   };
 
+  const startEdit = (s: Signup) => {
+    setEditingId(s.id);
+    setEditEmail(s.email);
+  };
+
+  const saveEmail = async (id: string) => {
+    const value = editEmail.trim();
+    if (!value) return;
+    setBusy(true);
+    setNotice(null);
+    const res = await fetch(`/api/admin/subscribers/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: value }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (res.ok) {
+      setEditingId(null);
+      setNotice("Email updated.");
+      refresh();
+    } else {
+      setNotice(data.error || "Could not update the email.");
+    }
+  };
+
   const exportCsv = () => {
     const header = "email,first_name,last_name,status,source,created_at\n";
     const esc = (v: unknown) => {
@@ -358,6 +429,60 @@ export function SubscribersTable({
             </button>
           );
         })}
+
+        {failedSet.size > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              const next = !failedOnly;
+              setFailedOnly(next);
+              if (next) {
+                setStatus("all");
+                setDupOnly(false);
+                setBouncedOnly(false);
+              }
+            }}
+            title="Sends that errored before leaving (never accepted)"
+            className={
+              "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] transition-colors " +
+              (failedOnly
+                ? "bg-red-400/20 text-red-100"
+                : "text-red-200/70 hover:bg-red-400/10 hover:text-red-100")
+            }
+          >
+            <AlertTriangle size={12} /> Failed
+            <span className="rounded-full bg-red-400/20 px-1.5 text-[10px]">
+              {failedSet.size}
+            </span>
+          </button>
+        )}
+
+        {bouncedSet.size > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              const next = !bouncedOnly;
+              setBouncedOnly(next);
+              if (next) {
+                setStatus("all");
+                setDupOnly(false);
+                setFailedOnly(false);
+              }
+            }}
+            title="Accepted, then rejected by the recipient's mail server"
+            className={
+              "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] transition-colors " +
+              (bouncedOnly
+                ? "bg-orange-400/20 text-orange-100"
+                : "text-orange-200/70 hover:bg-orange-400/10 hover:text-orange-100")
+            }
+          >
+            <AlertTriangle size={12} /> Bounced
+            <span className="rounded-full bg-orange-400/20 px-1.5 text-[10px]">
+              {bouncedSet.size}
+            </span>
+          </button>
+        )}
 
         {crossSet.size > 0 && (
           <button
@@ -495,6 +620,9 @@ export function SubscribersTable({
                 const ds = displayStatus(s);
                 const mailed = ds === "mailed" || ds === "active";
                 const unsub = ds === "unsubscribed";
+                const failed = isFailed(s);
+                const bounced = isBounced(s);
+                const problem = failed || bounced;
                 return (
                   <tr
                     key={s.id}
@@ -510,17 +638,75 @@ export function SubscribersTable({
                       />
                     </td>
                     <td className="px-4 py-3 text-bg/85">
-                      <span className="inline-flex items-center gap-2">
-                        {s.email}
-                        {isDuplicate(s) && (
-                          <span
-                            title="Also appears in the submissions log"
-                            className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[10px] text-amber-200"
+                      {editingId === s.id ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <input
+                            type="email"
+                            value={editEmail}
+                            onChange={(e) => setEditEmail(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveEmail(s.id);
+                              if (e.key === "Escape") setEditingId(null);
+                            }}
+                            autoFocus
+                            className="w-56 rounded-md border border-gold/40 bg-bg/5 px-2 py-1 text-[13px] text-bg focus:border-gold focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => saveEmail(s.id)}
+                            disabled={busy}
+                            aria-label="Save email"
+                            className="rounded-md p-1 text-emerald-300 hover:bg-emerald-400/10 disabled:opacity-40"
                           >
-                            <Copy size={10} /> dup
-                          </span>
-                        )}
-                      </span>
+                            <Check size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingId(null)}
+                            aria-label="Cancel"
+                            className="rounded-md p-1 text-bg/55 hover:bg-bg/10 hover:text-bg"
+                          >
+                            <X size={14} />
+                          </button>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-2">
+                          {s.email}
+                          <button
+                            type="button"
+                            onClick={() => startEdit(s)}
+                            aria-label="Edit email"
+                            title="Fix a typo in this email"
+                            className="rounded p-0.5 text-bg/40 transition-colors hover:bg-gold/10 hover:text-gold"
+                          >
+                            <Pencil size={12} />
+                          </button>
+                          {isFailed(s) && (
+                            <span
+                              title="Send errored before leaving (never accepted)"
+                              className="inline-flex items-center gap-1 rounded-full bg-red-400/15 px-1.5 py-0.5 text-[10px] text-red-200"
+                            >
+                              <AlertTriangle size={10} /> failed
+                            </span>
+                          )}
+                          {isBounced(s) && (
+                            <span
+                              title="Accepted, then rejected by the recipient's mail server"
+                              className="inline-flex items-center gap-1 rounded-full bg-orange-400/15 px-1.5 py-0.5 text-[10px] text-orange-200"
+                            >
+                              <AlertTriangle size={10} /> bounced
+                            </span>
+                          )}
+                          {isDuplicate(s) && (
+                            <span
+                              title="Also appears in the submissions log"
+                              className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[10px] text-amber-200"
+                            >
+                              <Copy size={10} /> dup
+                            </span>
+                          )}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-bg/70">
                       {[s.first_name, s.last_name].filter(Boolean).join(" ") || "-"}
@@ -553,9 +739,14 @@ export function SubscribersTable({
                               })
                             }
                             disabled={busy}
-                            className="rounded-full border border-bg/15 px-2.5 py-1 text-[11px] text-bg/75 hover:border-gold/50 hover:text-bg disabled:opacity-40"
+                            className={
+                              "rounded-full border px-2.5 py-1 text-[11px] disabled:opacity-40 " +
+                              (problem
+                                ? "border-red-400/40 text-red-200 hover:border-red-400/70"
+                                : "border-bg/15 text-bg/75 hover:border-gold/50 hover:text-bg")
+                            }
                           >
-                            {mailed ? "Resend" : "Send invite"}
+                            {mailed || problem ? "Resend" : "Send invite"}
                           </button>
                         )}
                         <button

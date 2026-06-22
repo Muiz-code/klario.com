@@ -19,7 +19,7 @@ const manrope = Manrope({
 
 const title = "Join the Klario beta";
 const description =
-  "Let's talk about your money (gently). Eight quick questions to help shape Klario — your AI money app built for Nigerians.";
+  "Let's talk about your money (gently). Eight quick questions to help shape Klario - your AI money app built for Nigerians.";
 
 export const metadata: Metadata = {
   title,

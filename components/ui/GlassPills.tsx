@@ -31,7 +31,7 @@ export function GlassPills({
         className
       )}
     >
-      {/* Pills use the same static .glass-card style as the Security cards — no
+      {/* Pills use the same static .glass-card style as the Security cards - no
           backdrop-filter, so there's nothing to re-sample on scroll (no jank). */}
       <div className="flex" style={{ perspective: 1200 }}>
         {Array.from({ length: count }).map((_, i) => (

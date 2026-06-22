@@ -32,7 +32,7 @@ const DEFAULTS: Array<
     name: "Re-engage inactive subscribers",
     delay_hours: 72,
     subject: "Still keen on early access?",
-    body: "You joined the Klario beta list a little while ago but haven't jumped in yet.\n\nWe're rolling out access in small batches and your spot is still reserved. Tap below whenever you're ready — it only takes a minute to get started.",
+    body: "You joined the Klario beta list a little while ago but haven't jumped in yet.\n\nWe're rolling out access in small batches and your spot is still reserved. Tap below whenever you're ready - it only takes a minute to get started.",
   },
   {
     key: "winback",

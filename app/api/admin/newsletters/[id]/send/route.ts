@@ -98,7 +98,7 @@ export async function POST(
   const sent = results.filter((r) => r.ok).length;
   const failed = results.length - sent;
 
-  // Anyone still "pending" who was successfully emailed has now been contacted —
+  // Anyone still "pending" who was successfully emailed has now been contacted -
   // advance them to "invited" so they stop showing as a new/uncontacted lead.
   const okEmails = new Set(results.filter((r) => r.ok).map((r) => r.to));
   const nowContacted = recipients

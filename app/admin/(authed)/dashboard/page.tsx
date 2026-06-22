@@ -179,9 +179,9 @@ export default async function DashboardPage({
           body="Import a CSV, search, filter, and send the welcome email."
         />
         <Action
-          href="/p@ss1/email"
-          title="Beta invite"
-          body="Preview the welcome email, edit the subject and CTA, send a test."
+          href="/p@ss1/analytics"
+          title="Analytics"
+          body="See visits, clicks, top pages and the most-read blog posts."
         />
         <Action
           href="/p@ss1/newsletters/new"

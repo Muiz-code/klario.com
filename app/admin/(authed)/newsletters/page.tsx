@@ -69,7 +69,14 @@ export default async function NewslettersPage() {
                     {n.sent_at ? new Date(n.sent_at).toLocaleString() : "-"}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <NewsletterRowActions id={n.id} status={n.status} />
+                    <NewsletterRowActions
+                      id={n.id}
+                      status={n.status}
+                      failedCount={Math.max(
+                        0,
+                        n.recipient_count - n.sent_count
+                      )}
+                    />
                   </td>
                 </tr>
               ))

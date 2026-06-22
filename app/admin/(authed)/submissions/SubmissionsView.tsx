@@ -40,7 +40,7 @@ export function SubmissionsView({
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const [info, setInfo] = useState<{ title: string; message: string; ok?: boolean } | null>(null);
 
-  // Emails that appear in more than one submission row — repeat submitters.
+  // Emails that appear in more than one submission row - repeat submitters.
   const dupSet = useMemo(
     () => duplicateEmailSet(submissions.map((s) => s.email)),
     [submissions]

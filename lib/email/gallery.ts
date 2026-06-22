@@ -38,7 +38,7 @@ export function galleryTemplates(): GalleryTemplate[] {
   });
 
   // A deliberately plain, text-first email. No logo banner, no buttons, no
-  // multi-section tables — it reads like a personal note, which Gmail is far
+  // multi-section tables - it reads like a personal note, which Gmail is far
   // more likely to file under Primary than Promotions. One inline link, one
   // unsubscribe link, light background, system font.
   const plain = `<!DOCTYPE html>
@@ -46,7 +46,7 @@ export function galleryTemplates(): GalleryTemplate[] {
 <body style="margin:0;padding:0;background:#ffffff;">
 <div style="font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#1a1a1a;max-width:560px;margin:0 auto;padding:28px 22px;">
   <p style="margin:0 0 16px;">Hi {{first_name}},</p>
-  <p style="margin:0 0 16px;">Write your note here as if you're emailing one person — short, friendly, and to the point. A plain message like this is much more likely to land in the inbox.</p>
+  <p style="margin:0 0 16px;">Write your note here as if you're emailing one person - short, friendly, and to the point. A plain message like this is much more likely to land in the inbox.</p>
   <p style="margin:0 0 16px;">If you need them to do something, link it inline like <a href="https://www.klario.finance" style="color:#1a73e8;text-decoration:underline;">this</a> instead of using a big button.</p>
   <p style="margin:0 0 2px;">Thanks,</p>
   <p style="margin:0 0 28px;">Muiz · Klario</p>

@@ -135,7 +135,7 @@ export function BetaResponsesView({
     () => new Map(responses.map((r) => [r.id, r])),
     [responses]
   );
-  // Referral counts — every resolved referral counts (no email confirmation needed).
+  // Referral counts - every resolved referral counts (no email confirmation needed).
   const referralCounts = useMemo(() => {
     const m = new Map<string, number>();
     for (const r of responses) {

@@ -1,7 +1,7 @@
 import { listSignups } from "@/lib/db/signups";
 import { submissionEmailCounts } from "@/lib/db/duplicates";
 import { normalizeEmail } from "@/lib/duplicates";
-import { getMailedEmails } from "@/lib/db/email-log";
+import { getMailedEmails, getDeliveryProblems } from "@/lib/db/email-log";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import { SubscribersTable } from "./SubscribersTable";
 
@@ -9,15 +9,21 @@ export const dynamic = "force-dynamic";
 
 export default async function SubscribersPage() {
   const configured = isSupabaseConfigured();
-  const [signups, submissionCounts, mailedEmails] = configured
+  const [signups, submissionCounts, mailedEmails, problems] = configured
     ? await Promise.all([
         listSignups({ limit: 2000 }),
         submissionEmailCounts(),
         getMailedEmails(),
+        getDeliveryProblems(),
       ])
-    : [[], new Map<string, number>(), [] as string[]];
+    : [
+        [],
+        new Map<string, number>(),
+        [] as string[],
+        { failed: [] as string[], bounced: [] as string[] },
+      ];
 
-  // Subscriber emails that also appear in the public submissions log — the same
+  // Subscriber emails that also appear in the public submissions log - the same
   // person reached us through more than one channel (website form + the list).
   const crossListEmails = signups
     .map((s) => normalizeEmail(s.email))
@@ -43,6 +49,8 @@ export default async function SubscribersPage() {
         signups={signups}
         crossListEmails={crossListEmails}
         mailedEmails={mailedEmails}
+        failedEmails={problems.failed}
+        bouncedEmails={problems.bounced}
       />
     </div>
   );

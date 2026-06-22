@@ -67,7 +67,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /**
  * Find the column that holds emails. Prefers a header named like "email", but
  * falls back to scanning the data and picking the column with the most valid
- * emails — so arbitrary exports (e.g. a Google Form where the address sits under
+ * emails - so arbitrary exports (e.g. a Google Form where the address sits under
  * "Username") still work without renaming headers.
  */
 function findEmailColumn(rows: string[][], header: string[]): number {

@@ -115,7 +115,7 @@ export const FOOTER = {
     {
       title: "Resources",
       links: [
-        { label: "Blog", href: "#" },
+        { label: "Blog", href: "/blog" },
         { label: "Press", href: `mailto:${"hello@klario.finance"}` },
         { label: "Support", href: "#contact" },
         { label: "Newsletter", href: "#contact" },
@@ -167,10 +167,10 @@ export const FAQS = [
 ] as const;
 
 export const NAV_LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "Security", href: "#security" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Ambassadors", href: "#ambassadors" },
+  { label: "Features", href: "/#features" },
+  { label: "Security", href: "/#security" },
+  { label: "Pricing", href: "/#pricing" },
+  { label: "Blog", href: "/blog" },
 ] as const;
 
 export const PROBLEM = {

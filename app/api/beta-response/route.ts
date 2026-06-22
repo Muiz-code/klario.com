@@ -193,7 +193,7 @@ export async function POST(req: Request) {
     { touch: true }
   );
 
-  // Confirmation email — non-blocking for the user's success screen.
+  // Confirmation email - non-blocking for the user's success screen.
   try {
     const result = await sendTransactional({
       to: email,

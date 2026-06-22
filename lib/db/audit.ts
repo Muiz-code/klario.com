@@ -109,6 +109,24 @@ export async function getAuditByIds(
   }[];
 }
 
+/** Audit event ids tied to a newsletter (its original send plus any resends). */
+export async function getAuditIdsForNewsletter(
+  newsletterId: string
+): Promise<string[]> {
+  const db = supabaseAdmin();
+  const { data, error } = await db
+    .from("audit_log")
+    .select("id")
+    .eq("action", "newsletter")
+    .eq("meta->>newsletter_id", newsletterId)
+    .limit(1000);
+  if (error) {
+    console.error("[db] getAuditIdsForNewsletter failed:", error.message);
+    return [];
+  }
+  return (data ?? []).map((r) => r.id as string);
+}
+
 export async function listAuditEvents(limit = 200): Promise<AuditEvent[]> {
   const db = supabaseAdmin();
   const { data, error } = await db

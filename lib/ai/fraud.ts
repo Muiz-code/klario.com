@@ -131,7 +131,7 @@ function clampLevel(risk: number): FraudLevel {
   return "low";
 }
 
-/** Score one response with Claude. Never throws — returns {ok:false} on failure. */
+/** Score one response with Claude. Never throws - returns {ok:false} on failure. */
 export async function assessFraud(input: FraudInput): Promise<FraudResult> {
   if (!isAiConfigured()) {
     return { ok: false, error: "AI is not configured (missing ANTHROPIC_API_KEY)." };

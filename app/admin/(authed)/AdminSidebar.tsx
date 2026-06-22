@@ -6,14 +6,16 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Megaphone,
+  Newspaper,
   Users,
   Workflow,
   Layers,
   LayoutTemplate,
   FileText,
+  BarChart3,
+  PenSquare,
   Settings,
   Inbox,
-  Send,
   ScrollText,
   ClipboardList,
   Crown,
@@ -26,6 +28,8 @@ import { supabaseBrowser } from "@/lib/supabase/browser";
 const primaryNav = [
   { href: "/p@ss1/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/p@ss1/newsletters", label: "Campaigns", icon: Megaphone },
+  { href: "/p@ss1/blog", label: "Blog", icon: Newspaper },
+  { href: "/p@ss1/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/p@ss1/subscribers", label: "Audience", icon: Users },
   { href: "/p@ss1/automations", label: "Automations", icon: Workflow },
   { href: "/p@ss1/segments", label: "Segments", icon: Layers },
@@ -37,7 +41,6 @@ const primaryNav = [
 const toolsNav = [
   { href: "/p@ss1/beta", label: "Beta responses", icon: ClipboardList },
   { href: "/p@ss1/submissions", label: "Submissions", icon: Inbox },
-  { href: "/p@ss1/email", label: "Beta invite", icon: Send },
   { href: "/p@ss1/audit", label: "Audit log", icon: ScrollText },
 ];
 
@@ -139,6 +142,18 @@ export function AdminSidebar({ email }: { email: string }) {
           >
             <X size={18} />
           </button>
+        </div>
+
+        {/* Quick compose */}
+        <div className="px-3 pb-2">
+          <Link
+            href="/p@ss1/newsletters/new"
+            onClick={() => setOpen(false)}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-3 py-2.5 text-sm font-semibold text-ink transition-transform hover:scale-[1.01]"
+          >
+            <PenSquare size={15} strokeWidth={2} />
+            Compose mail
+          </Link>
         </div>
 
         {/* Nav */}

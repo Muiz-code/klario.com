@@ -210,7 +210,43 @@ create index if not exists beta_responses_referred_by_idx on public.beta_respons
 create index if not exists beta_responses_ip_idx          on public.beta_responses (ip);
 create index if not exists beta_responses_fingerprint_idx on public.beta_responses (fingerprint);
 
+-- --- blog_posts: admin-authored blog posts (public reads via the server) ----
+create table if not exists public.blog_posts (
+  id           uuid primary key default gen_random_uuid(),
+  slug         text not null unique,
+  title        text not null,
+  excerpt      text not null default '',
+  category     text not null default 'Money Tips',
+  image        text,
+  body         text not null default '',
+  author_name  text not null default 'Klario Team',
+  author_role  text not null default 'Product',
+  read_time    text,
+  published    boolean not null default false,
+  views        integer not null default 0,
+  published_at timestamptz,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create index if not exists blog_posts_published_idx on public.blog_posts (published, published_at desc);
+
+-- --- analytics_events: first-party pageview + click tracking ----------------
+create table if not exists public.analytics_events (
+  id          uuid primary key default gen_random_uuid(),
+  type        text not null check (type in ('pageview', 'click')),
+  path        text,
+  label       text,
+  href        text,
+  referrer    text,
+  session     text,
+  created_at  timestamptz not null default now()
+);
+create index if not exists analytics_events_created_idx on public.analytics_events (created_at desc);
+create index if not exists analytics_events_type_idx     on public.analytics_events (type, created_at desc);
+
 -- --- Lock everything down: RLS on, no policies -----------------------------
+alter table public.analytics_events enable row level security;
+alter table public.blog_posts       enable row level security;
 alter table public.beta_signups     enable row level security;
 alter table public.submissions      enable row level security;
 alter table public.email_log        enable row level security;

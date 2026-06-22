@@ -4,7 +4,7 @@ import { normalizeEmail } from "@/lib/duplicates";
 
 /**
  * Dashboard analytics over an explicit inclusive date range (from..to, UTC days).
- * Rows are fetched for the range and bucketed by UTC day in JS — fine at
+ * Rows are fetched for the range and bucketed by UTC day in JS - fine at
  * beta-scale and avoids SQL RPCs.
  */
 
@@ -282,7 +282,7 @@ export async function getDashboard(range: DateRange): Promise<DashboardData> {
         .limit(120000),
       // Full list (email + status) for contact-based segments.
       db.from("beta_signups").select("email, status").limit(60000),
-      // Every email we've ever attempted — to know who has been contacted.
+      // Every email we've ever attempted - to know who has been contacted.
       db.from("email_log").select("email").limit(200000),
     ]);
 

@@ -13,7 +13,7 @@ const RANGES = [
 
 /**
  * Audience growth chart with its own range filter, independent of the
- * dashboard's date picker — it always shows the overall running subscriber
+ * dashboard's date picker - it always shows the overall running subscriber
  * total, narrowed to the selected window.
  */
 export function AudienceGrowth({

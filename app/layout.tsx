@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono, Fraunces } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { siteMetadata } from "@/lib/metadata";
 import { jsonLd } from "@/lib/jsonld";
+import { AnalyticsBeacon } from "@/components/AnalyticsBeacon";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -59,6 +61,8 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         {children}
+        <AnalyticsBeacon />
+        <Analytics />
       </body>
     </html>
   );

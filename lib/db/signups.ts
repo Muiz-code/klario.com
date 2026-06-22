@@ -149,6 +149,30 @@ export async function setStatus(id: string, status: SignupStatus): Promise<boole
   return true;
 }
 
+/** Correct a subscriber's email (e.g. a .con -> .com typo). */
+export async function updateSignupEmail(
+  id: string,
+  email: string
+): Promise<{ ok: true } | { error: string }> {
+  const db = supabaseAdmin();
+  const clean = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
+    return { error: "That doesn't look like a valid email." };
+  }
+  const { error } = await db
+    .from("beta_signups")
+    .update({ email: clean })
+    .eq("id", id);
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "Another subscriber already uses that email." };
+    }
+    console.error("[db] updateSignupEmail failed:", error.message);
+    return { error: "Could not update the email." };
+  }
+  return { ok: true };
+}
+
 export async function deleteSignup(id: string): Promise<boolean> {
   const db = supabaseAdmin();
   const { error } = await db.from("beta_signups").delete().eq("id", id);
@@ -219,8 +243,8 @@ export type ImportResult = {
 
 /**
  * Bulk import for CSV upload. Inserts new emails, ignores ones that already
- * exist. Returns counts plus the specific emails that were duplicates — both
- * the ones repeated inside the file and the ones already on the list — so the
+ * exist. Returns counts plus the specific emails that were duplicates - both
+ * the ones repeated inside the file and the ones already on the list - so the
  * admin can identify exactly which addresses collided.
  */
 export async function importSignups(

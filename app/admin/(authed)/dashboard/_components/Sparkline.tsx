@@ -1,5 +1,5 @@
 /**
- * Tiny inline sparkline (server component — no interactivity). `id` must be
+ * Tiny inline sparkline (server component - no interactivity). `id` must be
  * unique per sparkline on the page so gradient fills don't collide.
  */
 export function Sparkline({

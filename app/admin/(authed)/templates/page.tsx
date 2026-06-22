@@ -29,7 +29,7 @@ export default async function TemplatesPage() {
         <h1 className="font-display text-3xl text-bg">Templates</h1>
         <p className="mt-1 text-sm text-bg/55">
           Ready-made email layouts and your own saved designs. Preview one, then
-          use it to start a campaign — you can edit everything before sending.
+          use it to start a campaign - you can edit everything before sending.
         </p>
       </div>
 

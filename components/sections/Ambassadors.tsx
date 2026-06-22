@@ -79,7 +79,7 @@ export function Ambassadors() {
     }
   };
 
-  // Ambassador applications are paused — show a "coming soon" panel instead of
+  // Ambassador applications are paused - show a "coming soon" panel instead of
   // the form. Flip to false to re-open the program.
   const COMING_SOON = true;
 

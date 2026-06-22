@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { deleteSignup, setStatus, type SignupStatus } from "@/lib/db/signups";
+import {
+  deleteSignup,
+  setStatus,
+  updateSignupEmail,
+  type SignupStatus,
+} from "@/lib/db/signups";
 
 export const runtime = "nodejs";
 
@@ -10,12 +15,22 @@ export async function PATCH(
   ctx: { params: Promise<{ id: string }> }
 ) {
   const { id } = await ctx.params;
-  let body: { status?: unknown };
+  let body: { status?: unknown; email?: unknown };
   try {
     body = (await req.json()) as typeof body;
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+
+  // Email correction (e.g. fixing a .con -> .com typo).
+  if (typeof body.email === "string") {
+    const result = await updateSignupEmail(id, body.email);
+    if ("error" in result) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
+    }
+    return NextResponse.json({ ok: true });
+  }
+
   const status = body.status;
   if (typeof status !== "string" || !VALID.includes(status as SignupStatus)) {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });

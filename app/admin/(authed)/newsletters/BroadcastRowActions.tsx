@@ -2,21 +2,51 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Send, Trash2 } from "lucide-react";
+import { Send, Trash2, RotateCcw } from "lucide-react";
 import { ConfirmModal, InfoModal, type ConfirmState } from "../_components/Modal";
 
 export function NewsletterRowActions({
   id,
   status,
+  failedCount = 0,
 }: {
   id: string;
   status: string;
+  failedCount?: number;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [busy, setBusy] = useState<"send" | "delete" | null>(null);
+  const [busy, setBusy] = useState<"send" | "delete" | "resend" | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState>(null);
   const [info, setInfo] = useState<{ title: string; message: string; ok?: boolean } | null>(null);
+
+  const resendFailed = async () => {
+    setBusy("resend");
+    const res = await fetch(`/api/admin/newsletters/${id}/resend-failed`, {
+      method: "POST",
+    });
+    const data = await res.json().catch(() => ({}));
+    setBusy(null);
+    setConfirm(null);
+    if (res.ok) {
+      setInfo({
+        title: "Resend complete",
+        message:
+          data.message ||
+          `Resent to ${data.sent} failed recipient${data.sent === 1 ? "" : "s"}.${
+            data.failed ? ` ${data.failed} still failed.` : ""
+          }`,
+        ok: true,
+      });
+      startTransition(() => router.refresh());
+    } else {
+      setInfo({
+        title: "Could not resend",
+        message: data.error || "Try again.",
+        ok: false,
+      });
+    }
+  };
 
   const send = async () => {
     setBusy("send");
@@ -50,10 +80,31 @@ export function NewsletterRowActions({
   };
 
   const canSend = status === "draft" || status === "failed";
+  const canResendFailed = status === "sent" && failedCount > 0;
 
   return (
     <>
       <div className="flex items-center justify-end gap-1">
+        {canResendFailed && (
+          <button
+            type="button"
+            onClick={() =>
+              setConfirm({
+                title: "Resend to failed recipients?",
+                message: `This re-sends this email to the ${failedCount} recipient${
+                  failedCount === 1 ? "" : "s"
+                } whose delivery failed. Already-delivered recipients are untouched.`,
+                confirmLabel: "Resend to failed",
+                onConfirm: resendFailed,
+              })
+            }
+            disabled={busy !== null || pending}
+            aria-label="Resend to failed recipients"
+            className="rounded-md p-1.5 text-bg/55 hover:bg-gold/10 hover:text-gold disabled:opacity-40"
+          >
+            <RotateCcw size={14} />
+          </button>
+        )}
         {canSend && (
           <button
             type="button"
