@@ -5,9 +5,9 @@ import { WageInflationChart } from "@/components/blog/WageInflationChart";
 // Nairametrics. Labour figures were rebased in 2023, so pre/post are not directly
 // comparable. Shown as context, not gospel.
 const KPIS = [
-  { value: "95.0%", label: "Employment rate", sub: "NBS, 2023 (rebased)" },
-  { value: "5.0%", label: "Unemployment rate", sub: "NBS, 2023" },
-  { value: "92.6%", label: "Of jobs are informal", sub: "NBS labour data" },
+  { value: "73.2%", label: "Employment ratio", sub: "Of working-age adults, NBS Q1 2024" },
+  { value: "4.9%", label: "Unemployment rate", sub: "NBS Q4 2024 (rebased)" },
+  { value: "10.9%", label: "Underemployment", sub: "NBS Q1 2024" },
   { value: "₦70k", label: "Monthly minimum wage", sub: "Effective 2024" },
 ];
 
@@ -61,12 +61,15 @@ export function NigeriaMoneyStats() {
           </div>
 
           <p className="mt-4 text-[11px] leading-relaxed text-body/45">
-            Indicative figures from the National Bureau of Statistics (NBS),
-            compiled via Nairametrics. The national minimum wage rose from ₦7,500
-            (2010) to ₦18,000 (2011), ₦30,000 (2019) and ₦70,000 (2024).
-            Unemployment was rebased to a new methodology in 2023, so the values
-            before and after are not directly comparable. Inflation is the
-            approximate annual average. 2025-2026 are estimates.
+            Figures from the National Bureau of Statistics (NBS), via
+            Nairametrics. Since 2023 the unemployment rate uses an ILO-aligned
+            method that counts anyone working at least one hour a week as
+            employed, so the current ~4.9% is not comparable to the pre-2023
+            figures (which peaked near 33%). The employment ratio is the share of
+            working-age adults in a job (73.2%, Q1 2024). The national minimum
+            wage rose from ₦7,500 (2010) to ₦18,000 (2011), ₦30,000 (2019) and
+            ₦70,000 (2024). Inflation is the approximate annual average;
+            2025-2026 are estimates.
           </p>
         </div>
       </Container>

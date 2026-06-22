@@ -8,8 +8,9 @@ const YEARS = Array.from({ length: 17 }, (_, i) => 2010 + i);
 const WAGE = [7.5, 18, 18, 18, 18, 18, 18, 18, 18, 30, 30, 30, 30, 30, 70, 70, 70];
 // Annual average inflation rate, %.
 const INFL = [13.7, 10.8, 12.2, 8.5, 8.1, 9.0, 15.7, 16.5, 12.1, 11.4, 13.2, 17.0, 18.8, 24.7, 33.2, 28.0, 22.0];
-// Unemployment rate, % (rebased methodology from 2023).
-const UNEMP = [21, 24, 27, 25, 23, 24, 27, 30, 33, 33, 33, 33, 33, 5.0, 5.3, 4.3, 4.3];
+// Unemployment rate, % (rebased ILO-aligned methodology from 2023, so the step
+// down is a definition change, not a sudden recovery).
+const UNEMP = [21, 24, 27, 25, 23, 24, 27, 30, 33, 33, 33, 33, 33, 5.0, 4.9, 4.5, 4.5];
 
 const W = 760;
 const H = 340;

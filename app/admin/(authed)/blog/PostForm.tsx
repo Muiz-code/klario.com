@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, X } from "lucide-react";
 import Link from "next/link";
 
 const CATEGORIES = [
@@ -61,6 +61,26 @@ export function PostForm({ initial }: { initial?: PostFormValues }) {
   const [slugTouched, setSlugTouched] = useState(Boolean(initial?.slug));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const onUpload = async (file: File) => {
+    setUploading(true);
+    setError(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/admin/upload-image", {
+      method: "POST",
+      body: fd,
+    });
+    const data = await res.json().catch(() => ({}));
+    setUploading(false);
+    if (res.ok && data.url) {
+      setForm((p) => ({ ...p, image: data.url }));
+    } else {
+      setError(data.error || "Image upload failed.");
+    }
+  };
 
   const set =
     (k: keyof PostFormValues) =>
@@ -194,15 +214,62 @@ export function PostForm({ initial }: { initial?: PostFormValues }) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className={label}>Cover image URL</span>
-            <input
-              value={form.image}
-              onChange={set("image")}
-              placeholder="https://images.unsplash.com/..."
-              className={input}
-            />
+            <span className={label}>Cover image</span>
+
+            {form.image && (
+              <div className="relative overflow-hidden rounded-lg border border-bg/15">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={form.image}
+                  alt="Cover preview"
+                  className="h-32 w-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setForm((p) => ({ ...p, image: "" }))}
+                  aria-label="Remove image"
+                  className="absolute right-1.5 top-1.5 rounded-md bg-black/55 p-1 text-white/80 hover:text-white"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <input
+                value={form.image}
+                onChange={set("image")}
+                placeholder="Paste a URL or upload"
+                className={input}
+              />
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onUpload(f);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-bg/15 px-3 text-sm text-bg/75 transition-colors hover:border-bg/30 hover:text-bg disabled:opacity-50"
+              >
+                {uploading ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Upload size={14} />
+                )}
+                Upload
+              </button>
+            </div>
             <span className="text-[11px] text-bg/35">
-              Leave blank to use a branded graphic cover.
+              Leave blank to use a branded graphic cover. Max 5 MB (PNG, JPG, GIF,
+              WebP).
             </span>
           </div>
 

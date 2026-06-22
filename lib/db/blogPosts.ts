@@ -268,6 +268,46 @@ export async function deleteDbPost(id: string): Promise<boolean> {
   return true;
 }
 
+export type BlogPostSeed = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  image: string | null;
+  body: string;
+  author_name: string;
+  author_role: string;
+  read_time: string | null;
+  published_at: string;
+};
+
+/** Insert seed posts that aren't already in the table (matched by slug). */
+export async function seedDbPosts(
+  seed: BlogPostSeed[]
+): Promise<{ added: number; skipped: number }> {
+  const db = supabaseAdmin();
+  const { data: existing, error: readErr } = await db
+    .from("blog_posts")
+    .select("slug")
+    .limit(5000);
+  if (readErr) {
+    console.error("[db] seedDbPosts read failed:", readErr.message);
+    return { added: 0, skipped: seed.length };
+  }
+  const have = new Set((existing ?? []).map((r) => r.slug as string));
+  const rows = seed
+    .filter((s) => !have.has(s.slug))
+    .map((s) => ({ ...s, published: true, views: 0 }));
+  if (rows.length === 0) return { added: 0, skipped: seed.length };
+
+  const { error } = await db.from("blog_posts").insert(rows);
+  if (error) {
+    console.error("[db] seedDbPosts insert failed:", error.message);
+    return { added: 0, skipped: seed.length };
+  }
+  return { added: rows.length, skipped: seed.length - rows.length };
+}
+
 /** Increment the public view counter for a published post. */
 export async function incrementDbPostView(slug: string): Promise<void> {
   const db = supabaseAdmin();

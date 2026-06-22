@@ -3,6 +3,7 @@ import { PenLine, Eye } from "lucide-react";
 import { listAllDbPosts } from "@/lib/db/blogPosts";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import { PostRowActions } from "./PostRowActions";
+import { SeedButton } from "./SeedButton";
 
 export const dynamic = "force-dynamic";
 
@@ -21,13 +22,16 @@ export default async function AdminBlogPage() {
             each one.
           </p>
         </div>
-        <Link
-          href="/p@ss1/blog/new"
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-semibold text-ink shadow-[0_12px_40px_-12px_rgba(212,168,83,0.6)] transition-transform hover:scale-[1.02]"
-        >
-          <PenLine size={16} />
-          Compose post
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <SeedButton />
+          <Link
+            href="/p@ss1/blog/new"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-semibold text-ink transition-transform hover:scale-[1.02]"
+          >
+            <PenLine size={16} />
+            Compose post
+          </Link>
+        </div>
       </div>
 
       {!configured && (

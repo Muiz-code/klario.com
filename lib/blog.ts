@@ -603,6 +603,31 @@ export function getBlogSlugs(): string[] {
   return BLOG_POSTS.map((post) => post.slug);
 }
 
+/** Serialize a post's sections back into the markdown-lite body the CMS edits. */
+export function serializePostBody(post: BlogPost): string {
+  const parts: string[] = [];
+  for (const section of post.sections) {
+    if (section.title) parts.push(`## ${section.title}`);
+    for (const block of section.blocks) {
+      switch (block.type) {
+        case "p":
+          parts.push(block.text);
+          break;
+        case "list":
+          parts.push(block.items.map((i) => `- ${i}`).join("\n"));
+          break;
+        case "subhead":
+          parts.push(`## ${block.text}`);
+          break;
+        case "link":
+          parts.push(`${block.prefix ?? ""}${block.label} (${block.href})`);
+          break;
+      }
+    }
+  }
+  return parts.join("\n\n");
+}
+
 /**
  * All posts shown publicly: admin-authored DB posts merged with the static seed
  * posts. A DB post with the same slug overrides its static twin. Falls back to
