@@ -26,11 +26,11 @@ export function buildRichEmail(opts: {
   // Always greet the recipient by name. If the writer didn't include the
   // {{first_name}} tag anywhere, prepend a greeting line so every composed
   // email is personalized. The tag is filled per recipient at send time
-  // (with a "there" fallback when no name is on file).
+  // ("Hello Tomiwa," with a name; "Hello from Klario," when no name is on file).
   const hasName = /\{\{\s*first_name\s*\}\}/.test(raw);
   const greeting = hasName
     ? ""
-    : `<p style="margin:0 0 16px;font-family:Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:${COLORS.text};">Hi {{first_name}},</p>`;
+    : `<p style="margin:0 0 16px;font-family:Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:${COLORS.text};">Hello {{first_name}},</p>`;
 
   const body = greeting + inlineEmailStyles(raw);
 

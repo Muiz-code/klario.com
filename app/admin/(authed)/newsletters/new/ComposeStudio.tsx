@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Image as ImageIcon, Send, Save, Pencil, Code } from "lucide-react";
+import { Image as ImageIcon, Send, Save, Pencil, Code, X } from "lucide-react";
 import type { GalleryTemplate } from "@/lib/email/gallery";
 import { buildRichEmail } from "@/lib/email/compose-html";
 import { RichEmailEditor } from "./RichEmailEditor";
@@ -25,14 +25,21 @@ function plainText(html: string): string {
 }
 
 type Mode = "write" | "html";
-type Segment = "all" | "new" | "existing" | "choose";
-type Counts = { all: number; new: number; existing: number };
-type Person = { email: string; name: string; status: string; mailed: boolean };
+type Segment = "all" | "new" | "existing" | "failed" | "choose";
+type Counts = { all: number; new: number; existing: number; failed: number };
+type Person = {
+  email: string;
+  name: string;
+  status: string;
+  mailed: boolean;
+  failed: boolean;
+};
 
 const SEGMENTS: { id: Segment; label: string; hint: string }[] = [
   { id: "all", label: "All subscribers", hint: "Everyone except unsubscribed" },
   { id: "new", label: "New subscribers", hint: "Signed up, not yet emailed" },
   { id: "existing", label: "Existing subscribers", hint: "Already invited or active" },
+  { id: "failed", label: "Failed / bounced", hint: "Last delivery failed or bounced" },
   { id: "choose", label: "Choose people", hint: "Pick specific recipients" },
 ];
 
@@ -55,6 +62,7 @@ export function ComposeStudio({
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [pickerQuery, setPickerQuery] = useState("");
   const [selectCount, setSelectCount] = useState(100);
+  const [manual, setManual] = useState("");
 
   // Write-mode fields
   const [bodyHtml, setBodyHtml] = useState("");
@@ -130,10 +138,47 @@ export function ComposeStudio({
 
   const chosenList = people.filter((p) => chosen.has(p.email));
 
+  // Emails typed in by hand that aren't existing subscribers.
+  const knownEmails = useMemo(
+    () => new Set(people.map((p) => p.email)),
+    [people]
+  );
+  const manualEmails = useMemo(
+    () => [...chosen].filter((e) => !knownEmails.has(e)),
+    [chosen, knownEmails]
+  );
+  // Combined recipient list for the review modal (selected + typed-in).
+  const chosenAll = [
+    ...chosenList.map((p) => ({ email: p.email, name: p.name })),
+    ...manualEmails.map((e) => ({ email: e, name: "" })),
+  ];
+
+  const addManual = () => {
+    const valid = manual
+      .split(/[\s,;]+/)
+      .map((e) => e.trim().toLowerCase())
+      .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+    if (valid.length === 0) return;
+    setChosen((prev) => {
+      const next = new Set(prev);
+      valid.forEach((e) => next.add(e));
+      return next;
+    });
+    setManual("");
+  };
+
+  const removeChosen = (email: string) =>
+    setChosen((prev) => {
+      const next = new Set(prev);
+      next.delete(email);
+      return next;
+    });
+
   // The people in the currently selected segment.
   const segmentPeople = useMemo(() => {
     if (segment === "new") return people.filter((p) => !p.mailed);
     if (segment === "existing") return people.filter((p) => p.mailed);
+    if (segment === "failed") return people.filter((p) => p.failed);
     return people; // all / choose
   }, [people, segment]);
 
@@ -286,7 +331,7 @@ export function ComposeStudio({
           </p>
           {chosen.size > 0 ? (
             <div className="max-h-52 overflow-y-auto rounded-lg border border-bg/12 bg-bg/4 p-2">
-              {chosenList.map((p) => (
+              {chosenAll.map((p) => (
                 <div
                   key={p.email}
                   className="flex items-center justify-between gap-3 px-2 py-1.5 text-[13px]"
@@ -469,6 +514,54 @@ export function ComposeStudio({
               onLast={selectLast}
               onRandom={selectRandom}
             />
+
+            {/* Type in extra recipients (even if not on the list). */}
+            <div className="mt-1 flex flex-col gap-2 rounded-xl border border-bg/12 bg-bg/4 p-3">
+              <span className="text-[11px] text-bg/50">
+                Or add emails manually (anyone, even if not on the list)
+              </span>
+              <div className="flex gap-2">
+                <input
+                  value={manual}
+                  onChange={(e) => setManual(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addManual();
+                    }
+                  }}
+                  placeholder="name@example.com, another@example.com"
+                  className="w-full rounded-lg border border-bg/15 bg-bg/4 px-3 py-2 text-[13px] text-bg placeholder:text-bg/40 focus:border-gold/60 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={addManual}
+                  className="shrink-0 rounded-lg border border-bg/15 px-3 py-2 text-[12px] text-bg/80 hover:border-gold/50 hover:text-bg"
+                >
+                  Add
+                </button>
+              </div>
+              {manualEmails.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {manualEmails.map((e) => (
+                    <span
+                      key={e}
+                      className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-1 text-[11px] text-bg/85"
+                    >
+                      {e}
+                      <button
+                        type="button"
+                        onClick={() => removeChosen(e)}
+                        aria-label={`Remove ${e}`}
+                        className="text-bg/50 hover:text-bg"
+                      >
+                        <X size={11} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -650,7 +743,10 @@ function HtmlEditor(props: {
         />
         <p className="text-[11px] text-bg/45">
           Merge tags: <span className="text-bg/70">{"{{first_name}}"}</span> and{" "}
-          <span className="text-bg/70">{"{{unsubscribe_url}}"}</span> are filled per recipient.
+          <span className="text-bg/70">{"{{unsubscribe_url}}"}</span> are filled per
+          recipient. When we have no name, {"{{first_name}}"} becomes{" "}
+          <span className="text-bg/70">from Klario</span> (so &quot;Hello{" "}
+          {"{{first_name}}"},&quot; reads &quot;Hello from Klario,&quot;).
         </p>
       </div>
     </div>

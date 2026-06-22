@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   Check,
   X,
+  Merge,
 } from "lucide-react";
 import type { Signup } from "@/lib/db/signups";
 import type { DuplicateReport } from "@/lib/db/duplicates";
@@ -98,6 +99,17 @@ export function SubscribersTable({
   );
   const isFailed = (s: Signup) => failedSet.has(normalizeEmail(s.email));
   const isBounced = (s: Signup) => bouncedSet.has(normalizeEmail(s.email));
+
+  // Count the subscribers actually in the list (some failed/bounced addresses
+  // may no longer be subscribers), so the chip matches the rows shown.
+  const failedCount = useMemo(
+    () => signups.filter((s) => failedSet.has(normalizeEmail(s.email))).length,
+    [signups, failedSet]
+  );
+  const bouncedCount = useMemo(
+    () => signups.filter((s) => bouncedSet.has(normalizeEmail(s.email))).length,
+    [signups, bouncedSet]
+  );
 
   // Everyone we've actually mailed (any non-failed send).
   const mailedSet = useMemo(
@@ -268,6 +280,35 @@ export function SubscribersTable({
     }
   };
 
+  const runMerge = async () => {
+    setBusy(true);
+    setNotice(null);
+    const res = await fetch("/api/admin/duplicates/merge", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    setBusy(false);
+    setConfirmState(null);
+    if (res.ok) {
+      setNotice(
+        data.removed > 0
+          ? `Merged ${data.groups} duplicate group${data.groups === 1 ? "" : "s"}, removed ${data.removed} extra row${data.removed === 1 ? "" : "s"}.`
+          : "No duplicate rows to merge."
+      );
+      setReport(null);
+      refresh();
+    } else {
+      setNotice(data.error || "Merge failed.");
+    }
+  };
+
+  const requestMerge = () =>
+    setConfirmState({
+      title: "Merge duplicate subscribers?",
+      message:
+        "Subscribers stored under the same email (different spelling, case, or Gmail dots) will be combined into one row. The oldest is kept, blank fields are filled from the others, an unsubscribe is respected, and the extra rows are deleted. This cannot be undone.",
+      confirmLabel: "Merge duplicates",
+      onConfirm: runMerge,
+    });
+
   const requestRemove = (s: Signup) => {
     setConfirmState({
       title: "Delete this subscriber?",
@@ -430,7 +471,7 @@ export function SubscribersTable({
           );
         })}
 
-        {failedSet.size > 0 && (
+        {failedCount > 0 && (
           <button
             type="button"
             onClick={() => {
@@ -452,12 +493,12 @@ export function SubscribersTable({
           >
             <AlertTriangle size={12} /> Failed
             <span className="rounded-full bg-red-400/20 px-1.5 text-[10px]">
-              {failedSet.size}
+              {failedCount}
             </span>
           </button>
         )}
 
-        {bouncedSet.size > 0 && (
+        {bouncedCount > 0 && (
           <button
             type="button"
             onClick={() => {
@@ -479,7 +520,7 @@ export function SubscribersTable({
           >
             <AlertTriangle size={12} /> Bounced
             <span className="rounded-full bg-orange-400/20 px-1.5 text-[10px]">
-              {bouncedSet.size}
+              {bouncedCount}
             </span>
           </button>
         )}
@@ -541,13 +582,26 @@ export function SubscribersTable({
         <div className="flex flex-col gap-3 rounded-xl border border-bg/15 bg-bg/4 px-4 py-3 text-[13px] text-bg/80">
           <div className="flex items-center justify-between gap-3">
             <span className="font-medium text-bg">Duplicate scan</span>
-            <button
-              type="button"
-              onClick={() => setReport(null)}
-              className="text-[11px] text-bg/55 hover:text-bg"
-            >
-              Dismiss
-            </button>
+            <div className="flex items-center gap-3">
+              {report.counts.storedVariants > 0 && (
+                <button
+                  type="button"
+                  onClick={requestMerge}
+                  disabled={busy}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 px-3 py-1 text-[11px] text-gold hover:border-gold disabled:opacity-50"
+                >
+                  <Merge size={12} /> Merge {report.counts.storedVariants} duplicate
+                  {report.counts.storedVariants === 1 ? "" : "s"}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setReport(null)}
+                className="text-[11px] text-bg/55 hover:text-bg"
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
           {report.counts.crossList === 0 &&
           report.counts.submissionRepeats === 0 &&

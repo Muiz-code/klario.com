@@ -29,7 +29,7 @@ export const jsonLd = {
         height: 630,
       },
       description:
-        "AI-powered personal finance management app for Nigerians. Connect every bank, track every naira, automate savings, and pay bills in one place.",
+        "AI-powered personal finance management app. Connect every bank, track every naira, automate savings, and pay bills in one place.",
       foundingDate: "2025",
       areaServed: { "@type": "Country", name: "Nigeria" },
       parentOrganization: {

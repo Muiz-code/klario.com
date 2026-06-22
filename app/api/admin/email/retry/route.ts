@@ -191,7 +191,10 @@ function buildRetryMessage(
     const link = unsubscribeUrl(email);
     const html = nl.html
       .replace(/\{\{\s*unsubscribe_url\s*\}\}/g, link)
-      .replace(/\{\{\s*first_name\s*\}\}/g, escapeHtml((firstName || "there").trim() || "there"));
+      .replace(
+        /\{\{\s*first_name\s*\}\}/g,
+        escapeHtml(firstName?.trim() || "from Klario")
+      );
     return {
       message: {
         to: email,

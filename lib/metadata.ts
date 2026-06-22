@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { SITE } from "./constants";
 
-const title = "Klario: Your Money, Finally Making Sense for Nigerians";
+const title = "Klario: Your Money, Finally Making Sense";
 const description =
-  "Klario is an AI-powered personal finance app for Nigerians. Connect every bank, track spending with AI, automate savings, and pay bills, all in one place.";
+  "Klario is an AI-powered personal finance app. Connect every bank, track spending with AI, automate savings, and pay bills, all in one place.";
 
 export const siteMetadata: Metadata = {
   metadataBase: new URL(SITE.url),

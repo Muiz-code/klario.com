@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { getNewsletter, markNewsletterSent } from "@/lib/db/newsletters";
 import { listSignups, markInvited } from "@/lib/db/signups";
-import { logEmails, getMailedEmails } from "@/lib/db/email-log";
+import {
+  logEmails,
+  getMailedEmails,
+  getDeliveryProblems,
+} from "@/lib/db/email-log";
 import { normalizeEmail } from "@/lib/duplicates";
 import { createAuditEvent } from "@/lib/db/audit";
 import { getAdminEmail } from "@/lib/supabase/server";
@@ -12,15 +16,16 @@ import { cleanupOrphanImages } from "@/lib/storage/cleanup";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-type Segment = "all" | "new" | "existing";
+type Segment = "all" | "new" | "existing" | "failed";
 
 /**
  * Batch-send a saved newsletter. body:
- *   { segment?: "all" | "new" | "existing" }  -> send to that audience, or
- *   { emails?: string[] }                     -> send to these specific people
+ *   { segment?: "all" | "new" | "existing" | "failed" }  -> send to that audience, or
+ *   { emails?: string[] }                                -> send to these people
  *
- * Segments: all = everyone not unsubscribed; new = never mailed (not in the
- * email log); existing = already mailed. An explicit emails[] takes priority.
+ * Segments: all = everyone not unsubscribed; new = never mailed; existing =
+ * already mailed; failed = last delivery failed or bounced. An explicit
+ * emails[] takes priority and may include addresses not on the list.
  */
 export async function POST(
   req: Request,
@@ -32,13 +37,18 @@ export async function POST(
   let emails: string[] | null = null;
   try {
     const body = (await req.json()) as { segment?: unknown; emails?: unknown };
-    if (body.segment === "new" || body.segment === "existing") {
+    if (
+      body.segment === "new" ||
+      body.segment === "existing" ||
+      body.segment === "failed"
+    ) {
       segment = body.segment;
     }
     if (Array.isArray(body.emails)) {
       emails = body.emails
         .filter((e): e is string => typeof e === "string")
-        .map((e) => e.trim().toLowerCase());
+        .map((e) => e.trim().toLowerCase())
+        .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
     }
   } catch {
     // no body / invalid JSON -> default to "all"
@@ -63,22 +73,64 @@ export async function POST(
   // mailed. Keeps this consistent with the audience page and the compose counts.
   const mailedSet = new Set(mailedEmails.map(normalizeEmail));
   const emailSet = emails ? new Set(emails) : null;
-  const recipients = all.filter((s) => {
-    if (s.status === "unsubscribed") return false;
-    if (emailSet) return emailSet.has(s.email.toLowerCase());
-    const mailed = mailedSet.has(normalizeEmail(s.email));
-    if (segment === "new") return !mailed;
-    if (segment === "existing") return mailed;
-    return true;
-  });
+
+  type Recip = {
+    email: string;
+    first_name: string | null;
+    id?: string;
+    status?: string;
+  };
+  let recipients: Recip[];
+
+  if (emailSet) {
+    // Explicit list: send to each, using a subscriber's name when we have one,
+    // and sending to typed-in addresses that aren't on the list at all.
+    const bySignup = new Map(all.map((s) => [s.email.toLowerCase(), s]));
+    recipients = [...emailSet]
+      .map((email): Recip | null => {
+        const s = bySignup.get(email);
+        if (s) {
+          if (s.status === "unsubscribed") return null;
+          return { email: s.email, first_name: s.first_name, id: s.id, status: s.status };
+        }
+        return { email, first_name: null };
+      })
+      .filter((r): r is Recip => r !== null);
+  } else {
+    let problemSet: Set<string> | null = null;
+    if (segment === "failed") {
+      const problems = await getDeliveryProblems();
+      problemSet = new Set(
+        [...problems.failed, ...problems.bounced].map(normalizeEmail)
+      );
+    }
+    recipients = all
+      .filter((s) => {
+        if (s.status === "unsubscribed") return false;
+        const mailed = mailedSet.has(normalizeEmail(s.email));
+        if (segment === "new") return !mailed;
+        if (segment === "existing") return mailed;
+        if (segment === "failed") return problemSet!.has(normalizeEmail(s.email));
+        return true;
+      })
+      .map((s) => ({
+        email: s.email,
+        first_name: s.first_name,
+        id: s.id,
+        status: s.status,
+      }));
+  }
 
   if (recipients.length === 0) {
-    return NextResponse.json({ error: "No subscribers in that audience." }, { status: 400 });
+    return NextResponse.json({ error: "No recipients in that audience." }, { status: 400 });
   }
 
   const messages: BatchMessage[] = recipients.map((s) => {
     const link = unsubscribeUrl(s.email);
-    const firstName = (s.first_name || "there").trim() || "there";
+    // Use the recipient's first name; when we don't have one, fall back to
+    // "from Klario" so a greeting like "Hello {{first_name}}," reads
+    // "Hello from Klario,".
+    const firstName = s.first_name?.trim() || "from Klario";
     const html = newsletter.html
       .replace(/\{\{\s*unsubscribe_url\s*\}\}/g, link)
       .replace(/\{\{\s*first_name\s*\}\}/g, escapeHtml(firstName));
@@ -102,8 +154,8 @@ export async function POST(
   // advance them to "invited" so they stop showing as a new/uncontacted lead.
   const okEmails = new Set(results.filter((r) => r.ok).map((r) => r.to));
   const nowContacted = recipients
-    .filter((s) => s.status === "pending" && okEmails.has(s.email))
-    .map((s) => s.id);
+    .filter((s) => s.status === "pending" && s.id && okEmails.has(s.email))
+    .map((s) => s.id as string);
   if (nowContacted.length > 0) await markInvited(nowContacted);
 
   const auditId = await createAuditEvent({

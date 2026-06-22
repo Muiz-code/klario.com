@@ -149,6 +149,85 @@ export async function setStatus(id: string, status: SignupStatus): Promise<boole
   return true;
 }
 
+/**
+ * Merge subscriber rows that share the same normalized email (case / spacing /
+ * Gmail-dot variants the UNIQUE constraint can't catch). Keeps the oldest row,
+ * fills its blank fields from the duplicates, settles on the strongest status
+ * (an unsubscribe always wins), then deletes the extra rows.
+ */
+export async function mergeDuplicateSignups(): Promise<{
+  groups: number;
+  removed: number;
+}> {
+  const db = supabaseAdmin();
+  const { data, error } = await db.from("beta_signups").select("*").limit(20000);
+  if (error || !data) {
+    if (error) console.error("[db] mergeDuplicateSignups read failed:", error.message);
+    return { groups: 0, removed: 0 };
+  }
+  const rows = data as Signup[];
+
+  const groups = new Map<string, Signup[]>();
+  for (const r of rows) {
+    const norm = normalizeEmail(r.email);
+    if (!norm) continue;
+    (groups.get(norm) ?? groups.set(norm, []).get(norm)!).push(r);
+  }
+
+  const statusRank: Record<SignupStatus, number> = {
+    unsubscribed: 3,
+    active: 2,
+    invited: 1,
+    pending: 0,
+  };
+
+  let groupCount = 0;
+  let removed = 0;
+
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    groupCount++;
+
+    // Keep the oldest row as the primary.
+    const sorted = [...group].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+    const primary = sorted[0];
+    const others = sorted.slice(1);
+
+    // Fill the primary's blanks from the duplicates.
+    const patch: Record<string, string | null> = {};
+    const fields: (keyof Signup)[] = ["first_name", "last_name", "phone", "device", "banks"];
+    for (const f of fields) {
+      if (!primary[f]) {
+        const filled = others.find((o) => o[f]);
+        if (filled) patch[f] = filled[f] as string;
+      }
+    }
+    // Settle the status: an unsubscribe always wins; otherwise take the strongest.
+    let finalStatus = primary.status;
+    for (const r of group) {
+      if (statusRank[r.status] > statusRank[finalStatus]) finalStatus = r.status;
+    }
+    if (finalStatus !== primary.status) patch.status = finalStatus;
+
+    if (Object.keys(patch).length > 0) {
+      await db.from("beta_signups").update(patch).eq("id", primary.id);
+    }
+    const { error: delErr } = await db
+      .from("beta_signups")
+      .delete()
+      .in("id", others.map((o) => o.id));
+    if (delErr) {
+      console.error("[db] mergeDuplicateSignups delete failed:", delErr.message);
+      continue;
+    }
+    removed += others.length;
+  }
+
+  return { groups: groupCount, removed };
+}
+
 /** Correct a subscriber's email (e.g. a .con -> .com typo). */
 export async function updateSignupEmail(
   id: string,

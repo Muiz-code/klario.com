@@ -67,7 +67,7 @@ export async function POST(
     if (s?.status === "unsubscribed") continue;
 
     const link = unsubscribeUrl(email);
-    const firstName = (s?.first_name || "there").trim() || "there";
+    const firstName = s?.first_name?.trim() || "from Klario";
     const html = newsletter.html
       .replace(/\{\{\s*unsubscribe_url\s*\}\}/g, link)
       .replace(/\{\{\s*first_name\s*\}\}/g, escapeHtml(firstName));

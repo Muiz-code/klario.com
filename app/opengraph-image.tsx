@@ -41,7 +41,7 @@ export default async function OpengraphImage() {
               display: "flex",
             }}
           >
-            Personal Finance Manager · Nigeria
+            Personal Finance Manager
           </div>
         </div>
 
