@@ -1099,11 +1099,35 @@ export const DELETE_ACCOUNT: LegalPage = {
       ],
     },
     {
+      title: "Delete specific data (without closing your account)",
+      blocks: [
+        {
+          type: "p",
+          text: "You can remove individual data in the app at any time:",
+        },
+        {
+          type: "list",
+          items: [
+            "Disconnect a bank: Profile > Money & Banking > Linked Banks > select a bank > Disconnect. This removes that bank and its synced transactions.",
+            "Delete budgets, savings goals, or debts: open the item and choose Delete.",
+          ],
+        },
+        {
+          type: "link",
+          prefix: "For anything else, email ",
+          label: "support@klario.finance",
+          href: "mailto:support@klario.finance?subject=Delete%20specific%20data",
+          suffix:
+            " from your registered email and we'll remove the requested data within 30 days.",
+        },
+      ],
+    },
+    {
       title: "What is deleted",
       blocks: [
         {
           type: "p",
-          text: "When your account is deleted, we permanently remove:",
+          text: "When you delete your account, we permanently remove:",
         },
         {
           type: "list",
