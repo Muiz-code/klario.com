@@ -30,6 +30,23 @@ function BlockRenderer({ block }: { block: Block }) {
       </ul>
     );
   }
+  if (block.type === "olist") {
+    return (
+      <ol className="flex flex-col gap-2.5">
+        {block.items.map((item, i) => (
+          <li
+            key={item}
+            className="flex gap-3 text-[15px] leading-relaxed text-body/85 md:text-base"
+          >
+            <span className="font-mono text-sm font-medium text-gold">
+              {i + 1}.
+            </span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ol>
+    );
+  }
   if (block.type === "link") {
     return (
       <p className="text-[15px] leading-relaxed text-body/85 md:text-base">
@@ -42,6 +59,7 @@ function BlockRenderer({ block }: { block: Block }) {
         >
           {block.label}
         </a>
+        {block.suffix}
       </p>
     );
   }

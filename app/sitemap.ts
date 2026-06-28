@@ -18,6 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "privacy",
     "terms",
     "cookies",
+    "delete-account",
     "data-protection",
     "anti-fraud",
     "compliance",

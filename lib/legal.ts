@@ -1,8 +1,9 @@
 export type Block =
   | { type: "p"; text: string }
   | { type: "list"; items: string[] }
+  | { type: "olist"; items: string[] }
   | { type: "subhead"; text: string }
-  | { type: "link"; prefix?: string; label: string; href: string };
+  | { type: "link"; prefix?: string; label: string; href: string; suffix?: string };
 
 export type LegalSection = {
   title: string;
@@ -16,7 +17,8 @@ export type LegalPage = {
     | "cookies"
     | "data-protection"
     | "anti-fraud"
-    | "compliance";
+    | "compliance"
+    | "delete-account";
   title: string;
   effectiveDate: string;
   lastUpdated: string;
@@ -1052,6 +1054,87 @@ export const COMPLIANCE: LegalPage = {
           label: "www.raavon.com",
           href: "https://www.raavon.com",
         },
+      ],
+    },
+  ],
+};
+
+export const DELETE_ACCOUNT: LegalPage = {
+  slug: "delete-account",
+  title: "Delete your Klario account",
+  effectiveDate: "21 June 2026",
+  lastUpdated: "21 June 2026",
+  preamble: [
+    {
+      type: "p",
+      text: "Klario (Raavon Limited) lets you delete your account and associated data at any time.",
+    },
+  ],
+  sections: [
+    {
+      title: "In the app (fastest)",
+      blocks: [
+        {
+          type: "olist",
+          items: [
+            "Open Klario and sign in.",
+            "Go to Profile.",
+            'Tap "Delete Account".',
+            "Confirm. Your account and data are permanently removed.",
+          ],
+        },
+      ],
+    },
+    {
+      title: "By email",
+      blocks: [
+        {
+          type: "link",
+          prefix: "If you can't access the app, email ",
+          label: "support@klario.finance",
+          href: "mailto:support@klario.finance?subject=Delete%20my%20account",
+          suffix:
+            ' from your registered email address with the subject "Delete my account". We\'ll verify and process the request within 30 days.',
+        },
+      ],
+    },
+    {
+      title: "What is deleted",
+      blocks: [
+        {
+          type: "p",
+          text: "When your account is deleted, we permanently remove:",
+        },
+        {
+          type: "list",
+          items: [
+            "Your profile and personal details",
+            "Linked bank connections",
+            "Transactions",
+            "Budgets",
+            "Savings goals",
+            "Debts",
+            "Notifications",
+            "Identity (KYC) data",
+          ],
+        },
+      ],
+    },
+    {
+      title: "What is kept, and for how long",
+      blocks: [
+        {
+          type: "p",
+          text: "Records we are legally required to retain (e.g. anti-fraud, tax and regulatory records under applicable Nigerian law) are kept for up to the period required by law, then permanently deleted. We do not retain this data for any other purpose.",
+        },
+      ],
+    },
+    {
+      title: "Contact",
+      blocks: [
+        { type: "subhead", text: "Klario (by Raavon Limited, RC-9537604)" },
+        { type: "p", text: "Email: support@klario.finance" },
+        { type: "p", text: "Last updated: 21 June 2026" },
       ],
     },
   ],

@@ -111,6 +111,7 @@ export const FOOTER = {
       links: [
         { label: "Privacy Policy", href: "/privacy" },
         { label: "Terms of Service", href: "/terms" },
+        { label: "Delete account", href: "/delete-account" },
         { label: "Cookie Policy", href: "/cookies" },
         { label: "Data Protection", href: "/data-protection" },
         { label: "Anti-Fraud Policy", href: "/anti-fraud" },
