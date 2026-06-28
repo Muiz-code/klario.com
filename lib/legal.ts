@@ -10,7 +10,13 @@ export type LegalSection = {
 };
 
 export type LegalPage = {
-  slug: "privacy" | "terms" | "cookies";
+  slug:
+    | "privacy"
+    | "terms"
+    | "cookies"
+    | "data-protection"
+    | "anti-fraud"
+    | "compliance";
   title: string;
   effectiveDate: string;
   lastUpdated: string;
@@ -304,6 +310,7 @@ export const PRIVACY: LegalPage = {
         },
         { type: "subhead", text: "Klario Finance" },
         { type: "p", text: "Powered by Raavon Limited (RC-9537604)" },
+        { type: "p", text: "Raavon contact: contact@raavon.com" },
         { type: "p", text: "Email: privacy@klario.finance" },
         { type: "p", text: "Website: klario.finance" },
         {
@@ -620,6 +627,7 @@ export const TERMS: LegalPage = {
         },
         { type: "subhead", text: "Klario Finance" },
         { type: "p", text: "Powered by Raavon Limited (RC-9537604)" },
+        { type: "p", text: "Raavon contact: contact@raavon.com" },
         { type: "p", text: "Email: legal@klario.finance" },
         { type: "p", text: "Website: klario.finance" },
         {
@@ -631,6 +639,418 @@ export const TERMS: LegalPage = {
         {
           type: "p",
           text: "We aim to respond to all enquiries within 5 business days.",
+        },
+      ],
+    },
+  ],
+};
+
+const corporateDates = {
+  effectiveDate: "24 April 2026",
+  lastUpdated: "24 April 2026",
+};
+
+export const DATA_PROTECTION: LegalPage = {
+  slug: "data-protection",
+  title: "Data Protection Policy",
+  ...corporateDates,
+  preamble: [
+    {
+      type: "p",
+      text: `This Policy sets out how Raavon Limited ("the Company"), the company behind Klario Finance, collects, uses, stores, shares, transfers and disposes of personal data, in compliance with the Nigeria Data Protection Act 2023 (NDPA), the Nigeria Data Protection Regulation 2019 (NDPR), and the General Application and Implementation Directive (GAID) 2025 issued by the Nigeria Data Protection Commission (NDPC).`,
+    },
+    {
+      type: "p",
+      text: `It applies to Raavon Limited and all ventures operating under it, including Klario Finance, and to all employees, co-founders, contractors and third parties processing personal data on the Company's behalf, whether the Company acts as a data controller or as a data processor.`,
+    },
+  ],
+  sections: [
+    {
+      title: "Definitions",
+      blocks: [
+        {
+          type: "list",
+          items: [
+            "Personal data: any information relating to an identified or identifiable natural person, including name, contact details, identification numbers, location data, online identifiers and financial information.",
+            "Sensitive personal data: data relating to health, genetic or biometric data, race or ethnicity, religious or similar beliefs, political opinions or sex life, or such other data as the NDPC may classify as sensitive.",
+            "Processing: any operation performed on personal data, including collection, recording, storage, retrieval, use, disclosure, restriction, erasure or destruction.",
+            "Data controller: the entity that determines the purposes and means of processing. Data processor: the entity that processes personal data on behalf of a controller.",
+          ],
+        },
+      ],
+    },
+    {
+      title: "Data Protection Principles",
+      blocks: [
+        {
+          type: "p",
+          text: "In line with Section 24 of the NDPA 2023, the Company ensures that personal data is:",
+        },
+        {
+          type: "list",
+          items: [
+            "Processed fairly, lawfully and transparently;",
+            "Collected for specified, explicit and legitimate purposes, and not further processed in a manner incompatible with those purposes;",
+            "Adequate, relevant and limited to what is necessary (data minimisation);",
+            "Accurate and kept up to date, with inaccurate data corrected or erased without delay;",
+            "Retained for no longer than is necessary for the purposes for which it was collected;",
+            "Processed with appropriate security, integrity and confidentiality.",
+          ],
+        },
+        {
+          type: "p",
+          text: "The Company applies privacy by design and by default in the development of all venture products.",
+        },
+      ],
+    },
+    {
+      title: "Lawful Bases for Processing",
+      blocks: [
+        {
+          type: "p",
+          text: "The Company processes personal data only where at least one lawful basis under Section 25 of the NDPA 2023 applies:",
+        },
+        {
+          type: "list",
+          items: [
+            "The data subject has given consent, which must be freely given, specific, informed and unambiguous, and may be withdrawn at any time;",
+            "Processing is necessary for the performance of a contract with the data subject, or to take steps at their request prior to entering a contract;",
+            "Processing is necessary for compliance with a legal obligation;",
+            "Processing is necessary to protect the vital interests of the data subject or another person;",
+            "Processing is necessary for a task carried out in the public interest or the exercise of official authority;",
+            "Processing is necessary for the legitimate interests of the Company or a third party, except where overridden by the rights and freedoms of the data subject.",
+          ],
+        },
+        {
+          type: "p",
+          text: "Sensitive personal data is processed only under the stricter conditions of Section 30 of the NDPA 2023. We do not process the personal data of children without verifiable parental or guardian consent, and apply appropriate age-verification mechanisms in ventures whose users may include persons under eighteen (18).",
+        },
+      ],
+    },
+    {
+      title: "Your Rights as a Data Subject",
+      blocks: [
+        {
+          type: "p",
+          text: "Under Sections 34 to 37 of the NDPA 2023, you have the right to:",
+        },
+        {
+          type: "list",
+          items: [
+            "Be informed about the processing of your personal data through clear privacy notices;",
+            "Access your personal data and obtain a copy;",
+            "Rectification of inaccurate or incomplete data;",
+            "Erasure of personal data where there is no lawful justification for retention;",
+            "Restriction of, or objection to, processing, including for direct marketing;",
+            "Data portability in a structured, commonly used and machine-readable format;",
+            "Withdraw consent at any time without affecting prior lawful processing;",
+            "Not be subject to a decision based solely on automated processing producing legal or similarly significant effects, without appropriate safeguards;",
+            "Lodge a complaint with the Nigeria Data Protection Commission.",
+          ],
+        },
+        {
+          type: "p",
+          text: "Requests should be directed to privacy@raavon.com and are resolved without undue delay and within any timeline prescribed by the NDPC. Identity is verified before any request is actioned.",
+        },
+      ],
+    },
+    {
+      title: "Data Protection Officer",
+      blocks: [
+        {
+          type: "p",
+          text: "The Company has designated a Data Protection Officer (DPO), reachable at privacy@raavon.com, responsible for compliance monitoring, maintenance of the Record of Processing Activities, data subject and regulator liaison, DPIA oversight and breach coordination.",
+        },
+      ],
+    },
+    {
+      title: "Security of Personal Data",
+      blocks: [
+        {
+          type: "p",
+          text: "We implement appropriate technical and organisational measures proportionate to the risk, including:",
+        },
+        {
+          type: "list",
+          items: [
+            "Encryption of data in transit (TLS 1.2 or higher) and at rest;",
+            "Role-based access control and least privilege;",
+            "Multi-factor authentication on critical systems;",
+            "Logging and monitoring;",
+            "Secure development practices;",
+            "Pseudonymisation or masking where full data is not required;",
+            "Secure disposal of data and media.",
+          ],
+        },
+      ],
+    },
+    {
+      title: "Personal Data Breach Management",
+      blocks: [
+        {
+          type: "list",
+          items: [
+            "All suspected personal data breaches are reported immediately to the DPO at privacy@raavon.com.",
+            "The DPO assesses the breach, coordinates containment and remediation, and maintains an internal breach register.",
+            "Where a breach is likely to result in a risk to the rights and freedoms of data subjects, we notify the NDPC within seventy-two (72) hours of becoming aware of it.",
+            "Where the breach is likely to result in a high risk, affected data subjects are informed without undue delay, with advice on protective steps.",
+            "Where the Company acts as a data processor, it notifies the relevant data controller without undue delay.",
+          ],
+        },
+      ],
+    },
+    {
+      title: "Third Parties and Data Processors",
+      blocks: [
+        {
+          type: "p",
+          text: "We engage only processors and sub-processors that provide sufficient guarantees of compliance with applicable data protection legislation. All processing by third parties is governed by a written data processing agreement covering confidentiality, security measures, sub-processing, assistance with data subject rights, breach notification, audit rights, and return or deletion of data at the end of the engagement. Where a venture relies on regulated partners (such as banking, payments or open-banking providers), data sharing is limited to the minimum data necessary for the service.",
+        },
+      ],
+    },
+    {
+      title: "Cross-Border Data Transfers",
+      blocks: [
+        {
+          type: "p",
+          text: "Personal data is not transferred outside Nigeria except in accordance with Sections 41 to 43 of the NDPA 2023, under a mechanism affording adequate protection or another lawful condition such as the data subject's informed consent. Where ventures use cloud infrastructure hosted outside Nigeria, the DPO ensures an appropriate transfer mechanism is in place and recorded.",
+        },
+      ],
+    },
+    {
+      title: "Retention, Disposal and Impact Assessments",
+      blocks: [
+        {
+          type: "p",
+          text: "Personal data is retained only as long as necessary for the purpose collected, or as required by law (including financial-sector record-keeping obligations). On expiry, data is securely deleted, anonymised or destroyed.",
+        },
+        {
+          type: "p",
+          text: "A Data Protection Impact Assessment (DPIA) is carried out before any processing likely to result in high risk to data subjects, including large-scale processing of financial data, profiling, the adoption of new technologies (including AI-assisted features), or processing of sensitive personal data.",
+        },
+      ],
+    },
+    {
+      title: "Contact",
+      blocks: [
+        { type: "subhead", text: "Raavon Limited (RC-9537604)" },
+        { type: "p", text: "Data Protection Officer: privacy@raavon.com" },
+        {
+          type: "link",
+          prefix: "Parent Company: ",
+          label: "www.raavon.com",
+          href: "https://www.raavon.com",
+        },
+      ],
+    },
+  ],
+};
+
+export const ANTI_FRAUD: LegalPage = {
+  slug: "anti-fraud",
+  title: "Anti-Fraud Policy",
+  ...corporateDates,
+  preamble: [
+    {
+      type: "p",
+      text: `This Anti-Fraud Policy forms part of the Anti-Fraud, Bribery & Corruption strategy of Raavon Limited (RC-9537604), the company behind Klario Finance. It sets out our zero-tolerance approach to fraud, bribery and corruption across all of our operations and ventures.`,
+    },
+  ],
+  sections: [
+    {
+      title: "Our Commitment",
+      blocks: [
+        { type: "p", text: "Management states that:" },
+        {
+          type: "list",
+          items: [
+            "Raavon Limited is committed to the prevention of fraud and malpractice in its operations.",
+            "We shall not tolerate acts of fraud, bribery or corruption.",
+            "Employees found guilty of fraud or malpractice will be subject to disciplinary measures, including but not limited to suspension, dismissal and criminal prosecution.",
+            "All employees have a duty to report incidents of fraudulent activity to management.",
+            "The confidentiality of staff reporting acts of fraud and malpractice will be maintained at all times.",
+            "Every reported incident of fraud will be thoroughly investigated.",
+            "Where applicable, appropriate government agencies will be notified.",
+            "This policy applies to all employees, contractors and consultants of Raavon Limited.",
+          ],
+        },
+      ],
+    },
+    {
+      title: "Reporting Fraud",
+      blocks: [
+        {
+          type: "p",
+          text: "If you suspect fraud, bribery or corruption involving Klario or Raavon, report it in confidence. All reports are taken seriously, investigated thoroughly, and the identity of the reporter is protected.",
+        },
+        { type: "p", text: "Email: contact@raavon.com" },
+      ],
+    },
+    {
+      title: "Contact",
+      blocks: [
+        { type: "subhead", text: "Raavon Limited (RC-9537604)" },
+        { type: "p", text: "Email: contact@raavon.com" },
+        {
+          type: "link",
+          prefix: "Parent Company: ",
+          label: "www.raavon.com",
+          href: "https://www.raavon.com",
+        },
+      ],
+    },
+  ],
+};
+
+export const COMPLIANCE: LegalPage = {
+  slug: "compliance",
+  title: "Compliance",
+  effectiveDate: "8 June 2026",
+  lastUpdated: "8 June 2026",
+  preamble: [
+    {
+      type: "p",
+      text: `Klario Finance is built and operated by Raavon Limited (RC-9537604), a Nigerian company registered with the Corporate Affairs Commission. We treat compliance, security and the protection of your money and data as foundational, not optional. This page summarises the regulatory framework, registrations and controls we operate under.`,
+    },
+  ],
+  sections: [
+    {
+      title: "Regulatory Framework",
+      blocks: [
+        {
+          type: "p",
+          text: "Our operations are governed by, and aligned with, the following Nigerian laws and standards:",
+        },
+        {
+          type: "list",
+          items: [
+            "Nigeria Data Protection Act 2023 (NDPA);",
+            "Nigeria Data Protection Regulation 2019 (NDPR);",
+            "NDPC General Application and Implementation Directive (GAID) 2025;",
+            "Money Laundering (Prevention and Prohibition) Act 2022;",
+            "The regulatory framework of the Central Bank of Nigeria (CBN), via our licensed banking and open-banking partners.",
+          ],
+        },
+      ],
+    },
+    {
+      title: "Registrations & Licences",
+      blocks: [
+        { type: "subhead", text: "Corporate Registration" },
+        {
+          type: "p",
+          text: "Raavon Limited is registered with the Corporate Affairs Commission of Nigeria under RC-9537604.",
+        },
+        { type: "subhead", text: "SCUML / Anti-Money Laundering" },
+        {
+          type: "p",
+          text: "Raavon Limited is registered with the Special Control Unit Against Money Laundering (SCUML), under the Economic and Financial Crimes Commission (EFCC), in accordance with Section 17(2)(a) of the Money Laundering (Prevention and Prohibition) Act 2022.",
+        },
+        {
+          type: "list",
+          items: [
+            "SCUML Registration Number: SC 251523895;",
+            "Date of issue: 8 June 2026.",
+          ],
+        },
+      ],
+    },
+    {
+      title: "Data Protection",
+      blocks: [
+        {
+          type: "p",
+          text: "We process personal data lawfully, fairly and transparently under the NDPA 2023, and we have appointed a Data Protection Officer responsible for compliance, the Record of Processing Activities, regulator liaison and breach coordination.",
+        },
+        {
+          type: "list",
+          items: [
+            "Data Protection Officer: privacy@raavon.com;",
+            "Data subjects can access, correct, port, restrict, object to and erase their data, and withdraw consent at any time;",
+            "Personal data breaches that pose a risk are notified to the NDPC within 72 hours.",
+          ],
+        },
+        {
+          type: "link",
+          prefix: "Read our full ",
+          label: "Data Protection Policy",
+          href: "/data-protection",
+        },
+      ],
+    },
+    {
+      title: "Information Security",
+      blocks: [
+        {
+          type: "p",
+          text: "We maintain an Information Security Policy aligned with recognised hardening standards (NIST, ISO 27001 / CIS Benchmarks). Core controls include:",
+        },
+        {
+          type: "list",
+          items: [
+            "Encryption of data in transit (TLS 1.2 or higher) and at rest;",
+            "Role-based access control and least privilege, with unique user IDs;",
+            "Multi-factor authentication on critical systems, cloud consoles, code repositories and production environments;",
+            "Centralised logging, monitoring and alerting, with audit logs retained;",
+            "A formal change-control process, with protected repositories and mandatory review before merge;",
+            "Secure application development aligned with the OWASP Top 10, and periodic penetration testing;",
+            "Secure data retention and disposal.",
+          ],
+        },
+        {
+          type: "p",
+          text: "Klario is not a bank and does not store your bank login credentials. Financial data is accessed on a read-only basis through licensed open-banking partners.",
+        },
+      ],
+    },
+    {
+      title: "Anti-Fraud",
+      blocks: [
+        {
+          type: "p",
+          text: "We operate a zero-tolerance Anti-Fraud, Bribery & Corruption policy across the company and all of its ventures, with mandatory reporting, confidential whistleblowing and thorough investigation of every reported incident.",
+        },
+        {
+          type: "link",
+          prefix: "Read our full ",
+          label: "Anti-Fraud Policy",
+          href: "/anti-fraud",
+        },
+      ],
+    },
+    {
+      title: "Records & Policies",
+      blocks: [
+        {
+          type: "p",
+          text: "We maintain a Record of Processing Activities (RoPA) documenting every processing activity, its lawful basis, recipients, transfers and retention, reviewed at least annually. Our full policy set includes:",
+        },
+        {
+          type: "list",
+          items: [
+            "Data Protection Policy (RAAVON/DPP/2026);",
+            "Information Security Policy (RAAVON/ISP/2026);",
+            "Anti-Fraud, Bribery & Corruption Policy;",
+            "Record of Processing Activities (RAAVON/ROPA/2026).",
+          ],
+        },
+        {
+          type: "p",
+          text: "The Information Security Policy and Record of Processing Activities are internal compliance documents; summaries are provided above and full copies are available to regulators and partners on request.",
+        },
+      ],
+    },
+    {
+      title: "Contact",
+      blocks: [
+        { type: "subhead", text: "Raavon Limited (RC-9537604)" },
+        { type: "p", text: "Compliance & data protection: privacy@raavon.com" },
+        { type: "p", text: "General: contact@raavon.com" },
+        {
+          type: "link",
+          prefix: "Parent Company: ",
+          label: "www.raavon.com",
+          href: "https://www.raavon.com",
         },
       ],
     },
@@ -824,6 +1244,7 @@ export const COOKIES: LegalPage = {
         },
         { type: "subhead", text: "Klario Finance" },
         { type: "p", text: "Powered by Raavon Limited (RC-9537604)" },
+        { type: "p", text: "Raavon contact: contact@raavon.com" },
         { type: "p", text: "Email: privacy@klario.finance" },
         { type: "p", text: "Website: klario.finance" },
         {

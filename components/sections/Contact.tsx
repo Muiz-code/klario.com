@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Mail, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Section } from "@/components/ui/Section";
-import { CONTACT } from "@/lib/constants";
+import { CONTACT, SITE } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -68,6 +68,22 @@ export function Contact() {
               </span>
             </div>
           </a>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[12px] text-body/55">
+            <span className="uppercase tracking-[0.14em] text-body/45">Also</span>
+            <a
+              href={`mailto:${SITE.emails.contact}`}
+              className="font-mono text-body/80 transition-colors hover:text-gold"
+            >
+              {SITE.emails.contact}
+            </a>
+            <span className="text-body/30">·</span>
+            <a
+              href={`mailto:${SITE.poweredBy.email}`}
+              className="font-mono text-body/80 transition-colors hover:text-gold"
+            >
+              {SITE.poweredBy.email}
+            </a>
+          </div>
           <p className="text-sm leading-relaxed text-body/65">
             For ambassador applications, use the{" "}
             <a href="#ambassadors" className="text-gold hover:underline">

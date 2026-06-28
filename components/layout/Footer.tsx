@@ -263,6 +263,13 @@ export function Footer() {
             <p className="text-[11px] text-bg/45">{FOOTER.disclaimer}</p>
             <p className="text-[11px] text-bg/45">
               <a
+                href={`mailto:${SITE.poweredBy.email}`}
+                className="transition-colors hover:text-gold"
+              >
+                {SITE.poweredBy.email}
+              </a>
+              {" · "}
+              <a
                 href={SITE.poweredBy.url}
                 target="_blank"
                 rel="noreferrer noopener"

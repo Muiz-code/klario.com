@@ -14,7 +14,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "contact",
   ];
 
-  const legal = ["privacy", "terms", "cookies"];
+  const legal = [
+    "privacy",
+    "terms",
+    "cookies",
+    "data-protection",
+    "anti-fraud",
+    "compliance",
+  ];
 
   return [
     {

@@ -8,6 +8,7 @@ export const SITE = {
   ambassadorsHref: "#ambassadors",
   emails: {
     hello: "hello@klario.finance",
+    contact: "contact@klario.finance",
     privacy: "privacy@klario.finance",
     legal: "legal@klario.finance",
   },
@@ -15,6 +16,7 @@ export const SITE = {
     brand: "Raavon Limited",
     rc: "RC-9537604",
     url: "https://www.raavon.com",
+    email: "contact@raavon.com",
   },
   twitter: "@klariofinance",
 } as const;
@@ -110,6 +112,9 @@ export const FOOTER = {
         { label: "Privacy Policy", href: "/privacy" },
         { label: "Terms of Service", href: "/terms" },
         { label: "Cookie Policy", href: "/cookies" },
+        { label: "Data Protection", href: "/data-protection" },
+        { label: "Anti-Fraud Policy", href: "/anti-fraud" },
+        { label: "Compliance", href: "/compliance" },
       ],
     },
     {
