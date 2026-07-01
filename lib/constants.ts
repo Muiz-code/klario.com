@@ -1,7 +1,7 @@
 export const SITE = {
   name: "Klario",
   legalName: "Klario Finance",
-  tagline: "Your money, finally making sense.",
+  tagline: "Your money, clear and simple.",
   subTagline: "One app. Every account. Full clarity.",
   url: "https://www.klario.finance",
   downloadHref: "#download",
