@@ -101,6 +101,7 @@ export const FOOTER = {
       title: "Company",
       links: [
         { label: "About", href: "#problem" },
+        { label: "Investors", href: "/investors" },
         { label: "Ambassadors", href: "#ambassadors" },
         { label: "Contact", href: "#contact" },
         { label: "Beta program", action: "beta" as const },
@@ -160,7 +161,7 @@ export const FAQS = [
   },
   {
     q: "How much does Klario cost?",
-    a: "Klario has three tiers: Free at ₦0 per month, Money Manager at ₦1,900 per month, and Financial Executive at ₦5,400 per month. Annual billing is 10% cheaper.",
+    a: "Klario has three tiers: Free, Money Manager, and Financial Executive. Free gives you a first taste of clarity; the paid tiers add multiple banks, more KlarioAI, an automated budget engine, in-app bill payments and, on Financial Executive, a dedicated human financial manager. See the Pricing section for current rates.",
   },
   {
     q: "Who is behind Klario?",
@@ -176,6 +177,7 @@ export const NAV_LINKS = [
   { label: "Features", href: "/#features" },
   { label: "Security", href: "/#security" },
   { label: "Pricing", href: "/#pricing" },
+  { label: "Investors", href: "/investors" },
   { label: "Blog", href: "/blog" },
 ] as const;
 
@@ -259,7 +261,6 @@ export const PRICING = {
         "5 KlarioAI queries / month",
         "Basic balance dashboard",
         "Budget alerts",
-        "₦10 per transaction",
       ],
     },
     {
@@ -278,7 +279,6 @@ export const PRICING = {
         "Transaction export (PDF / CSV)",
         "Bank-integrated savings goals",
         "Push notifications",
-        "₦10 per transaction",
       ],
     },
     {
@@ -295,7 +295,6 @@ export const PRICING = {
         "Monthly 1-on-1 strategy call",
         "Personalised financial plan (quarterly)",
         "Investment partner referrals",
-        "Zero transfer fees",
         "Priority support (2hr response)",
       ],
     },
@@ -311,8 +310,8 @@ export const SECURITY = {
   cards: [
     {
       icon: "Fingerprint",
-      title: "Biometric Authentication",
-      body: "Face ID or fingerprint required every session. No one gets in but you.",
+      title: "Layered Account Security",
+      body: "A transaction PIN approves every payment, optional Face ID speeds up sign-in, and a fresh-device identity check confirms it's really you.",
     },
     {
       icon: "ShieldCheck",

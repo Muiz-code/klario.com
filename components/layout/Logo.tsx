@@ -23,8 +23,8 @@ export function Logo({
         src={src}
         alt="Klario"
         priority
-        sizes="(min-width: 768px) 140px, 112px"
-        className="h-7 w-auto md:h-8"
+        sizes="(min-width: 768px) 108px, 92px"
+        className="h-5 w-auto md:h-6"
       />
     </Link>
   );

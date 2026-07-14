@@ -417,13 +417,22 @@ export function SubscribersTable({
   };
 
   const exportCsv = () => {
-    const header = "email,first_name,last_name,status,source,created_at\n";
+    const header =
+      "email,first_name,last_name,status,source,created_at,unsubscribed_at\n";
     const esc = (v: unknown) => {
       const s = v == null ? "" : String(v);
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const rows = signups.map((s) =>
-      [s.email, s.first_name, s.last_name, s.status, s.source, s.created_at]
+      [
+        s.email,
+        s.first_name,
+        s.last_name,
+        s.status,
+        s.source,
+        s.created_at,
+        s.unsubscribed_at,
+      ]
         .map(esc)
         .join(",")
     );
@@ -836,6 +845,15 @@ export function SubscribersTable({
                       >
                         {STATUS_LABEL[ds]}
                       </span>
+                      {ds === "unsubscribed" && s.unsubscribed_at && (
+                        <span className="mt-1 block text-[10px] text-bg/45">
+                          {new Date(s.unsubscribed_at).toLocaleDateString("en-US", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-[12px] text-bg/55">
                       {new Date(s.created_at).toLocaleDateString("en-US", {

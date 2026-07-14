@@ -23,9 +23,12 @@ create table if not exists public.beta_signups (
   phone       text,
   device      text,
   banks       text,
-  invited_at  timestamptz,
-  created_at  timestamptz not null default now()
+  invited_at       timestamptz,
+  created_at       timestamptz not null default now(),
+  unsubscribed_at  timestamptz
 );
+-- Backfill for databases created before unsubscribed_at existed.
+alter table public.beta_signups add column if not exists unsubscribed_at timestamptz;
 create index if not exists beta_signups_status_idx  on public.beta_signups (status);
 create index if not exists beta_signups_created_idx  on public.beta_signups (created_at desc);
 

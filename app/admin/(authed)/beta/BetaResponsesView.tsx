@@ -12,9 +12,11 @@ import {
   BadgeCheck,
   Sparkles,
   UserPlus,
+  Presentation,
 } from "lucide-react";
 import type { BetaResponse } from "@/lib/db/betaResponses";
 import { canonicalEmail } from "@/lib/duplicates";
+import { exportBetaDeck } from "@/lib/beta/betaDeck";
 import { InfoModal } from "../_components/Modal";
 
 export type Summary = {
@@ -338,6 +340,7 @@ export function BetaResponsesView({
   const [scanAll, setScanAll] = useState(false);
   const uncheckedCount = responses.filter((r) => !r.ai_checked_at).length;
   const [syncing, setSyncing] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const syncAudience = async () => {
     setSyncing(true);
@@ -457,6 +460,17 @@ export function BetaResponsesView({
     a.download = `klario-beta-responses-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const exportPptx = async () => {
+    setExporting(true);
+    try {
+      await exportBetaDeck(responses);
+    } catch (e) {
+      console.error("[beta] PPTX export failed:", e);
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -647,6 +661,19 @@ export function BetaResponsesView({
           className="rounded-full border border-bg/15 px-3 py-1.5 text-[12px] text-bg/70 hover:border-bg/30 hover:text-bg disabled:opacity-40"
         >
           Export CSV
+        </button>
+        <button
+          type="button"
+          onClick={exportPptx}
+          disabled={exporting || !responses.length}
+          className="inline-flex items-center gap-1.5 rounded-full border border-gold/35 bg-gold/10 px-3 py-1.5 text-[12px] text-gold hover:bg-gold/15 disabled:opacity-40"
+        >
+          {exporting ? (
+            <RotateCw size={12} className="animate-spin" />
+          ) : (
+            <Presentation size={12} />
+          )}
+          {exporting ? "Building…" : "Export PowerPoint"}
         </button>
       </div>
 

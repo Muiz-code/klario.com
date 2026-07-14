@@ -15,6 +15,7 @@ export type Signup = {
   banks: string | null;
   invited_at: string | null;
   created_at: string;
+  unsubscribed_at: string | null;
 };
 
 export type SignupInput = {
@@ -141,7 +142,12 @@ export async function markInvited(ids: string[]): Promise<void> {
 
 export async function setStatus(id: string, status: SignupStatus): Promise<boolean> {
   const db = supabaseAdmin();
-  const { error } = await db.from("beta_signups").update({ status }).eq("id", id);
+  // Stamp the unsubscribe time when moving to unsubscribed; clear it otherwise.
+  const patch = {
+    status,
+    unsubscribed_at: status === "unsubscribed" ? new Date().toISOString() : null,
+  };
+  const { error } = await db.from("beta_signups").update(patch).eq("id", id);
   if (error) {
     console.error("[db] setStatus failed:", error.message);
     return false;
@@ -266,7 +272,7 @@ export async function unsubscribeByEmail(email: string): Promise<boolean> {
   const db = supabaseAdmin();
   const { error } = await db
     .from("beta_signups")
-    .update({ status: "unsubscribed" })
+    .update({ status: "unsubscribed", unsubscribed_at: new Date().toISOString() })
     .eq("email", email.trim().toLowerCase());
   if (error) {
     console.error("[db] unsubscribeByEmail failed:", error.message);

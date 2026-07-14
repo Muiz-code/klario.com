@@ -3,7 +3,8 @@ export type Block =
   | { type: "list"; items: string[] }
   | { type: "olist"; items: string[] }
   | { type: "subhead"; text: string }
-  | { type: "link"; prefix?: string; label: string; href: string; suffix?: string };
+  | { type: "link"; prefix?: string; label: string; href: string; suffix?: string }
+  | { type: "table"; head: string[]; rows: string[][] };
 
 export type LegalSection = {
   title: string;
@@ -27,8 +28,13 @@ export type LegalPage = {
 };
 
 const dates = {
-  effectiveDate: "10 May 2026",
-  lastUpdated: "10 May 2026",
+  effectiveDate: "11 July 2026",
+  lastUpdated: "11 July 2026",
+};
+
+const draftNotice: Block = {
+  type: "p",
+  text: "Draft for review: this document is a draft representation prepared for review by a qualified Nigerian lawyer before publication. It is provided for information only and is not legal advice. Confirmed legal names of our licensed partners are inserted before publishing.",
 };
 
 export const PRIVACY: LegalPage = {
@@ -36,294 +42,279 @@ export const PRIVACY: LegalPage = {
   title: "Privacy Policy",
   ...dates,
   preamble: [
+    draftNotice,
     {
       type: "p",
-      text: `Klario Finance ("Klario", "we", "us", or "our") is committed to protecting the privacy and security of your personal information. This Privacy Policy explains how we collect, use, store, share, and protect your data when you use the Klario mobile application and website (collectively, the "Platform").`,
+      text: `Klario ("Klario", "we", "us", or "our") is a product of Raavon Limited. This Privacy Policy explains, in plain language, what personal information we collect when you use the Klario app and website (klario.finance), how we use it, who we share it with, and the choices and rights you have. It is written to comply with the Nigeria Data Protection Act 2023 (NDPA), the NDPR, and the consumer-protection expectations of the Central Bank of Nigeria (CBN).`,
     },
     {
       type: "p",
-      text: `By accessing or using the Platform, you acknowledge that you have read, understood, and agree to the terms of this Privacy Policy. If you do not agree, please discontinue use of the Platform immediately.`,
+      text: "An important note about your money: Klario is not a bank and never holds your funds itself. Your savings balance is held in a wallet operated by a licensed payments partner, and transfers and payouts are carried out by CBN-licensed partners on your instruction. Klario orchestrates these actions; it does not itself move or hold your money.",
     },
   ],
   sections: [
     {
-      title: "Information We Collect",
-      blocks: [
-        { type: "subhead", text: "1.1 Information You Provide Directly" },
-        {
-          type: "p",
-          text: "We collect information you voluntarily provide when you register for an account or use our services, including:",
-        },
-        {
-          type: "list",
-          items: [
-            "Full name and date of birth",
-            "Email address and phone number",
-            "Bank Verification Number (BVN) for identity verification",
-            "Profile photograph (optional)",
-            "Financial goals and preferences you set within the Platform",
-          ],
-        },
-        { type: "subhead", text: "1.2 Information We Collect Automatically" },
-        {
-          type: "p",
-          text: "When you use the Platform, we automatically collect certain technical information, including:",
-        },
-        {
-          type: "list",
-          items: [
-            "Device type, operating system, and unique device identifiers",
-            "IP address and approximate location",
-            "App usage data, feature interactions, and session duration",
-            "Crash reports and performance diagnostics",
-          ],
-        },
-        { type: "subhead", text: "1.3 Financial Information" },
-        {
-          type: "p",
-          text: "To provide our core services, we collect the following financial data via licensed open banking infrastructure:",
-        },
-        {
-          type: "list",
-          items: [
-            "Bank account names and account numbers (masked)",
-            "Account balances and transaction history",
-            "Spending categories and patterns",
-          ],
-        },
-        {
-          type: "p",
-          text: "Important: We access your financial data on a read-only basis through licensed data partners. We do not store your bank login credentials. Your username and password for any bank are never transmitted to or stored on Klario's servers.",
-        },
-      ],
-    },
-    {
-      title: "How We Use Your Information",
+      title: "Who we are, and how money moves",
       blocks: [
         {
           type: "p",
-          text: "We use the information we collect for the following purposes:",
+          text: "Klario is operated by Raavon Limited (RC-9537604). You can reach us at support@klario.finance. Klario recently added the ability to move money; previously the app was read-only. This policy reflects those new features.",
         },
-        { type: "subhead", text: "2.1 Service Delivery" },
+        {
+          type: "p",
+          text: "Because we are not a bank, the parts of Klario that hold or move money are provided by licensed partners:",
+        },
         {
           type: "list",
           items: [
-            "To create and manage your Klario account",
-            "To display consolidated financial data from your connected bank accounts",
-            "To generate AI-powered financial insights and recommendations personalised to your spending behaviour",
-            "To execute bill payments and savings instructions you initiate within the Platform",
-          ],
-        },
-        { type: "subhead", text: "2.2 Security and Fraud Prevention" },
-        {
-          type: "list",
-          items: [
-            "To verify your identity and prevent unauthorised access",
-            "To monitor for suspicious activity and protect your account",
-            "To comply with anti-money laundering (AML) obligations",
-          ],
-        },
-        { type: "subhead", text: "2.3 Platform Improvement" },
-        {
-          type: "list",
-          items: [
-            "To analyse usage patterns and improve product features",
-            "To diagnose technical issues and optimise performance",
-            "To conduct internal research and product development",
-          ],
-        },
-        { type: "subhead", text: "2.4 Communications" },
-        {
-          type: "list",
-          items: [
-            "To send transactional notifications (payment confirmations, savings updates, security alerts)",
-            "To deliver important updates about changes to our services or policies",
-            "To send marketing communications where you have provided consent (you may opt out at any time)",
+            "Your savings balance is held in a wallet operated by a licensed payments partner.",
+            "Transfers and direct debits (including recurring auto-save) are executed by a licensed open-banking partner through its direct-debit feature, on your instruction.",
+            "Klario prepares and routes your instructions; it does not itself custody or move your money.",
           ],
         },
       ],
     },
     {
-      title: "How We Share Your Information",
+      title: "Information we collect",
       blocks: [
+        { type: "subhead", text: "Identity and KYC" },
         {
           type: "p",
-          text: "Klario does not sell, rent, or trade your personal information to third parties for commercial purposes.",
+          text: "Your legal name, date of birth, phone number, email, and identity-verification data. Your Bank Verification Number (BVN) is verified by our open-banking and KYC partners and is not stored in raw form on Klario's servers.",
         },
+        { type: "subhead", text: "Bank account data (via open banking)" },
         {
           type: "p",
-          text: "We may share your information only in the following limited circumstances:",
+          text: "With your consent, we read: account name, balance, masked account number, and transaction history. We do not access your card details, PINs, or one-time passwords (OTPs).",
         },
-        { type: "subhead", text: "3.1 Licensed Service Partners" },
+        { type: "subhead", text: "Money-movement data" },
         {
           type: "p",
-          text: "We work with carefully selected partners to deliver our services. These include:",
+          text: "Savings goals, auto-save mandates, and records of the transfers, withdrawals and deposits you make. Your transfer PIN is stored only as a salted hash, never as plaintext.",
         },
+        { type: "subhead", text: "Device and diagnostics" },
+        {
+          type: "p",
+          text: "Device identifiers, and crash and diagnostic logs that are scrubbed of personal information on your device before they reach us.",
+        },
+      ],
+    },
+    {
+      title: "How we use your information",
+      blocks: [
+        { type: "p", text: "We use your information to:" },
         {
           type: "list",
           items: [
-            "Open banking data providers, to securely retrieve your financial data from connected banks",
-            "Payment processors, to facilitate bill payments and subscription billing",
-            "Cloud infrastructure providers, to host and secure your data",
+            "Create and run your account, and show your money in one place;",
+            "Set up and run savings goals and recurring auto-save;",
+            "Carry out the transfers and withdrawals you authorise, through our licensed partners;",
+            "Power KlarioAI guidance based on your financial context;",
+            "Verify your identity and protect you from fraud and money laundering;",
+            "Send you the notifications described below;",
+            "Fix problems, keep the app secure, and improve it;",
+            "Meet our legal and regulatory obligations.",
           ],
         },
         {
           type: "p",
-          text: "All partners are contractually bound to handle your data in accordance with applicable data protection laws and may not use your data for any purpose beyond delivering the agreed service.",
-        },
-        { type: "subhead", text: "3.2 Legal and Regulatory Obligations" },
-        {
-          type: "p",
-          text: "We may disclose your information where required by law, court order, or regulatory authority, including the Central Bank of Nigeria (CBN) and the Nigeria Data Protection Commission (NDPC).",
-        },
-        { type: "subhead", text: "3.3 Business Transfers" },
-        {
-          type: "p",
-          text: "In the event of a merger, acquisition, or sale of assets, your information may be transferred to the successor entity. We will notify you prior to such a transfer.",
+          text: "Under the NDPA, we rely on these lawful bases: performing our contract with you (running your account and executing your instructions), your consent (connecting a bank, marketing, an auto-save mandate), our legal obligations (KYC and anti-money-laundering), and our legitimate interests (fraud prevention and improving the app).",
         },
       ],
     },
     {
-      title: "Data Security",
+      title: "KlarioAI",
       blocks: [
         {
           type: "p",
-          text: "We implement industry-standard technical and organisational measures to protect your personal information, including:",
+          text: "KlarioAI, our in-app assistant, is powered by Anthropic (Claude). It processes your financial context to give guidance and can prepare an action for you, but it never executes a payment on its own. Every action needs your tap and your transfer PIN.",
         },
         {
-          type: "list",
-          items: [
-            "AES-256 encryption for all data stored at rest",
-            "TLS 1.3 encryption for all data transmitted in transit",
-            "Row-level security architecture ensuring no cross-user data access is architecturally possible",
-            "Biometric and PIN-based authentication at the application level",
-            "HMAC-SHA512 cryptographic verification on all payment callbacks",
-            "Regular vulnerability assessments and security audits",
+          type: "p",
+          text: "KlarioAI may fetch live foreign-exchange rates from ExchangeRate-API (open.er-api.com). No personal data is sent to the rate provider; Klario only requests the public rate table. Any FX figures shown are indicative only; they are not a settlement or guaranteed rate.",
+        },
+        {
+          type: "p",
+          text: "KlarioAI output is general information only. It is not financial, investment, tax, or legal advice.",
+        },
+      ],
+    },
+    {
+      title: "Moving money, and your consent",
+      blocks: [
+        { type: "subhead", text: "Savings wallet" },
+        {
+          type: "p",
+          text: "Money you save is held in a wallet operated by our licensed payments partner, not by Klario.",
+        },
+        { type: "subhead", text: "Recurring auto-save (debit mandate)" },
+        {
+          type: "p",
+          text: "Recurring auto-save is a debit mandate that you authorise. You can cancel it at any time in the app. If there are not enough funds on a scheduled date, we notify you, hold the instruction, retry when funds appear, and then skip to the next scheduled date. Nothing is debited without an active mandate.",
+        },
+        { type: "subhead", text: "Withdrawals" },
+        {
+          type: "p",
+          text: "For your security and to prevent fraud, you can only withdraw to a bank account whose account-holder name matches your identity-verified (KYC) legal name, including accounts you have not connected. We resolve the destination account name through a payments provider to enforce this.",
+        },
+        { type: "subhead", text: "Sending money" },
+        {
+          type: "p",
+          text: "Each transfer is authorised individually with your transfer PIN.",
+        },
+      ],
+    },
+    {
+      title: "Who we share data with (sub-processors)",
+      blocks: [
+        {
+          type: "p",
+          text: "We do not sell or rent your personal information. We share it only with the service providers below, each under a contract that requires them to protect your data and use it solely to deliver their service. Some are also our regulated financial partners.",
+        },
+        {
+          type: "table",
+          head: ["Third party", "What they do"],
+          rows: [
+            ["Licensed open-banking partner", "CBN-licensed open banking (connecting your bank accounts and verifying your BVN), and executing transfers and direct debits on your instruction"],
+            ["Licensed payments partner", "Holds your savings wallet balance and provides payment rails"],
+            ["Account-verification partner", "Bank list and account-name resolution"],
+            ["Identity-verification partner", "Identity verification (KYC)"],
+            ["Anthropic", "AI processing that powers KlarioAI (Claude)"],
+            ["ExchangeRate-API (open.er-api.com)", "Live currency exchange rates for KlarioAI conversions. No user data is sent; Klario only requests the public rate table."],
+            ["Supabase", "Application hosting, database, and authentication"],
+            ["Push-notification delivery provider", "Delivering push notifications to your device"],
           ],
         },
         {
           type: "p",
-          text: "While we apply rigorous security controls, no system can guarantee absolute security. We encourage you to use a strong, unique PIN and to enable biometric authentication within the app.",
+          text: "We may also disclose information where required by law, court order, or a regulator such as the CBN or the NDPC.",
         },
       ],
     },
     {
-      title: "Data Retention",
+      title: "How we keep your data secure",
       blocks: [
         {
           type: "p",
-          text: "We retain your personal data for as long as your account remains active or as required to fulfil our legal and regulatory obligations.",
+          text: "We apply technical and organisational safeguards, including:",
         },
-        { type: "p", text: "Upon account deletion:" },
         {
           type: "list",
           items: [
-            "Your personal profile data is permanently deleted within 30 days",
-            "Transaction history and financial data are deleted within 30 days",
-            "Anonymised, aggregated analytics data may be retained indefinitely as it cannot be linked to any individual",
+            "Your transfer PIN stored as a salted hash, never as plaintext;",
+            "The transfer PIN bound to your account (not just your device), with brute-force rate limiting;",
+            "HTTPS-only transport for data in transit;",
+            "Name-matched withdrawals (funds can only leave to an account in your verified name);",
+            "Automatic app lock and biometric unlock.",
           ],
         },
-      ],
-    },
-    {
-      title: "Your Rights",
-      blocks: [
         {
           type: "p",
-          text: "Under the Nigeria Data Protection Act (NDPA) and applicable regulations, you have the following rights regarding your personal data:",
-        },
-        { type: "subhead", text: "Right of Access" },
-        {
-          type: "p",
-          text: "You may request a copy of the personal data we hold about you at any time.",
-        },
-        { type: "subhead", text: "Right to Rectification" },
-        {
-          type: "p",
-          text: "You may request correction of any inaccurate or incomplete personal data.",
-        },
-        { type: "subhead", text: "Right to Erasure" },
-        {
-          type: "p",
-          text: "You may request deletion of your personal data, subject to our legal retention obligations.",
-        },
-        { type: "subhead", text: "Right to Withdraw Consent" },
-        {
-          type: "p",
-          text: "Where we process your data based on consent, you may withdraw that consent at any time without affecting the lawfulness of prior processing.",
-        },
-        { type: "subhead", text: "Right to Data Portability" },
-        {
-          type: "p",
-          text: "You may request your data in a structured, machine-readable format.",
-        },
-        { type: "subhead", text: "Right to Lodge a Complaint" },
-        {
-          type: "p",
-          text: "You have the right to lodge a complaint with the Nigeria Data Protection Commission (NDPC) if you believe your data rights have been violated.",
-        },
-        {
-          type: "p",
-          text: "To exercise any of these rights, contact us at: privacy@klario.finance",
-        },
-        {
-          type: "p",
-          text: "We will respond to all verified requests within 30 days of receipt.",
+          text: "Some safeguards are provided by our licensed partners: wallet custody, account-name resolution, and the execution of transfers and payouts. No system can be perfectly secure, so please keep your PIN secret and enable biometric unlock.",
         },
       ],
     },
     {
-      title: "Cookies and Tracking",
+      title: "Your rights (NDPR)",
       blocks: [
         {
           type: "p",
-          text: "Our website uses cookies and similar tracking technologies to improve your browsing experience. Please refer to our Cookie Policy for full details on how we use cookies and how you can manage your preferences.",
+          text: "Under the NDPA and NDPR, you can, at any time:",
+        },
+        {
+          type: "list",
+          items: [
+            "Access the personal data we hold about you;",
+            "Export your data (portability) in a structured, machine-readable format;",
+            "Delete your account and associated data;",
+            "Disconnect any bank you have linked;",
+            "Withdraw consent, including cancelling an auto-save mandate;",
+            "Object to or restrict certain processing, and opt out of marketing.",
+          ],
+        },
+        {
+          type: "p",
+          text: "Most of these are self-service in the app. You can also contact support@klario.finance. We verify your identity and respond within the timeline set by the NDPC, and in any case within 30 days. You may also lodge a complaint with the NDPC.",
         },
       ],
     },
     {
-      title: "Children's Privacy",
+      title: "Unauthorised transactions",
       blocks: [
         {
           type: "p",
-          text: "The Klario Platform is intended for users aged 18 and above. We do not knowingly collect personal information from individuals under the age of 18. If we become aware that a minor has registered an account, we will promptly delete the account and associated data.",
+          text: "Keep your transfer PIN secret and never share it. If you see a transaction you did not authorise, report it immediately in the app or by emailing support@klario.finance. We will investigate, work with the relevant licensed partner, and handle your report in line with CBN consumer-protection expectations. Report promptly, as delays can affect what can be recovered.",
         },
       ],
     },
     {
-      title: "Changes to This Policy",
+      title: "Notifications we send",
       blocks: [
         {
           type: "p",
-          text: "We may update this Privacy Policy from time to time to reflect changes in our practices, technology, or legal obligations. Where changes are material, we will notify you via email or in-app notification at least 14 days before the changes take effect.",
+          text: "So you always know what is happening with your money, we send:",
+        },
+        {
+          type: "list",
+          items: [
+            "Savings maturity notices;",
+            "Upcoming-deposit reminders (before a scheduled auto-save);",
+            "Upcoming-withdrawal reminders;",
+            "Security alerts and other push notices.",
+          ],
         },
         {
           type: "p",
-          text: "Your continued use of the Platform after the effective date of any update constitutes your acceptance of the revised Policy.",
+          text: "You can manage most notifications in settings. Some security and transaction notices are necessary and cannot be turned off.",
         },
       ],
     },
     {
-      title: "Contact Us",
+      title: "How long we keep your data",
       blocks: [
         {
           type: "p",
-          text: "If you have any questions, concerns, or requests regarding this Privacy Policy, please contact us:",
+          text: "We keep your data while your account is active. When you delete your account, your personal and financial data are permanently removed within 30 days.",
         },
-        { type: "subhead", text: "Klario Finance" },
-        { type: "p", text: "Powered by Raavon Limited (RC-9537604)" },
-        { type: "p", text: "Raavon contact: contact@raavon.com" },
-        { type: "p", text: "Email: privacy@klario.finance" },
+        {
+          type: "p",
+          text: "Records we are legally required to retain (for example anti-fraud, tax and regulatory records under applicable Nigerian law) are kept for up to the period required by law, then permanently deleted. Anonymised, aggregated data that cannot identify you may be kept longer.",
+        },
+      ],
+    },
+    {
+      title: "Children",
+      blocks: [
+        {
+          type: "p",
+          text: "Klario is for users aged 18 and above. We do not knowingly collect data from anyone under 18. If we learn that a minor has registered, we will delete the account and its data.",
+        },
+      ],
+    },
+    {
+      title: "Changes to this policy",
+      blocks: [
+        {
+          type: "p",
+          text: "We may update this policy to reflect new features or legal requirements. Where changes are material, we will notify you by email or in-app at least 14 days before they take effect.",
+        },
+      ],
+    },
+    {
+      title: "Governing law and contact",
+      blocks: [
+        {
+          type: "p",
+          text: "This policy is governed by the laws of the Federal Republic of Nigeria.",
+        },
+        { type: "subhead", text: "Klario (by Raavon Limited, RC-9537604)" },
+        { type: "p", text: "Email: support@klario.finance" },
         { type: "p", text: "Website: klario.finance" },
         {
           type: "link",
-          prefix: "Parent Company: ",
+          prefix: "Parent company: ",
           label: "www.raavon.com",
           href: "https://www.raavon.com",
-        },
-        {
-          type: "p",
-          text: "We aim to respond to all enquiries within 5 business days.",
         },
       ],
     },
@@ -335,312 +326,198 @@ export const TERMS: LegalPage = {
   title: "Terms of Service",
   ...dates,
   preamble: [
+    draftNotice,
     {
       type: "p",
-      text: `These Terms of Service ("Terms") constitute a legally binding agreement between you ("User", "you", or "your") and Klario Finance ("Klario", "we", "us", or "our") governing your access to and use of the Klario mobile application and website (the "Platform").`,
+      text: `These Terms of Service ("Terms") are an agreement between you and Raavon Limited ("Klario", "we", "us", or "our"), which operates the Klario app and website. They explain the rules for using Klario, especially now that the app can move money on your instruction.`,
     },
     {
       type: "p",
-      text: "Please read these Terms carefully before using the Platform. By creating an account or using any part of the Platform, you confirm that you have read, understood, and agree to be bound by these Terms and our Privacy Policy.",
+      text: "By creating an account or using Klario, you confirm you have read and agree to these Terms and our Privacy Policy. If you do not agree, please do not use Klario.",
     },
   ],
   sections: [
     {
-      title: "About Klario",
+      title: "About Klario (and what we are not)",
       blocks: [
         {
           type: "p",
-          text: "Klario is a personal finance management platform developed under Klario Finance and operated by Raavon Limited (RC-9537604, www.raavon.com). We are not a bank, deposit-taking institution, or payment service provider. We do not hold, custody, or control your funds. All banking and payment functions are delivered through licensed third-party financial infrastructure partners operating under the regulatory framework of the Central Bank of Nigeria (CBN).",
+          text: "Klario is a personal-finance app operated by Raavon Limited (RC-9537604). We are not a bank and never hold your funds ourselves. Your savings balance is held in a wallet operated by a licensed payments partner, and transfers and direct debits are executed by a licensed open-banking partner through its direct-debit feature, on your instruction. Klario orchestrates these actions; it does not itself custody or move your money. Our partners are described in our Privacy Policy.",
         },
       ],
     },
     {
-      title: "Eligibility",
+      title: "Who can use Klario",
       blocks: [
-        { type: "p", text: "To use the Klario Platform, you must:" },
+        { type: "p", text: "To use Klario, you must:" },
         {
           type: "list",
           items: [
-            "Be at least 18 years of age",
-            "Be a resident of Nigeria",
-            "Possess a valid Nigerian Bank Verification Number (BVN)",
-            "Have the legal capacity to enter into a binding agreement",
-            "Provide accurate, current, and complete registration information",
+            "Be at least 18 years old;",
+            "Be resident in Nigeria;",
+            "Have a valid Nigerian Bank Verification Number (BVN);",
+            "Have the legal capacity to enter into this agreement;",
+            "Provide accurate and complete information, and keep it up to date.",
           ],
-        },
-        {
-          type: "p",
-          text: "By registering an account, you represent and warrant that you meet all of the above eligibility requirements.",
         },
       ],
     },
     {
-      title: "Account Registration and Security",
+      title: "Your account and security",
       blocks: [
-        { type: "subhead", text: "3.1 Account Creation" },
         {
           type: "p",
-          text: "You must register an account to access Klario's core features. You agree to provide truthful, accurate, and complete information during registration and to keep your information current.",
-        },
-        { type: "subhead", text: "3.2 Account Security" },
-        { type: "p", text: "You are solely responsible for:" },
-        {
-          type: "list",
-          items: [
-            "Maintaining the confidentiality of your login credentials, PIN, and biometric authentication",
-            "All activities that occur under your account",
-            "Notifying us immediately at security@klario.finance if you suspect any unauthorised access or security breach",
-          ],
+          text: "You may hold one account, and you are responsible for everything that happens under it. Keep your login, app PIN, transfer PIN and biometric access private and never share them. Your transfer PIN is what authorises money to move, so treat it like a bank PIN.",
         },
         {
           type: "p",
-          text: "Klario will not be liable for any loss or damage arising from your failure to maintain the security of your account credentials.",
-        },
-        { type: "subhead", text: "3.3 One Account Per User" },
-        {
-          type: "p",
-          text: "You may only maintain one active Klario account. Creating multiple accounts or accounts on behalf of another person without their explicit authorisation is strictly prohibited.",
+          text: "Tell us immediately at support@klario.finance if you think someone else has accessed your account or a transaction was made without your permission.",
         },
       ],
     },
     {
-      title: "Services",
+      title: "Savings and auto-save (debit mandate)",
       blocks: [
-        { type: "subhead", text: "4.1 Platform Services" },
         {
           type: "p",
-          text: "Subject to these Terms, Klario provides the following services depending on your subscription tier:",
+          text: "You can create savings goals; the money is held in a wallet operated by our licensed payments partner. Recurring auto-save is a debit mandate that you authorise, and you can cancel it at any time in the app.",
         },
-        {
-          type: "list",
-          items: [
-            "Bank Account Aggregation: Read-only access to your connected Nigerian bank accounts, displaying consolidated balances and transaction history",
-            "KlarioAI Financial Assistant: An AI-powered conversational assistant that provides personalised financial insights based on your account data",
-            "Savings Goal Management: Automated savings instructions that direct funds to a dedicated savings account opened in your name at our banking partner",
-            "Bill Payments: Facilitation of airtime, data, electricity, and cable TV payments initiated by you",
-            "Human Financial Manager: A dedicated financial professional assigned to Financial Executive tier subscribers",
-          ],
-        },
-        { type: "subhead", text: "4.2 Service Availability" },
         {
           type: "p",
-          text: "We endeavour to maintain continuous Platform availability but do not guarantee uninterrupted service. Scheduled maintenance, system upgrades, or events beyond our control may temporarily affect availability. We will notify users of planned downtime where reasonably possible.",
-        },
-        { type: "subhead", text: "4.3 Service Modifications" },
-        {
-          type: "p",
-          text: "We reserve the right to modify, suspend, or discontinue any feature or service at any time. Where changes are material, we will provide reasonable advance notice.",
+          text: "If there are not enough funds on a scheduled date, we notify you, hold the instruction, retry when funds appear, and then skip to the next scheduled date. Nothing is debited without an active mandate.",
         },
       ],
     },
     {
-      title: "Subscription and Payment Terms",
+      title: "Withdrawals",
       blocks: [
-        { type: "subhead", text: "5.1 Subscription Tiers" },
-        { type: "p", text: "Klario offers three subscription tiers:" },
-        {
-          type: "list",
-          items: [
-            "Free: ₦0 / month, limited features as described on the Platform",
-            "Money Manager: ₦1,900 / month, expanded features as described on the Platform",
-            "Financial Executive: ₦5,400 / month, full feature access including dedicated human financial manager",
-          ],
-        },
-        { type: "subhead", text: "5.2 Transaction Fees" },
         {
           type: "p",
-          text: "A flat transaction fee of ₦10 applies to each outbound transaction initiated by Free and Money Manager tier users. Financial Executive tier users are exempt from transaction fees.",
-        },
-        { type: "subhead", text: "5.3 Billing and Renewal" },
-        {
-          type: "p",
-          text: "Paid subscriptions are billed monthly in advance. Your subscription will automatically renew on the same date each month unless cancelled before the renewal date.",
-        },
-        { type: "subhead", text: "5.4 Cancellation" },
-        {
-          type: "p",
-          text: "You may cancel your subscription at any time through the app settings. Cancellation takes effect at the end of the current billing period. We do not provide refunds for the remaining days of a cancelled billing period.",
-        },
-        { type: "subhead", text: "5.5 Price Changes" },
-        {
-          type: "p",
-          text: "We reserve the right to change subscription prices with 30 days' written notice. Continued use of the Platform after a price change takes effect constitutes acceptance of the new pricing.",
+          text: "For your security and to prevent fraud, you can only withdraw to a bank account whose account-holder name matches your identity-verified (KYC) legal name, including accounts you have not connected to Klario. The destination account name is resolved through a payments provider to enforce this. Withdrawals to accounts in a different name are not permitted.",
         },
       ],
     },
     {
-      title: "Prohibited Conduct",
+      title: "Sending money and transfers",
+      blocks: [
+        {
+          type: "p",
+          text: "Each transfer is authorised individually with your transfer PIN. Your transfer PIN is stored as a salted hash bound to your account (not just your device), with brute-force rate limiting. Please check the recipient and amount carefully before you confirm: once your instruction is executed by our licensed partners, a transfer may not be reversible.",
+        },
+      ],
+    },
+    {
+      title: "KlarioAI",
+      blocks: [
+        {
+          type: "p",
+          text: "KlarioAI is powered by Anthropic (Claude). It can give guidance and prepare an action for you, but it never executes a payment on its own. Every action needs your tap and your transfer PIN.",
+        },
+        {
+          type: "p",
+          text: "KlarioAI may show live foreign-exchange rates from ExchangeRate-API (open.er-api.com); those figures are indicative only and are not a settlement or guaranteed rate. KlarioAI output is general information only, and is not financial, investment, tax, or legal advice.",
+        },
+      ],
+    },
+    {
+      title: "Fees",
+      blocks: [
+        {
+          type: "p",
+          text: "Klario may offer free and paid plans. Any subscription prices and transaction fees are shown in the app and on our website before you subscribe or confirm a transaction. Your bank or our partners may also apply their own charges.",
+        },
+      ],
+    },
+    {
+      title: "Acceptable use",
       blocks: [
         { type: "p", text: "You agree not to:" },
         {
           type: "list",
           items: [
-            "Use the Platform for any unlawful, fraudulent, or deceptive purpose",
-            "Attempt to gain unauthorised access to any part of the Platform or its underlying systems",
-            "Reverse engineer, decompile, or disassemble any component of the Platform",
-            "Use automated tools, bots, or scrapers to interact with the Platform",
-            "Upload, transmit, or distribute malicious code or content",
-            "Impersonate any person, entity, or Klario employee",
-            "Use the Platform to facilitate money laundering, terrorist financing, or any other financial crime",
-            "Violate any applicable local, national, or international law or regulation",
+            "Use Klario for any unlawful, fraudulent, or deceptive purpose;",
+            "Use Klario to facilitate money laundering, terrorist financing, or any financial crime;",
+            "Attempt to gain unauthorised access to Klario or its systems, or interfere with them;",
+            "Reverse engineer, scrape, or misuse the app;",
+            "Impersonate another person, or use an account that is not yours;",
+            "Break any applicable Nigerian or other law.",
           ],
         },
         {
           type: "p",
-          text: "Violation of these prohibitions may result in immediate account suspension or termination and may be reported to relevant law enforcement or regulatory authorities.",
+          text: "Breaking these rules may lead to suspension or termination of your account, and may be reported to law enforcement or regulators.",
         },
       ],
     },
     {
-      title: "Intellectual Property",
+      title: "Availability and changes to the service",
       blocks: [
         {
           type: "p",
-          text: "All content, features, design elements, trademarks, logos, software, and technology comprising the Klario Platform are the exclusive property of Klario Finance and are protected by applicable intellectual property laws.",
-        },
-        {
-          type: "p",
-          text: "Nothing in these Terms grants you any right, title, or interest in our intellectual property. You may not reproduce, distribute, modify, or create derivative works from any part of the Platform without our prior written consent.",
+          text: "We work to keep Klario available but cannot guarantee it will always be uninterrupted; maintenance, upgrades, partner outages, or events beyond our control may affect it. We may add, change, or remove features, and will give reasonable notice of material changes where we can.",
         },
       ],
     },
     {
-      title: "Disclaimer of Warranties",
+      title: "Disclaimers and limitation of liability",
       blocks: [
         {
           type: "p",
-          text: `The Platform is provided on an "as is" and "as available" basis without warranties of any kind, whether express or implied.`,
-        },
-        { type: "p", text: "Klario does not warrant that:" },
-        {
-          type: "list",
-          items: [
-            "The Platform will be uninterrupted, error-free, or free of viruses or harmful components",
-            "Financial insights generated by KlarioAI constitute professional financial advice",
-            "The accuracy of third-party financial data retrieved from your banks",
-          ],
+          text: `Klario is provided on an "as is" and "as available" basis. KlarioAI insights are information, not professional advice, and we do not warrant the accuracy of third-party data retrieved from your banks or FX providers.`,
         },
         {
           type: "p",
-          text: "KlarioAI insights are for informational purposes only and should not be relied upon as a substitute for professional financial advice.",
+          text: "To the fullest extent permitted by Nigerian law, we are not liable for indirect or consequential losses, for losses caused by your failure to keep your PIN and credentials secret, or for the acts or omissions of our licensed banking, payments and infrastructure partners. Nothing in these Terms limits any liability that cannot be limited under applicable law.",
         },
       ],
     },
     {
-      title: "Limitation of Liability",
+      title: "Unauthorised transactions and complaints",
       blocks: [
         {
           type: "p",
-          text: "To the fullest extent permitted by applicable law, Klario Finance, its directors, employees, and partners shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from:",
-        },
-        {
-          type: "list",
-          items: [
-            "Your use of or inability to use the Platform",
-            "Unauthorised access to your account resulting from your failure to maintain credential security",
-            "Inaccuracies in third-party financial data",
-            "Actions or omissions of our banking or infrastructure partners",
-          ],
-        },
-        {
-          type: "p",
-          text: "In no event shall our total cumulative liability exceed the total subscription fees paid by you to Klario in the three months immediately preceding the claim.",
-        },
-      ],
-    },
-    {
-      title: "Indemnification",
-      blocks: [
-        {
-          type: "p",
-          text: "You agree to indemnify, defend, and hold harmless Klario Finance and its officers, directors, employees, and partners from and against any claims, damages, losses, liabilities, costs, and expenses (including reasonable legal fees) arising from:",
-        },
-        {
-          type: "list",
-          items: [
-            "Your use of the Platform",
-            "Your violation of these Terms",
-            "Your violation of any third-party rights",
-            "Any content you submit through the Platform",
-          ],
+          text: "If you notice a transaction you did not authorise, report it as soon as possible in the app or by emailing support@klario.finance. We will investigate, work with the relevant licensed partner, and handle your complaint in line with CBN consumer-protection expectations. Reporting promptly gives the best chance of resolving the issue.",
         },
       ],
     },
     {
       title: "Termination",
       blocks: [
-        { type: "subhead", text: "11.1 Termination by You" },
         {
           type: "p",
-          text: `You may terminate your account at any time by selecting "Delete Account" in the app settings. Upon deletion, your data will be permanently removed within 30 days.`,
-        },
-        { type: "subhead", text: "11.2 Termination by Klario" },
-        {
-          type: "p",
-          text: "We reserve the right to suspend or permanently terminate your account, with or without notice, if we determine that you have:",
-        },
-        {
-          type: "list",
-          items: [
-            "Violated any provision of these Terms",
-            "Engaged in fraudulent, abusive, or illegal activity",
-            "Created risk or legal exposure for Klario or its users",
-          ],
-        },
-        { type: "subhead", text: "11.3 Effect of Termination" },
-        {
-          type: "p",
-          text: "Upon termination, your right to access the Platform ceases immediately. Provisions that by their nature should survive termination shall do so, including intellectual property, limitation of liability, indemnification, and governing law.",
+          text: 'You can close your account at any time by choosing "Delete Account" in the app; your data is removed as described in our Privacy Policy. We may suspend or terminate your account if you break these Terms, act fraudulently, or create legal or security risk. Terms that should survive termination (such as liability and governing law) continue to apply.',
         },
       ],
     },
     {
-      title: "Governing Law and Dispute Resolution",
+      title: "Governing law and disputes",
       blocks: [
         {
           type: "p",
-          text: "These Terms are governed by and construed in accordance with the laws of the Federal Republic of Nigeria.",
-        },
-        {
-          type: "p",
-          text: "Any dispute arising from or relating to these Terms or your use of the Platform shall first be subject to good-faith negotiation between the parties. If unresolved within 30 days, the dispute shall be referred to mediation or arbitration under Nigerian law.",
+          text: "These Terms are governed by the laws of the Federal Republic of Nigeria. If a dispute arises, we will first try to resolve it with you in good faith; if it is not resolved within 30 days, it may be referred to mediation or arbitration under Nigerian law. You can reach us at support@klario.finance.",
         },
       ],
     },
     {
-      title: "Changes to These Terms",
+      title: "Changes to these Terms",
       blocks: [
         {
           type: "p",
-          text: "We reserve the right to update these Terms at any time. Material changes will be communicated via email or prominent in-app notification at least 14 days before taking effect.",
-        },
-        {
-          type: "p",
-          text: "Your continued use of the Platform following notification of changes constitutes your acceptance of the revised Terms.",
+          text: "We may update these Terms. Where changes are material, we will notify you by email or in-app at least 14 days before they take effect. Continuing to use Klario after that means you accept the updated Terms.",
         },
       ],
     },
     {
       title: "Contact",
       blocks: [
-        {
-          type: "p",
-          text: "For questions or concerns regarding these Terms:",
-        },
-        { type: "subhead", text: "Klario Finance" },
-        { type: "p", text: "Powered by Raavon Limited (RC-9537604)" },
-        { type: "p", text: "Raavon contact: contact@raavon.com" },
-        { type: "p", text: "Email: legal@klario.finance" },
+        { type: "subhead", text: "Klario (by Raavon Limited, RC-9537604)" },
+        { type: "p", text: "Email: support@klario.finance" },
         { type: "p", text: "Website: klario.finance" },
         {
           type: "link",
-          prefix: "Parent Company: ",
+          prefix: "Parent company: ",
           label: "www.raavon.com",
           href: "https://www.raavon.com",
-        },
-        {
-          type: "p",
-          text: "We aim to respond to all enquiries within 5 business days.",
         },
       ],
     },
@@ -807,6 +684,10 @@ export const DATA_PROTECTION: LegalPage = {
         {
           type: "p",
           text: "We engage only processors and sub-processors that provide sufficient guarantees of compliance with applicable data protection legislation. All processing by third parties is governed by a written data processing agreement covering confidentiality, security measures, sub-processing, assistance with data subject rights, breach notification, audit rights, and return or deletion of data at the end of the engagement. Where a venture relies on regulated partners (such as banking, payments or open-banking providers), data sharing is limited to the minimum data necessary for the service.",
+        },
+        {
+          type: "p",
+          text: "For Klario, these partners include a licensed open-banking partner (open banking, BVN verification and direct debits), a licensed payments partner (savings wallet and payment rails), an account-verification partner (account-name resolution), an identity-verification partner (KYC), Anthropic (KlarioAI), Supabase (hosting and database), and a currency-rates provider (no personal data is sent).",
         },
       ],
     },
@@ -995,13 +876,13 @@ export const COMPLIANCE: LegalPage = {
             "Multi-factor authentication on critical systems, cloud consoles, code repositories and production environments;",
             "Centralised logging, monitoring and alerting, with audit logs retained;",
             "A formal change-control process, with protected repositories and mandatory review before merge;",
-            "Secure application development aligned with the OWASP Top 10, and periodic penetration testing;",
+            "Secure application development aligned with the OWASP Top 10, and a documented penetration-testing methodology;",
             "Secure data retention and disposal.",
           ],
         },
         {
           type: "p",
-          text: "Klario is not a bank and does not store your bank login credentials. Financial data is accessed on a read-only basis through licensed open-banking partners.",
+          text: "Klario is not a bank, does not hold customer funds itself, and does not store bank login credentials. Bank data is read through our licensed open-banking partner. Money movement is carried out by our regulated partners on the user's instruction: the savings wallet is operated by a licensed payments partner, and transfers and direct debits run through a licensed open-banking partner's direct-debit feature.",
         },
       ],
     },
@@ -1062,8 +943,8 @@ export const COMPLIANCE: LegalPage = {
 export const DELETE_ACCOUNT: LegalPage = {
   slug: "delete-account",
   title: "Delete your Klario account",
-  effectiveDate: "21 June 2026",
-  lastUpdated: "21 June 2026",
+  effectiveDate: "11 July 2026",
+  lastUpdated: "11 July 2026",
   preamble: [
     {
       type: "p",
@@ -1158,7 +1039,7 @@ export const DELETE_ACCOUNT: LegalPage = {
       blocks: [
         { type: "subhead", text: "Klario (by Raavon Limited, RC-9537604)" },
         { type: "p", text: "Email: support@klario.finance" },
-        { type: "p", text: "Last updated: 21 June 2026" },
+        { type: "p", text: "Last updated: 11 July 2026" },
       ],
     },
   ],
@@ -1169,9 +1050,10 @@ export const COOKIES: LegalPage = {
   title: "Cookie Policy",
   ...dates,
   preamble: [
+    draftNotice,
     {
       type: "p",
-      text: `This Cookie Policy explains how Klario Finance ("Klario", "we", "us", or "our") uses cookies and similar tracking technologies on the klario.finance website (the "Website").`,
+      text: `This Cookie Policy explains how Klario (a product of Raavon Limited) uses cookies and similar tracking technologies on the klario.finance website (the "Website").`,
     },
     {
       type: "p",

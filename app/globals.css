@@ -1,23 +1,30 @@
 @import "tailwindcss";
 
+/* Klario brand palette (Brand Guide v1.1). Lead with one base (noir or cream)
+   ~60%, caramel ~30% accent, gold/cream ~10% highlight. No greens or blues. */
 @theme inline {
-  --color-bg: #f7f6f2;
-  --color-surface: #efeeea;
-  --color-card: #e9e8e3;
+  --color-bg: #f4f1e8;        /* soft cream base */
+  --color-surface: #ece6d8;   /* Cream, light backgrounds */
+  --color-card: #e5dece;      /* slightly deeper cream card */
 
-  --color-ink: #0d0d0e;
+  --color-ink: #0b0b0e;       /* Noir, primary text / dark mode */
   --color-body: #3d3a35;
-  --color-muted: rgba(13, 13, 14, 0.45);
+  --color-muted: rgba(11, 11, 14, 0.45);
 
-  --color-gold: #d4a853;
-  --color-gold-dim: rgba(212, 168, 83, 0.12);
-  --color-border-gold: rgba(212, 168, 83, 0.2);
+  --color-mahogany: #4e2c20;  /* primary dark, headlines on light */
+  --color-gold: #c19a6b;      /* Caramel, the signature accent (buttons, rules) */
+  --color-caramel: #c19a6b;
+  --color-gold-hi: #e6c989;   /* Gold highlight */
+  --color-cream-gold: #f4e4c5;
+  --color-gold-dim: rgba(193, 154, 107, 0.12);
+  --color-border-gold: rgba(193, 154, 107, 0.22);
 
-  --color-accent-green: #00b86b;
-  --color-accent-blue: #2b7fd6;
-  --color-accent-warm: #ff6b35;
+  /* Legacy accent aliases repointed to brand tones so nothing renders green/blue. */
+  --color-accent-green: #c19a6b;
+  --color-accent-blue: #4e2c20;
+  --color-accent-warm: #e6c989;
 
-  --color-phone-dark: #161929;
+  --color-phone-dark: #0b0b0e;
 
   --font-display: var(--font-jakarta);
   --font-sans: var(--font-inter);

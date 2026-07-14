@@ -1,23 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Inter, JetBrains_Mono, Fraunces } from "next/font/google";
+import { Space_Grotesk, Manrope, JetBrains_Mono, Fraunces } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { siteMetadata } from "@/lib/metadata";
 import { jsonLd } from "@/lib/jsonld";
 import { AnalyticsBeacon } from "@/components/AnalyticsBeacon";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
+// Brand type system: Space Grotesk for display/headlines, Manrope for body/UI.
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-jakarta",
-  weight: ["300", "400", "500", "600", "700", "800"],
-  style: ["normal", "italic"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-inter",
-  weight: ["300", "400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -53,7 +53,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${jakarta.variable} ${inter.variable} ${jetbrains.variable} ${fraunces.variable}`}
+      className={`${spaceGrotesk.variable} ${manrope.variable} ${jetbrains.variable} ${fraunces.variable}`}
     >
       <body className="bg-bg text-body grain min-h-dvh antialiased">
         <script

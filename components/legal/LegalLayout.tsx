@@ -60,6 +60,46 @@ function BlockRenderer({ block }: { block: Block }) {
       </p>
     );
   }
+  if (block.type === "table") {
+    return (
+      <div className="overflow-x-auto rounded-xl border border-border-gold/40">
+        <table className="w-full min-w-[420px] border-collapse text-left text-[14px] md:text-[15px]">
+          <thead>
+            <tr className="border-b border-border-gold/40 bg-gold/5">
+              {block.head.map((h) => (
+                <th
+                  key={h}
+                  className="px-4 py-3 font-display text-[13px] font-semibold text-ink"
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {block.rows.map((row, r) => (
+              <tr
+                key={r}
+                className="border-b border-border-gold/25 last:border-0 align-top"
+              >
+                {row.map((cell, c) => (
+                  <td
+                    key={c}
+                    className={
+                      "px-4 py-3 leading-relaxed text-body/85 " +
+                      (c === 0 ? "font-medium text-ink/90" : "")
+                    }
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
   return (
     <h3 className="font-display text-base text-ink md:text-lg">{block.text}</h3>
   );

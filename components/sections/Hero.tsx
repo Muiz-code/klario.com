@@ -56,14 +56,14 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="relative isolate flex min-h-[100dvh] items-center overflow-hidden bg-black pt-28 pb-20 text-bg md:pt-32"
+      className="relative isolate flex min-h-[100dvh] items-center overflow-hidden bg-ink pt-28 pb-20 text-bg md:pt-32"
     >
       <GlassPills />
 
       <Container className="relative z-10 flex flex-col items-center gap-6 px-4 text-center md:gap-8">
         <motion.div initial="hidden" animate="visible" variants={fade}>
           <span className="inline-flex items-center gap-2 rounded-full border border-border-gold bg-gold-dim px-3.5 py-1.5 text-[11px] font-medium tracking-wide text-gold">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent-green pulse-dot" />
+            <span className="h-1.5 w-1.5 rounded-full bg-gold pulse-dot" />
             {HERO.badge}
           </span>
         </motion.div>
