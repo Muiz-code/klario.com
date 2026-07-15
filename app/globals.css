@@ -115,11 +115,49 @@
 }
 .drift { animation: drift 14s ease-in-out infinite; }
 
+/* Print / "Save as PDF" (used by the investor page's Download button). Reveal
+   the scroll-animated content, keep the dark section backgrounds, and drop the
+   fixed nav / decorative overlays that don't belong in a document. */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* Show everything ScrollReveal would otherwise hide until scrolled into view. */
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+  header.fixed,
+  .no-print {
+    display: none !important;
+  }
+  .grain::before {
+    display: none !important;
+  }
+  section {
+    break-inside: auto;
+  }
+  article,
+  table,
+  .glass-card,
+  .glass-card-dark,
+  .glass-card-black {
+    break-inside: avoid;
+  }
+}
+
 /* Liquid-glass card surfaces. Static (no backdrop-filter / animation), and the
-   gloss lives in the background gradient so it sits behind content — no overlay,
+   gloss lives in the background gradient so it sits behind content - no overlay,
    no per-child fixes, zero runtime cost. */
 
-/* Light frosted glass — for dark sections. */
+/* Light frosted glass - for dark sections. */
 .glass-card {
   background-image:
     linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 16%),
@@ -135,7 +173,7 @@
     0 18px 50px -28px rgba(0, 0, 0, 0.6);
 }
 
-/* Dark-tinted smoked glass — for light (cream) sections; keeps dark text readable. */
+/* Dark-tinted smoked glass - for light (cream) sections; keeps dark text readable. */
 .glass-card-dark {
   background-image:
     linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, transparent 18%),
@@ -149,7 +187,7 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-/* Black liquid glass — a glossy near-black pane for use on light sections.
+/* Black liquid glass - a glossy near-black pane for use on light sections.
    Content inside must use light text. Static, so no runtime cost. */
 .glass-card-black {
   background-image:

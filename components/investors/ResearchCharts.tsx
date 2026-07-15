@@ -17,7 +17,11 @@ function Donut({ title, sub, data }: { title: string; sub: string; data: Slice[]
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const cx = size / 2;
-  let acc = 0;
+  // Cumulative fraction offset per slice, computed up-front so nothing is
+  // reassigned mid-render (satisfies the React Compiler immutability rule).
+  const cumulative = data.map((_, i) =>
+    data.slice(0, i).reduce((sum, s) => sum + s.value / total, 0),
+  );
 
   return (
     <div className="flex flex-col gap-5 rounded-2xl border border-bg/10 bg-bg/[0.03] p-7">
@@ -30,7 +34,7 @@ function Donut({ title, sub, data }: { title: string; sub: string; data: Slice[]
           <g transform={`rotate(-90 ${cx} ${cx})`}>
             {data.map((d, i) => {
               const frac = d.value / total;
-              const seg = (
+              return (
                 <circle
                   key={i}
                   cx={cx}
@@ -40,11 +44,9 @@ function Donut({ title, sub, data }: { title: string; sub: string; data: Slice[]
                   stroke={d.color}
                   strokeWidth={stroke}
                   strokeDasharray={`${frac * c} ${c}`}
-                  strokeDashoffset={`${-acc * c}`}
+                  strokeDashoffset={`${-cumulative[i] * c}`}
                 />
               );
-              acc += frac;
-              return seg;
             })}
           </g>
           <text x={cx} y={cx - 4} textAnchor="middle" className="fill-bg font-mono" fontSize="26" fontWeight="700">
@@ -102,13 +104,13 @@ export function ResearchCharts() {
     <div className="mt-8 grid gap-5 lg:grid-cols-2">
       <Donut
         title="Who answered"
-        sub="The two groups with the most accounts and the least tooling (n = 310)"
+        sub="The two groups with the most accounts and the least tooling (n = 331)"
         data={[
-          { label: "Employed", value: 129, color: PIE[0] },
-          { label: "Student", value: 104, color: PIE[1] },
-          { label: "Business owner", value: 39, color: PIE[2] },
-          { label: "Other / unstated", value: 28, color: PIE[3] },
-          { label: "Freelancer", value: 10, color: PIE[4] },
+          { label: "Employed", value: 132, color: PIE[0] },
+          { label: "Student", value: 113, color: PIE[1] },
+          { label: "Business owner", value: 41, color: PIE[2] },
+          { label: "Other / unstated", value: 30, color: PIE[3] },
+          { label: "Freelancer", value: 15, color: PIE[4] },
         ]}
       />
       <Donut
@@ -123,26 +125,39 @@ export function ResearchCharts() {
       />
       <Bars
         title="Most-wanted features (in their words)"
-        sub="Every top request is already in Klario's build (n = 310)"
+        sub="Every top request is already in Klario's build (n = 171)"
         data={[
-          { label: "Track spending automatically", value: 76 },
-          { label: "Save better & hit goals", value: 52 },
-          { label: "Alerts & reminders", value: 41 },
-          { label: "All accounts in one view", value: 39 },
-          { label: "Spend less, curb impulse", value: 32 },
-          { label: "Plain-English advice", value: 28 },
-          { label: "Budget & stick to it", value: 13 },
+          { label: "All accounts in one view", value: 60 },
+          { label: "Save better & hit goals", value: 60 },
+          { label: "Alerts & reminders", value: 57 },
+          { label: "Spend less, curb impulse", value: 52 },
+          { label: "Transactions sorted for me", value: 44 },
+          { label: "Plain-English advice", value: 36 },
         ]}
       />
+      {/*
+        Wave B willingness-to-pay, reconciled to the full n=171 (no responses dropped):
+          - Conditional ("if it saves me money"): 62
+          - Free tier only:                       51
+          - Named a specific price/range:         58  (broken out below)
+        The 58 named prices, folding the small raw buckets into their nearest band:
+          Under ₦2,500 = ₦1,000-2,500 (2) + ₦1,500 (1)      -> 3
+          ₦2,500-4,000 = base 27 + one "₦2,500+" (1)        -> 28
+          ₦4,000-5,500 = base 9  + ₦4,500 (1)               -> 10
+          ₦5,500-7,000                                       -> 14
+          Above ₦10,000 = ₦10,000 (2) + ₦30,000 (1)         -> 3
+        Total: 62 + 51 + (3 + 28 + 10 + 14 + 3 = 58) = 171.
+      */}
       <Bars
         title="What they'd pay"
-        sub="The largest group pays if it demonstrably saves them money (n = 150)"
+        sub="The largest group pays if it demonstrably saves them money (n = 171)"
         data={[
-          { label: "If it saves me money", value: 38 },
-          { label: "Free forever", value: 31 },
-          { label: "₦2,500 – 4,000", value: 13 },
-          { label: "₦5,500 – 7,000", value: 7 },
-          { label: "₦4,000 – 5,500", value: 6 },
+          { label: "If it saves me money", value: 62 },
+          { label: "Free forever", value: 51 },
+          { label: "₦2,500 – 4,000", value: 28 },
+          { label: "₦5,500 – 7,000", value: 14 },
+          { label: "₦4,000 – 5,500", value: 10 },
+          { label: "Under ₦2,500", value: 3 },
           { label: "Above ₦10,000", value: 3 },
         ]}
       />

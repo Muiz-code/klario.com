@@ -28,6 +28,7 @@ export function ScrollReveal({
   const MotionTag = motion[as] as typeof motion.div;
   return (
     <MotionTag
+      data-reveal
       className={cn(className)}
       initial="hidden"
       whileInView="visible"

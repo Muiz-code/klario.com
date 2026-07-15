@@ -10,12 +10,12 @@ export const INVESTORS = {
     emphasis: "everyday Nigeria.",
     sub: "Nigerians bank across three to five apps and still can't answer a simple question: how am I actually doing? Klario unifies every account, adds an AI that understands naira, and turns clarity into action, saving, budgeting, paying, all in one place.",
     primaryCta: { label: "Download the investor brief", href: "/Klario-Investor-Brief.pdf" },
-    secondaryCta: { label: "Request the data room", href: "mailto:invest@klario.finance?subject=Klario%20data%20room%20request" },
+    secondaryCta: { label: "Talk to the founders", href: "mailto:invest@klario.finance?subject=Intro%20call" },
   },
 
   // Headline numbers from our own beta research (two waves, July 2026).
   metrics: [
-    { value: "310", label: "Nigerians surveyed across two research waves" },
+    { value: "331", label: "Nigerians surveyed across two research waves" },
     { value: "92%", label: "use two or more banks, accounts scattered" },
     { value: "97%", label: "still track money by hand, or not at all" },
     { value: "79%", label: "regularly lose track of where it went" },
@@ -27,13 +27,13 @@ export const INVESTORS = {
     label: "Beta insights",
     heading: "We didn't guess the demand.",
     emphasis: "We measured it.",
-    intro: "Two research waves with 310 Nigerians, July 2026. The problem is near-universal, the appetite is proven, and no habit stands in the way.",
+    intro: "Two research waves with 331 Nigerians, July 2026. The problem is near-universal, the appetite is proven, and no habit stands in the way.",
     signals: [
       { value: "78%", label: "call automatic spend clarity “extremely valuable”" },
       { value: "86%", label: "want all their accounts in one view" },
       { value: "71%", label: "volunteered to actively test and give feedback" },
       { value: "82%", label: "are comfortable connecting a bank to a secure app" },
-      { value: "38%", label: "named a specific price they would pay" },
+      { value: "34%", label: "named a specific price they would pay" },
       { value: "84%", label: "feel anxious about not knowing where money went" },
     ],
     takeaways: [
@@ -41,7 +41,7 @@ export const INVESTORS = {
       "The demand is not the bottleneck; trust and execution are, and both are our focus.",
       "Security is the top objection raised, and read-only access is exactly our answer.",
     ],
-    source: "Klario Beta Insights, two waves merged (n = 310 / 160 / 150), July 2026.",
+    source: "Klario Beta Insights, two waves combined (n = 331 / 160 / 171), July 2026.",
   },
 
   opportunity: {
@@ -86,7 +86,7 @@ export const INVESTORS = {
     heading: "Recurring revenue, with room to",
     emphasis: "compound.",
     streams: [
-      { title: "Subscriptions", body: "A free tier for reach, and two paid tiers, Money Manager and Financial Executive, for households and power users who want automation and a human advisor." },
+      { title: "Subscriptions", body: "A free tier for reach, and two paid tiers, Money Manager and Financial Executive, for households and power users who want automation and a human advisor. The core paid tier is priced inside the ₦2,500-4,000 band our beta community said they would pay (median ₦3,250), with the free tier as the on-ramp." },
       { title: "Partnerships", body: "Distribution and product partnerships with regulated financial institutions that want to reach engaged, verified, financially active users." },
       { title: "Referrals", body: "Warm, permissioned introductions to vetted savings and investment products, on the user's terms." },
     ],
@@ -99,9 +99,9 @@ export const INVESTORS = {
     heading: "Freemium, sold as one-time upgrades,",
     emphasis: "trust-first by design.",
     intro: "Three tiers, sold as one-time payments rather than silent auto-renewals. Higher tiers unlock more linked banks, more KlarioAI, and priority support, and the business-versus-personal engine pulls SME users toward paid plans.",
-    columns: ["Capability", "Free", "Premium", "Pro"],
+    columns: ["Capability", "Free", "Money Manager", "Financial Executive"],
     rows: [
-      ["Linked bank accounts", "1", "3", "Unlimited"],
+      ["Linked bank accounts", "1", "3", "10"],
       ["KlarioAI messages / month", "5", "30", "100"],
       ["Data export (NDPR)", "Yes", "Yes", "Yes"],
       ["Priority support", "No", "No", "Yes"],
@@ -128,7 +128,7 @@ export const INVESTORS = {
         "Co-built savings, lending and deposit journeys",
         "Aggregated, consented insight into how customers actually manage money",
       ],
-      cta: { label: "Download the partnership brief", href: "/Klario-Partnership-Brief.pdf" },
+      cta: { label: "Request the partnership brief", href: "mailto:invest@klario.finance?subject=Klario%20partnership%20brief%20request" },
     },
     {
       id: "financial",
@@ -142,11 +142,26 @@ export const INVESTORS = {
         "Asset-light model: licensed partners carry money-movement risk",
         "AI-native product with a widening data and guidance moat",
       ],
-      cta: { label: "Download the investor brief", href: "/Klario-Investor-Brief.pdf" },
+      cta: { label: "Request the investor brief", href: "mailto:invest@klario.finance?subject=Klario%20investor%20brief%20request" },
     },
   ],
 
   // ── Competitive landscape ────────────────────────────────────────────
+  // Competitor claims re-verified 2026-07-15. These products move fast, so
+  // re-check every cell before each investor send. Findings from this review:
+  //   - Revolut: core model = you bank with it; only a "Limited" AI assistant;
+  //     not available in NG. Cells OK.
+  //   - Emma: live PFM aggregator, cells OK. ⚠️ MINT WAS DISCONTINUED by Intuit
+  //     (closed to users ~Mar 2024, folded into Credit Karma). Listing it as a
+  //     current competitor is outdated - drop "Mint" or swap in a live
+  //     aggregator before this goes to investors.
+  //   - Cleo: connects accounts via Plaid, so "Sits on your existing banks" is
+  //     arguably "Yes" rather than "Partly"; AI advisor "Yes" OK; not in NG.
+  //   - PiggyVest / Cowrywise: custody funds, NG-native, no AI advisor, no
+  //     business-vs-personal. All cells OK.
+  //   - Kuda / Carbon: you bank with them, NG-native. ⚠️ Kuda now ships an AI
+  //     assistant ("Ada") - "AI money advisor" may be "Limited" not "No"; verify
+  //     current scope before relying on the "No".
   competitors: {
     label: "The landscape",
     heading: "Everyone owns a slice.",
@@ -208,6 +223,12 @@ export const INVESTORS = {
     body: "Klario is currently in private beta on a controlled test environment while we complete our regulatory and partner licensing. We're speaking with strategic and financial investors who want in early. The investor brief covers our roadmap, model and the round; the data room has the detail.",
     primaryCta: { label: "Download the investor brief", href: "/Klario-Investor-Brief.pdf" },
     secondaryCta: { label: "Talk to the founders", href: "mailto:invest@klario.finance?subject=Intro%20call" },
+    // TODO(legal): counsel to review this disclaimer. The page pairs an
+    // "informational only / not an offer or solicitation" statement with live
+    // investor-solicitation CTAs ("Talk to the founders", "Request the investor
+    // brief", mailto:invest@). Confirm the disclaimer and the active solicitation are
+    // compatible under NG (ISA / SEC Nigeria) and any target-investor
+    // jurisdiction before publishing. Do not change the wording without sign-off.
     disclaimer: "This page is informational only and is not an offer to sell or a solicitation to buy any security. Klario is operated by Raavon Limited (RC-9537604). Figures shared in the deck are subject to change.",
   },
 } as const;

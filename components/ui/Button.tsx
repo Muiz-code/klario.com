@@ -51,6 +51,17 @@ export function Button(props: AsLink | AsButton) {
         </a>
       );
     }
+    // mailto:/tel: and static files (e.g. a PDF in /public) must use a plain
+    // anchor, not Next's router-based Link. Files also get a download hint.
+    const isProtocol = /^(mailto:|tel:)/.test(href);
+    const isFile = href.startsWith("/") && /\.[a-z0-9]+$/i.test(href);
+    if (isProtocol || isFile) {
+      return (
+        <a className={cls} href={href} {...(isFile ? { download: true } : {})} {...rest}>
+          {children}
+        </a>
+      );
+    }
     return (
       <Link className={cls} href={href} {...rest}>
         {children}

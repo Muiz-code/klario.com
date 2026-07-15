@@ -267,7 +267,9 @@ export const PRICING = {
       id: "money-manager",
       name: "Money Manager",
       tagline: "For everyday active money management.",
-      monthly: 1900,
+      // Set inside the ₦2,500-4,000 band beta users named they'd pay (median
+      // ₦3,250); kept consistent with the investor page's stated core-tier price.
+      monthly: 3500,
       cta: "Start Money Manager",
       featured: true,
       features: [
@@ -288,7 +290,7 @@ export const PRICING = {
       monthly: 5400,
       cta: "Go Executive",
       features: [
-        "Unlimited bank connections",
+        "10 bank connections",
         "30 KlarioAI queries / day",
         "Everything in Money Manager",
         "Dedicated human financial manager",

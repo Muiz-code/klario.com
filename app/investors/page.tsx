@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { ResearchCharts } from "@/components/investors/ResearchCharts";
+import { PrintButton } from "@/components/investors/PrintButton";
 import { INVESTORS } from "@/lib/investors";
 
 export const metadata: Metadata = {
@@ -45,9 +46,9 @@ export default function InvestorsPage() {
                 {I.hero.sub}
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
-                <Button href={I.hero.primaryCta.href} size="lg" className="gap-2">
+                <PrintButton size="lg" className="gap-2">
                   <Download size={17} /> {I.hero.primaryCta.label}
-                </Button>
+                </PrintButton>
                 <Button href={I.hero.secondaryCta.href} variant="outline" size="lg" className="border-bg/25 text-bg hover:border-bg hover:bg-bg/10">
                   {I.hero.secondaryCta.label}
                 </Button>
@@ -386,7 +387,7 @@ export default function InvestorsPage() {
                 const Icon = icons[t.icon];
                 return (
                   <ScrollReveal key={t.id}>
-                    <article className="flex h-full flex-col rounded-3xl border border-gold/25 bg-gold/[0.05] p-8 md:p-10">
+                    <article className="flex h-full flex-col rounded-3xl border border-gold/25 bg-gold/[0.05] p-8 transition-colors hover:border-gold/45 md:p-10">
                       <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gold text-ink">
                         <Icon size={22} strokeWidth={1.9} />
                       </span>
@@ -401,8 +402,10 @@ export default function InvestorsPage() {
                           </li>
                         ))}
                       </ul>
-                      <div className="mt-8 pt-2">
-                        <Button href={t.cta.href} className="gap-2">
+                      {/* mt-auto pins the CTA to the bottom edge so both cards align
+                          regardless of how many bullets each has. */}
+                      <div className="mt-auto border-t border-gold/15 pt-6">
+                        <Button href={t.cta.href} size="lg" className="w-full justify-between gap-2">
                           {t.cta.label} <ArrowRight size={16} />
                         </Button>
                       </div>
@@ -425,9 +428,9 @@ export default function InvestorsPage() {
                 </h2>
                 <p className="mt-6 max-w-2xl text-[15px] leading-relaxed text-body/75">{I.ask.body}</p>
                 <div className="mt-9 flex flex-wrap gap-3">
-                  <Button href={I.ask.primaryCta.href} size="lg" className="gap-2">
+                  <PrintButton size="lg" className="gap-2">
                     <Download size={17} /> {I.ask.primaryCta.label}
-                  </Button>
+                  </PrintButton>
                   <Button href={I.ask.secondaryCta.href} variant="outline" size="lg">
                     {I.ask.secondaryCta.label}
                   </Button>
