@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import {
   Landmark, Bot, Clock, Sparkles, PiggyBank, Zap, UserRound,
-  Building2, TrendingUp, Download, ArrowRight, type LucideIcon,
+  Building2, TrendingUp, Download, Presentation, ArrowRight, type LucideIcon,
 } from "lucide-react";
 import { AppShell } from "@/components/providers/AppShell";
 import { Navbar } from "@/components/layout/Navbar";
@@ -12,6 +12,7 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { ResearchCharts } from "@/components/investors/ResearchCharts";
 import { PrintButton } from "@/components/investors/PrintButton";
+import { DownloadDeckButton } from "@/components/investors/DownloadDeckButton";
 import { INVESTORS } from "@/lib/investors";
 
 export const metadata: Metadata = {
@@ -49,6 +50,9 @@ export default function InvestorsPage() {
                 <PrintButton size="lg" className="gap-2">
                   <Download size={17} /> {I.hero.primaryCta.label}
                 </PrintButton>
+                <DownloadDeckButton size="lg" className="gap-2 border-bg/25 text-bg hover:border-bg hover:bg-bg/10">
+                  <Presentation size={17} /> PowerPoint (.pptx)
+                </DownloadDeckButton>
                 <Button href={I.hero.secondaryCta.href} variant="outline" size="lg" className="border-bg/25 text-bg hover:border-bg hover:bg-bg/10">
                   {I.hero.secondaryCta.label}
                 </Button>
@@ -431,6 +435,9 @@ export default function InvestorsPage() {
                   <PrintButton size="lg" className="gap-2">
                     <Download size={17} /> {I.ask.primaryCta.label}
                   </PrintButton>
+                  <DownloadDeckButton size="lg" className="gap-2">
+                    <Presentation size={17} /> PowerPoint (.pptx)
+                  </DownloadDeckButton>
                   <Button href={I.ask.secondaryCta.href} variant="outline" size="lg">
                     {I.ask.secondaryCta.label}
                   </Button>
