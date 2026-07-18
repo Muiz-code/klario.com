@@ -4,6 +4,7 @@ import { motion, type Variants } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { GlassPills } from "@/components/ui/GlassPills";
+import { GuillocheRosette } from "@/components/ui/Engraving";
 import { WordRotator } from "@/components/ui/WordRotator";
 import { HERO, SITE } from "@/lib/constants";
 
@@ -58,6 +59,10 @@ export function Hero() {
       id="hero"
       className="relative isolate flex min-h-[100dvh] items-center overflow-hidden bg-ink pt-28 pb-20 text-bg md:pt-32"
     >
+      {/* Engine-turned guilloche rosettes bleeding off opposite corners, like
+          the brand-guide cover. */}
+      <GuillocheRosette className="pointer-events-none absolute right-[-6%] top-[-16%] z-0 h-[80%] w-auto opacity-[0.16]" />
+      <GuillocheRosette className="pointer-events-none absolute bottom-[-18%] left-[-8%] z-0 h-[58%] w-auto opacity-[0.10]" />
       <GlassPills />
 
       <Container className="relative z-10 flex flex-col items-center gap-6 px-4 text-center md:gap-8">
@@ -85,6 +90,8 @@ export function Hero() {
               {HERO.line2.prefix}{" "}
               <WordRotator
                 words={HERO.rotatingWords}
+                interval={4800}
+                scrambleMs={560}
                 className="capitalize italic text-gold"
               />
               {HERO.line2.suffix}

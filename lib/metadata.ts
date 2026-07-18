@@ -125,6 +125,8 @@ export const siteMetadata: Metadata = {
       "max-video-preview": -1,
     },
   },
+  // Favicons resolved from the file conventions app/icon.png + app/apple-icon.png
+  // (both now the engraved Klario sub-logo / app logo).
   icons: {
     icon: "/favicon.ico",
     apple: "/favicon.ico",

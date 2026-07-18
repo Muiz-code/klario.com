@@ -7,7 +7,7 @@
   --color-surface: #ece6d8;   /* Cream, light backgrounds */
   --color-card: #e5dece;      /* slightly deeper cream card */
 
-  --color-ink: #0b0b0e;       /* Noir, primary text / dark mode */
+  --color-ink: #080808;       /* Deep matte black, primary text / dark mode */
   --color-body: #3d3a35;
   --color-muted: rgba(11, 11, 14, 0.45);
 
@@ -15,6 +15,7 @@
   --color-gold: #c19a6b;      /* Caramel, the signature accent (buttons, rules) */
   --color-caramel: #c19a6b;
   --color-gold-hi: #e6c989;   /* Gold highlight */
+  --color-champagne: #e8d5ad; /* Champagne gold, foil highlight */
   --color-cream-gold: #f4e4c5;
   --color-gold-dim: rgba(193, 154, 107, 0.12);
   --color-border-gold: rgba(193, 154, 107, 0.22);
@@ -24,12 +25,25 @@
   --color-accent-blue: #4e2c20;
   --color-accent-warm: #e6c989;
 
-  --color-phone-dark: #0b0b0e;
+  --color-phone-dark: #080808;
 
   --font-display: var(--font-jakarta);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains);
   --font-serif: var(--font-fraunces);
+}
+
+/* ── Engraving system ─────────────────────────────────────────────────────
+   Intaglio / guilloche line textures used as background layers and overlays.
+   Fine curved linework only (no dots, halftones, beads or noise), tuned to
+   sit at 2-6% presence so surfaces read as security-printed, never busy. */
+:root {
+  /* Woven guilloche mesh, gold strokes - for dark surfaces. */
+  --guilloche-gold: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='130' height='130'><g fill='none' stroke='%23c19a6b' stroke-width='0.5' stroke-opacity='0.22'><path d='M0 22 Q32 8 65 22 T130 22'/><path d='M0 43 Q32 29 65 43 T130 43'/><path d='M0 65 Q32 51 65 65 T130 65'/><path d='M0 87 Q32 73 65 87 T130 87'/><path d='M0 108 Q32 94 65 108 T130 108'/></g><g fill='none' stroke='%23c19a6b' stroke-width='0.4' stroke-opacity='0.12'><path d='M22 0 Q8 32 22 65 T22 130'/><path d='M43 0 Q29 32 43 65 T43 130'/><path d='M65 0 Q51 32 65 65 T65 130'/><path d='M87 0 Q73 32 87 65 T87 130'/><path d='M108 0 Q94 32 108 65 T108 130'/></g></svg>");
+  /* Woven guilloche mesh, mahogany strokes - for warm light surfaces. */
+  --guilloche-ink: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='130' height='130'><g fill='none' stroke='%234e2c20' stroke-width='0.5' stroke-opacity='0.26'><path d='M0 22 Q32 8 65 22 T130 22'/><path d='M0 43 Q32 29 65 43 T130 43'/><path d='M0 65 Q32 51 65 65 T130 65'/><path d='M0 87 Q32 73 65 87 T130 87'/><path d='M0 108 Q32 94 65 108 T130 108'/></g><g fill='none' stroke='%234e2c20' stroke-width='0.4' stroke-opacity='0.15'><path d='M22 0 Q8 32 22 65 T22 130'/><path d='M43 0 Q29 32 43 65 T43 130'/><path d='M65 0 Q51 32 65 65 T65 130'/><path d='M87 0 Q73 32 87 65 T87 130'/><path d='M108 0 Q94 32 108 65 T108 130'/></g></svg>");
+  /* Nested currency curves - certificate dividers and engraved accents. */
+  --currency-curve: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='40'><g fill='none' stroke='%23c19a6b' stroke-width='0.7'><path d='M8 37 Q120 -10 232 37'/><path d='M8 37 Q120 1 232 37'/><path d='M8 37 Q120 12 232 37'/><path d='M8 37 Q120 23 232 37'/></g></svg>");
 }
 
 @layer base {
@@ -46,6 +60,15 @@
     background: var(--color-bg);
     color: var(--color-body);
     color-scheme: light;
+    scrollbar-width: none; /* Firefox: hide the page scrollbar, keep scrolling */
+    -ms-overflow-style: none; /* legacy Edge/IE */
+  }
+  /* WebKit/Chromium: hide the main page scrollbar (scroll still works). */
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
   }
 
   body {
@@ -85,8 +108,9 @@
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    opacity: 0.05;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.4 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0;
+    /* Plain matte-black background: the engraving now lives in corner rosettes. */
+    background-image: none;
   }
 
   .grid-faint {
@@ -200,4 +224,181 @@
     );
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* ── Foil gold: engraved metallic button surface with a slow foil sweep ── */
+.foil-gold {
+  position: relative;
+  overflow: hidden;
+  /* Hardcoded metallic gradient (no theme-var dependency, since @theme inline
+     does not emit --color-* as runtime variables) so the button always paints. */
+  background-image: linear-gradient(135deg, #dcbb84 0%, #c8a271 38%, #a9814f 60%, #dcbb84 100%);
+}
+.foil-gold::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 34%,
+    rgba(255, 247, 224, 0.5) 48%,
+    transparent 62%
+  );
+  transform: translateX(-130%);
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.foil-gold:hover::after,
+.foil-gold:focus-visible::after {
+  transform: translateX(130%);
+}
+
+/* ── Certificate divider: nested currency curves over a hairline rule ──── */
+.divider-certificate {
+  position: relative;
+  height: 22px;
+  border: 0;
+  background: transparent;
+}
+.divider-certificate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--currency-curve);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 240px 22px;
+  opacity: 0.55;
+}
+.divider-certificate::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(193, 154, 107, 0.38) 22%,
+    rgba(193, 154, 107, 0.38) 78%,
+    transparent
+  );
+}
+
+/* ── Slow gold shimmer / security-line hover ──────────────────────────── */
+@keyframes gold-shimmer {
+  0% { background-position: -160% 0; }
+  100% { background-position: 160% 0; }
+}
+.hover-shimmer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.hover-shimmer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 40%,
+    rgba(230, 201, 137, 0.16) 50%,
+    transparent 60%
+  );
+  background-size: 220% 100%;
+  transition: opacity 0.45s ease;
+}
+.hover-shimmer:hover::before {
+  opacity: 1;
+  animation: gold-shimmer 2.6s linear infinite;
+}
+
+/* ── Emblem watermark (large medallion behind footer / hero) ──────────── */
+.emblem-watermark {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Soft engraved edges: a faint guilloche masked to the card's edges,
+      clear through the centre where the text sits. ─────────────────────── */
+.card-edge-engrave::after,
+.card-edge-engrave-gold::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-size: 82px 82px;
+  opacity: 0.6;
+  -webkit-mask-image: radial-gradient(135% 135% at 50% 50%, transparent 66%, #000 100%);
+  mask-image: radial-gradient(135% 135% at 50% 50%, transparent 66%, #000 100%);
+}
+/* mahogany edge, for light cards */
+.card-edge-engrave::after {
+  background-image: var(--guilloche-ink);
+}
+/* gold edge, for dark cards */
+.card-edge-engrave-gold::after {
+  background-image: var(--guilloche-gold);
+  opacity: 0.5;
+}
+
+/* ── Slow rotation for the emblem watermark, if animated ──────────────── */
+@keyframes emblem-spin {
+  to { transform: rotate(360deg); }
+}
+.emblem-spin {
+  animation: emblem-spin 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+/* ── The alignment dial (loader): rings spin, lock to one true vertical,
+      a guide grows, then the two plates part along it and it opens. ──── */
+.kdial { display: block; overflow: visible; }
+.kdial .ring { fill: none; stroke: #e6c989; stroke-width: 2.6; stroke-linecap: butt; }
+.kdial .ring.soft { stroke: #c19a6b; stroke-width: 1.4; opacity: 0.75; }
+.kdial .guide { stroke: #e6c989; stroke-width: 1; opacity: 0; }
+.kdial .tick { stroke: #c19a6b; stroke-width: 1; opacity: 0.35; }
+
+@keyframes kSettle1 { 0% { transform: rotate(0) } 44% { transform: rotate(408deg) } 58% { transform: rotate(357deg) } 66%, 100% { transform: rotate(360deg) } }
+@keyframes kSettle2 { 0% { transform: rotate(0) } 50% { transform: rotate(-430deg) } 62% { transform: rotate(-352deg) } 70%, 100% { transform: rotate(-360deg) } }
+@keyframes kSettle3 { 0% { transform: rotate(0) } 56% { transform: rotate(392deg) } 68% { transform: rotate(364deg) } 75%, 100% { transform: rotate(360deg) } }
+@keyframes kGuide { 0%, 72% { transform: scaleY(0); opacity: 0 } 75% { opacity: 1 } 84%, 100% { transform: scaleY(1); opacity: 1 } }
+@keyframes kOpenL { 0%, 84% { transform: translateX(0) } 96%, 100% { transform: translateX(-30px) } }
+@keyframes kOpenR { 0%, 84% { transform: translateX(0) } 96%, 100% { transform: translateX(30px) } }
+@keyframes kLock { 0%, 80% { filter: none } 86% { filter: drop-shadow(0 0 12px rgba(230, 201, 137, 0.6)) } 100% { filter: none } }
+@keyframes kShell { 0% { opacity: 0 } 4% { opacity: 1 } 95% { opacity: 1 } 100% { opacity: 0 } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.kdial.run { animation: kShell var(--cycle, 4.2s) linear infinite; }
+.kdial.run .r1 { animation: kSettle1 var(--cycle, 4.2s) cubic-bezier(0.16, 0.7, 0.2, 1) infinite; transform-box: view-box; transform-origin: 100px 100px; }
+.kdial.run .r2 { animation: kSettle2 var(--cycle, 4.2s) cubic-bezier(0.16, 0.7, 0.2, 1) infinite; transform-box: view-box; transform-origin: 100px 100px; }
+.kdial.run .r3 { animation: kSettle3 var(--cycle, 4.2s) cubic-bezier(0.16, 0.7, 0.2, 1) infinite; transform-box: view-box; transform-origin: 100px 100px; }
+.kdial.run .guide { animation: kGuide var(--cycle, 4.2s) cubic-bezier(0.4, 0, 0.2, 1) infinite; transform-box: view-box; transform-origin: 100px 100px; }
+.kdial.run .hl { animation: kOpenL var(--cycle, 4.2s) cubic-bezier(0.5, 0, 0.2, 1) infinite; transform-box: view-box; transform-origin: 100px 100px; }
+.kdial.run .hr { animation: kOpenR var(--cycle, 4.2s) cubic-bezier(0.5, 0, 0.2, 1) infinite; transform-box: view-box; transform-origin: 100px 100px; }
+.kdial.run .grp { animation: kLock var(--cycle, 4.2s) linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kdial.run,
+  .kdial.run .r1, .kdial.run .r2, .kdial.run .r3,
+  .kdial.run .guide, .kdial.run .hl, .kdial.run .hr, .kdial.run .grp {
+    animation: none !important;
+  }
+  .kdial.run { opacity: 1; }
+  .kdial .guide { opacity: 0.55; transform: scaleY(1); }
+}
+
+/* Site loader: rings settle and lock only. The full-page line + curtains
+   (in the Loader component) grow and then split the page along that line. */
+/* Play once and hold the aligned (vertical) state, so the rings finish settling
+   before the guide line grows and the page opens. */
+.kdial.spin .r1 { animation: kSettle1 var(--cycle, 1.8s) cubic-bezier(0.16, 0.7, 0.2, 1) forwards; transform-box: view-box; transform-origin: 100px 100px; }
+.kdial.spin .r2 { animation: kSettle2 var(--cycle, 1.8s) cubic-bezier(0.16, 0.7, 0.2, 1) forwards; transform-box: view-box; transform-origin: 100px 100px; }
+.kdial.spin .r3 { animation: kSettle3 var(--cycle, 1.8s) cubic-bezier(0.16, 0.7, 0.2, 1) forwards; transform-box: view-box; transform-origin: 100px 100px; }
+.kdial.spin .grp { animation: kLock var(--cycle, 1.8s) linear forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .kdial.spin .r1, .kdial.spin .r2, .kdial.spin .r3, .kdial.spin .grp { animation: none !important; }
 }

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klario · Loader, trust build</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --noir:#0B0B0E; --caramel:#C19A6B; --gold:#E6C989; --cream:#ECE6D8;
+  --bg:var(--noir); --ink:var(--cream); --muted:#8b8071; --plate:#131019;
+  --rule:rgba(193,154,107,.20); --mark:var(--gold); --mark-dim:var(--caramel);
+  --ok:#8FBF8A;
+}
+body.light{ --bg:#F2ECDE; --ink:#3A2218; --muted:#7c6a5a; --plate:#E9E1D0;
+  --rule:rgba(78,44,32,.18); --mark:#8A6220; --mark-dim:#A97F42; --ok:#4E7A48; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Manrope',system-ui,sans-serif;
+  min-height:100vh;padding:clamp(20px,4vw,56px);transition:background .4s,color .4s}
+
+.top{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:clamp(28px,5vw,56px)}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--mark-dim)}
+h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(26px,4.6vw,40px);line-height:1.05;letter-spacing:-.02em;margin-top:10px}
+h1 em{font-style:normal;color:var(--mark)}
+.lede{max-width:56ch;margin-top:12px;font-size:14.5px;line-height:1.6;color:var(--muted)}
+.toggle{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  background:none;color:var(--ink);border:1px solid var(--rule);padding:10px 16px;border-radius:999px;cursor:pointer;height:fit-content}
+.toggle:hover{border-color:var(--mark)}
+.toggle:focus-visible{outline:2px solid var(--mark);outline-offset:3px}
+
+section{margin-bottom:clamp(36px,6vw,72px)}
+.sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:13px;border-bottom:1px solid var(--rule);margin-bottom:26px}
+.sec-head h2{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700}
+.sec-head span{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-left:auto}
+.note{font-size:13px;line-height:1.65;color:var(--muted);max-width:64ch;margin-top:18px}
+.note b{color:var(--ink);font-weight:600}
+
+/* ---------------- the dial ---------------- */
+.dial{display:block;overflow:visible}
+.dial .ring{fill:none;stroke:var(--mark);stroke-width:2.6;stroke-linecap:butt}
+.dial .ring.soft{stroke:var(--mark-dim);stroke-width:1.4;opacity:.75}
+.dial .guide{stroke:var(--mark);stroke-width:1;opacity:0}
+.dial .tick{stroke:var(--mark-dim);stroke-width:1;opacity:.35}
+
+/* spin -> decelerate -> lock aligned -> guide draws top to bottom -> mark opens */
+@keyframes settle1{
+  0%{transform:rotate(0deg)} 44%{transform:rotate(408deg)}
+  58%{transform:rotate(357deg)} 66%,100%{transform:rotate(360deg)} }
+@keyframes settle2{
+  0%{transform:rotate(0deg)} 50%{transform:rotate(-430deg)}
+  62%{transform:rotate(-352deg)} 70%,100%{transform:rotate(-360deg)} }
+@keyframes settle3{
+  0%{transform:rotate(0deg)} 56%{transform:rotate(392deg)}
+  68%{transform:rotate(364deg)} 75%,100%{transform:rotate(360deg)} }
+
+/* the guide grows from the centre until it reaches top and bottom */
+@keyframes guideGrow{
+  0%,72%{transform:scaleY(0);opacity:0}
+  75%{opacity:1}
+  84%,100%{transform:scaleY(1);opacity:1} }
+
+/* then the plates part along that line */
+@keyframes openL{ 0%,84%{transform:translateX(0)} 96%,100%{transform:translateX(-30px)} }
+@keyframes openR{ 0%,84%{transform:translateX(0)} 96%,100%{transform:translateX(30px)} }
+@keyframes lockpulse{ 0%,80%{filter:none} 86%{filter:drop-shadow(0 0 12px rgba(230,201,137,.6))} 100%{filter:none} }
+@keyframes shell{ 0%{opacity:0} 4%{opacity:1} 95%{opacity:1} 100%{opacity:0} }
+
+.run{animation:shell var(--cycle,4.2s) linear infinite}
+.run .r1{animation:settle1 var(--cycle,4.2s) cubic-bezier(.16,.7,.2,1) infinite;transform-origin:100px 100px}
+.run .r2{animation:settle2 var(--cycle,4.2s) cubic-bezier(.16,.7,.2,1) infinite;transform-origin:100px 100px}
+.run .r3{animation:settle3 var(--cycle,4.2s) cubic-bezier(.16,.7,.2,1) infinite;transform-origin:100px 100px}
+.run .guide{animation:guideGrow var(--cycle,4.2s) cubic-bezier(.4,0,.2,1) infinite;transform-origin:100px 100px}
+.run .hl{animation:openL var(--cycle,4.2s) cubic-bezier(.5,0,.2,1) infinite}
+.run .hr{animation:openR var(--cycle,4.2s) cubic-bezier(.5,0,.2,1) infinite}
+.run .grp{animation:lockpulse var(--cycle,4.2s) linear infinite}
+
+/* one-shot: plays once and stays open, for page transitions */
+.once{animation-iteration-count:1!important;animation-fill-mode:forwards!important}
+.once .r1,.once .r2,.once .r3,.once .guide,.once .hl,.once .hr,.once .grp{
+  animation-iteration-count:1!important;animation-fill-mode:forwards!important}
+
+/* reveal: the loader opens into the screen behind it */
+.reveal{position:relative;height:260px;border:1px solid var(--rule);border-radius:16px;overflow:hidden;background:var(--plate);display:grid;place-items:center}
+.reveal .behind{position:absolute;inset:0;display:grid;place-items:center;gap:10px;opacity:0;transform:scale(.985);
+  transition:opacity .5s ease .15s, transform .6s cubic-bezier(.2,.8,.2,1) .15s;text-align:center;padding:20px}
+.reveal.open .behind{opacity:1;transform:none}
+.reveal .behind .amt2{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(20px,3.4vw,30px);font-variant-numeric:tabular-nums}
+.reveal .behind .lb{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.reveal .dial{position:relative;z-index:2;transition:opacity .45s ease .35s}
+.reveal.open .dial{opacity:0;pointer-events:none}
+.curtain{position:absolute;top:0;bottom:0;width:50%;background:var(--plate);z-index:1;transition:transform .75s cubic-bezier(.5,0,.2,1)}
+.curtain.l{left:0} .curtain.r{right:0}
+.reveal.open .curtain.l{transform:translateX(-100%)}
+.reveal.open .curtain.r{transform:translateX(100%)}
+
+/* ---------------- verification ledger ---------------- */
+.panel{background:var(--plate);border:1px solid var(--rule);border-radius:18px;overflow:hidden;max-width:600px}
+.panel-head{display:flex;align-items:center;gap:16px;padding:24px 26px 20px;border-bottom:1px solid var(--rule)}
+.panel-head .who{flex:1;min-width:0}
+.panel-head .bank{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px}
+.panel-head .act{font-size:12.5px;color:var(--muted);margin-top:3px}
+.shield{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--mark);border:1px solid var(--rule);border-radius:999px;padding:6px 11px;white-space:nowrap}
+
+.ledger{padding:8px 26px 20px;list-style:none}
+.ledger li{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--rule);
+  opacity:.28;transition:opacity .45s ease}
+.ledger li:last-child{border-bottom:none}
+.ledger li.on{opacity:1}
+.ledger .tickbox{width:17px;height:17px;flex:none;border:1px solid var(--rule);border-radius:4px;position:relative}
+.ledger li.on .tickbox{border-color:var(--ok)}
+.ledger li.on .tickbox:after{content:"";position:absolute;left:5px;top:1.5px;width:5px;height:9px;
+  border:solid var(--ok);border-width:0 1.6px 1.6px 0;transform:rotate(45deg)}
+.ledger li.pending .tickbox{border-color:var(--mark);animation:blink 1.1s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:.35}50%{opacity:1}}
+.ledger .label{flex:1;font-size:13.5px;line-height:1.4}
+.ledger .val{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ledger li.on .val{color:var(--mark-dim)}
+.ledger .cant{color:var(--muted)}
+.ledger li.cantrow .label{color:var(--ink)}
+
+.panel-foot{padding:16px 26px 22px;border-top:1px solid var(--rule);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.meter{flex:1;min-width:140px;height:3px;background:var(--rule);border-radius:2px;overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--mark);transition:width .55s cubic-bezier(.4,0,.2,1)}
+.count{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--mark);font-variant-numeric:tabular-nums}
+.partner{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);width:100%}
+
+/* resolved figure */
+.figure{display:flex;align-items:baseline;gap:10px;margin-top:4px}
+.figure .amt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(24px,4vw,34px);
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.figure .cap{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+
+.row{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.card{background:var(--plate);border:1px solid var(--rule);border-radius:14px;padding:22px;display:flex;
+  flex-direction:column;align-items:center;gap:14px;text-align:center;min-width:180px;flex:1}
+.card h3{font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:700}
+.card p{font-size:12px;color:var(--muted);line-height:1.5}
+.phone{width:180px;height:340px;border-radius:28px;border:1px solid var(--rule);background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;position:relative}
+.phone .cap2{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);text-align:center;padding:0 24px;line-height:1.7}
+
+.replay{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  background:none;border:1px solid var(--rule);color:var(--ink);padding:9px 16px;border-radius:999px;cursor:pointer;margin-top:20px}
+.replay:hover{border-color:var(--mark)}
+.replay:focus-visible{outline:2px solid var(--mark);outline-offset:3px}
+footer{border-top:1px solid var(--rule);padding-top:18px;font-family:'JetBrains Mono',monospace;font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+@media (prefers-reduced-motion:reduce){
+  .run,.run .r1,.run .r2,.run .r3,.run .guide,.run .hl,.run .hr,.run .grp,.ledger li.pending .tickbox{animation:none!important}
+  .run .guide{opacity:.55;transform:scaleY(1)}
+  .run{opacity:1}
+  .meter i{transition:none}
+}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div>
+    <div class="eyebrow">Klario · loader, second pass</div>
+    <h1>Trust is <em>things lining up.</em></h1>
+    <p class="lede">The loader appears at the most nervous moment in the product: handing over bank access. So it stops performing and starts proving. The mark becomes a precision instrument that locks into alignment, and the wait shows exactly what is happening, including what Klario cannot do.</p>
+  </div>
+  <button class="toggle" id="modeBtn">Switch to light</button>
+</div>
+
+<!-- 1 · THE DIAL -->
+<section>
+  <div class="sec-head"><h2>The alignment dial</h2><span>Mark · all platforms</span></div>
+  <div class="row">
+    <div class="card" style="max-width:280px">
+      <svg class="dial run" id="d1" width="150" height="150" viewBox="0 0 200 200" aria-label="Loading"></svg>
+      <h3>Primary</h3>
+      <p>Three rings spin, decelerate, and settle until every split lines up into one true vertical.</p>
+    </div>
+    <div class="card" style="max-width:240px">
+      <div class="phone">
+        <svg class="dial run" width="86" height="86" viewBox="0 0 200 200" data-dial aria-hidden="true"></svg>
+        <div class="cap2">Securing your<br>connection</div>
+      </div>
+      <h3>App</h3>
+      <p>Slow, steady, no bounce. Nothing here should feel playful.</p>
+    </div>
+    <div class="card" style="max-width:200px">
+      <svg class="dial run" width="40" height="40" viewBox="0 0 200 200" data-dial data-min aria-hidden="true" style="--cycle:2.4s"></svg>
+      <h3>Inline</h3>
+      <p>Rings only under 48px, so it stays legible at any size.</p>
+    </div>
+  </div>
+  <p class="note"><b>Why a dial.</b> A spinner says "busy." A dial that decelerates and locks says "precise, and now settled." It borrows from the vault and the measuring instrument rather than the loading GIF, and it uses the mark's own split as the thing being aligned, so the animation means the same as the product: <b>clarity is things lining up.</b></p>
+</section>
+
+<!-- 2 · VERIFICATION LEDGER -->
+<section>
+  <div class="sec-head"><h2>Bank connection</h2><span>In-app · the anxious moment</span></div>
+  <div class="panel">
+    <div class="panel-head">
+      <svg class="dial run" width="46" height="46" viewBox="0 0 200 200" data-dial aria-hidden="true" style="--cycle:3s"></svg>
+      <div class="who">
+        <div class="bank">Connecting GTBank</div>
+        <div class="act" id="act">Opening a secure channel</div>
+      </div>
+      <div class="shield">Read-only</div>
+    </div>
+    <ul class="ledger" id="ledger">
+      <li data-val="TLS 1.3"><span class="tickbox"></span><span class="label">Secure channel opened</span><span class="val"></span></li>
+      <li data-val="Licensed"><span class="tickbox"></span><span class="label">Verified through Mono</span><span class="val"></span></li>
+      <li data-val="Read-only"><span class="tickbox"></span><span class="label">Access scope confirmed</span><span class="val"></span></li>
+      <li class="cantrow" data-val="Never"><span class="tickbox"></span><span class="label">Klario cannot move or withdraw your money</span><span class="val"></span></li>
+      <li data-val="1,284"><span class="tickbox"></span><span class="label">Transactions read</span><span class="val"></span></li>
+      <li data-val="Encrypted"><span class="tickbox"></span><span class="label">Stored and encrypted</span><span class="val"></span></li>
+    </ul>
+    <div class="panel-foot">
+      <span class="count" id="count">0%</span>
+      <span class="meter"><i id="meter"></i></span>
+      <span class="partner">You can disconnect anytime in Settings</span>
+    </div>
+  </div>
+  <button class="replay" id="replay">Run it again</button>
+  <p class="note"><b>Why a ledger.</b> Anxiety is not cured by distraction, it is cured by information. Each line is a fact that can be checked, in the same monospace you use for money. The fourth line is the one that earns the trust, and it is the only one written as a limit rather than an achievement.</p>
+</section>
+
+<!-- 3 · REVEAL -->
+<section>
+  <div class="sec-head"><h2>Opening into the screen</h2><span>Transition · one shot</span></div>
+  <div class="reveal" id="reveal">
+    <div class="curtain l"></div>
+    <div class="curtain r"></div>
+    <svg class="dial run" id="dRev" width="120" height="120" viewBox="0 0 200 200" aria-label="Loading" style="--cycle:4.2s"></svg>
+    <div class="behind">
+      <div class="lb">Total tracked</div>
+      <div class="amt2">&#8358; 1,240,500.00</div>
+      <div class="lb">Across 3 accounts</div>
+    </div>
+  </div>
+  <button class="replay" id="replay2">Play the transition</button>
+  <p class="note"><b>Why it opens.</b> The line the rings settle into is the same line the screen parts along, so the loader does not disappear, it becomes the doorway. Use it once, on the handover from loading to loaded, never as an idle loop.</p>
+</section>
+
+<!-- 4 · RESOLVE -->
+<section>
+  <div class="sec-head"><h2>Figures resolving</h2><span>Balances · totals</span></div>
+  <div class="panel" style="max-width:380px">
+    <div class="panel-head" style="border:none;padding-bottom:8px">
+      <div class="who">
+        <div class="act">Total tracked</div>
+        <div class="figure">
+          <span class="amt" id="amt">&#8358; 0.00</span>
+        </div>
+        <div class="figure" style="margin-top:8px"><span class="cap" id="acap">Reading accounts</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="note"><b>Why counting.</b> Money loaders should never use a shimmering grey placeholder, it reads as a guess. Digits settling into an exact figure, to the kobo, says the number is real and was counted. This is the loading state for any balance or total.</p>
+</section>
+
+<footer><span>Klario · loader system v2</span><span>SVG · reduced-motion safe</span></footer>
+
+<script>
+const NS="http://www.w3.org/2000/svg", C=100, CHAN=7.6;
+const RINGS=[[69,"r1",false],[50,"r2",true],[33,"r3",false]];
+
+/* an arc pair interrupted by the mark's central channel */
+function arcs(r){
+  const phi=Math.asin(Math.min(1,CHAN/r));
+  const dx=r*Math.cos(phi), dy=r*Math.sin(phi);
+  return [
+    `M ${(C+dx).toFixed(2)} ${(C-dy).toFixed(2)} A ${r} ${r} 0 0 1 ${(C+dx).toFixed(2)} ${(C+dy).toFixed(2)}`,
+    `M ${(C-dx).toFixed(2)} ${(C+dy).toFixed(2)} A ${r} ${r} 0 0 1 ${(C-dx).toFixed(2)} ${(C-dy).toFixed(2)}`
+  ];
+}
+
+function buildDial(svg, minimal){
+  svg.innerHTML="";
+  const grp=document.createElementNS(NS,"g");
+  grp.setAttribute("class","grp");
+  svg.appendChild(grp);
+
+  // the two plates: everything left of the channel, and everything right of it
+  const HL=document.createElementNS(NS,"g"); HL.setAttribute("class","hl");
+  const HR=document.createElementNS(NS,"g"); HR.setAttribute("class","hr");
+
+  // measuring ticks, split onto their own side so they part with the mark
+  if(!minimal){
+    for(let i=0;i<48;i++){
+      const a=(i/48)*Math.PI*2, long=(i%4===0);
+      const r0=80, r1=long?86:83;
+      const x1=C+r0*Math.cos(a), y1=C+r0*Math.sin(a);
+      const x2=C+r1*Math.cos(a), y2=C+r1*Math.sin(a);
+      const l=document.createElementNS(NS,"line");
+      l.setAttribute("x1",x1.toFixed(2)); l.setAttribute("y1",y1.toFixed(2));
+      l.setAttribute("x2",x2.toFixed(2)); l.setAttribute("y2",y2.toFixed(2));
+      l.setAttribute("class","tick");
+      (x1 < C ? HL : HR).appendChild(l);
+    }
+  }
+
+  // rings: each rotation group carries its half of every ring
+  const set = minimal ? RINGS.slice(0,2) : RINGS;
+  set.forEach(([r,cls,soft])=>{
+    const gL=document.createElementNS(NS,"g"); gL.setAttribute("class",cls);
+    const gR=document.createElementNS(NS,"g"); gR.setAttribute("class",cls);
+    const [right,left]=arcs(r);
+    [[left,gL],[right,gR]].forEach(([d,g])=>{
+      const p=document.createElementNS(NS,"path");
+      p.setAttribute("d",d);
+      p.setAttribute("class","ring"+(soft?" soft":""));
+      g.appendChild(p);
+    });
+    HL.appendChild(gL); HR.appendChild(gR);
+  });
+
+  grp.appendChild(HL); grp.appendChild(HR);
+
+  // the guide: reaches the full height of the frame, then the plates open along it
+  const gl=document.createElementNS(NS,"line");
+  gl.setAttribute("x1",C); gl.setAttribute("y1",0);
+  gl.setAttribute("x2",C); gl.setAttribute("y2",200);
+  gl.setAttribute("class","guide");
+  grp.appendChild(gl);
+}
+buildDial(document.getElementById("d1"),false);
+document.querySelectorAll("[data-dial]").forEach(s=>buildDial(s,s.hasAttribute("data-min")));
+
+/* ---------- ledger ---------- */
+const items=[...document.querySelectorAll("#ledger li")];
+const acts=["Opening a secure channel","Verifying with Mono","Confirming access scope",
+            "Confirming limits","Reading transactions","Encrypting and storing"];
+const meter=document.getElementById("meter"), count=document.getElementById("count"),
+      act=document.getElementById("act");
+let idx=0, t1=null;
+
+function step(){
+  if(idx>0){ const prev=items[idx-1]; prev.classList.remove("pending"); prev.classList.add("on");
+             prev.querySelector(".val").textContent=prev.dataset.val; }
+  if(idx>=items.length){
+    act.textContent="Connected";
+    meter.style.width="100%"; count.textContent="100%";
+    clearInterval(t1); return;
+  }
+  items[idx].classList.add("pending");
+  act.textContent=acts[idx];
+  const pc=Math.round(((idx+1)/items.length)*100);
+  meter.style.width=pc+"%"; count.textContent=pc+"%";
+  idx++;
+}
+function runLedger(){
+  clearInterval(t1); idx=0;
+  items.forEach(li=>{li.classList.remove("on","pending"); li.querySelector(".val").textContent="";});
+  meter.style.width="0%"; count.textContent="0%";
+  step(); t1=setInterval(step,1150);
+}
+
+/* ---------- figure resolve ---------- */
+const amtEl=document.getElementById("amt"), acap=document.getElementById("acap");
+const TARGET=1240500.00;
+let t2=null;
+function fmt(n){ return "₦ "+n.toLocaleString("en-NG",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function runFigure(){
+  clearInterval(t2);
+  const start=performance.now(), dur=2200;
+  acap.textContent="Reading accounts";
+  t2=setInterval(()=>{
+    const k=Math.min(1,(performance.now()-start)/dur);
+    const eased=1-Math.pow(1-k,3);
+    // scramble the kobo until the very end, so it settles rather than ticks up neatly
+    const noise = k<.92 ? (Math.random()*90) : 0;
+    amtEl.textContent = fmt(TARGET*eased + noise);
+    if(k>=1){ clearInterval(t2); amtEl.textContent=fmt(TARGET); acap.textContent="Counted to the kobo"; }
+  },55);
+}
+
+document.getElementById("replay").addEventListener("click",()=>{runLedger();runFigure();});
+
+/* ---------- reveal transition ---------- */
+const reveal=document.getElementById("reveal"), dRev=document.getElementById("dRev");
+buildDial(dRev,false);
+let revTimer=null;
+function playReveal(){
+  clearTimeout(revTimer);
+  reveal.classList.remove("open");
+  dRev.style.animation="none"; void dRev.offsetWidth; dRev.style.animation="";
+  // open the screen at the moment the plates part (~88% of a 4.2s cycle)
+  revTimer=setTimeout(()=>reveal.classList.add("open"), 3700);
+}
+document.getElementById("replay2").addEventListener("click",playReveal);
+playReveal();
+runLedger(); runFigure();
+
+const btn=document.getElementById("modeBtn");
+btn.addEventListener("click",()=>{document.body.classList.toggle("light");
+  btn.textContent=document.body.classList.contains("light")?"Switch to dark":"Switch to light";});
+</script>
+</body>
+</html>

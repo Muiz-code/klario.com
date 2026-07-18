@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import {
   Smartphone,
   Link as LinkIcon,
@@ -8,9 +7,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Section } from "@/components/ui/Section";
+import { StackedCards } from "@/components/ui/StackedCards";
 import { HOW_IT_WORKS } from "@/lib/constants";
-
-const ease = [0.16, 1, 0.3, 1] as const;
 
 const icons: Record<string, LucideIcon> = {
   Smartphone,
@@ -25,21 +23,16 @@ export function HowItWorks() {
       layout="split"
       titleSide="right"
       label={HOW_IT_WORKS.label}
-      heading={HOW_IT_WORKS.heading}
-      emphasis={HOW_IT_WORKS.emphasis}
+      sub={{ lead: HOW_IT_WORKS.heading, emphasis: HOW_IT_WORKS.emphasis }}
       className="bg-surface"
     >
-      <ol className="flex flex-col gap-10">
+      <StackedCards heightClass="h-[66vh] md:h-[76vh]">
         {HOW_IT_WORKS.steps.map((step, i) => {
           const Icon = icons[step.icon];
           return (
-            <motion.li
+            <article
               key={step.title}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.4 }}
-              transition={{ duration: 0.6, delay: i * 0.1, ease }}
-              className="flex flex-col gap-5"
+              className="card-edge-engrave relative flex min-h-[340px] flex-col gap-6 overflow-hidden rounded-2xl bg-[#f6f2ea] p-8 shadow-[0_30px_80px_-32px_rgba(60,40,20,0.5)] md:p-10"
             >
               <div className="flex items-center gap-4">
                 <span className="font-display text-5xl leading-none text-gold/35 md:text-6xl">
@@ -57,10 +50,10 @@ export function HowItWorks() {
                   {step.body}
                 </p>
               </div>
-            </motion.li>
+            </article>
           );
         })}
-      </ol>
+      </StackedCards>
     </Section>
   );
 }

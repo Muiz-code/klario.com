@@ -19,13 +19,13 @@ export const COLORS = {
   border: "#272B33", // hairlines on dark
 } as const;
 
-const LOGO_URL = `${SITE.url}/klarioLogoDark.png`;
+const LOGO_URL = `${SITE.url}/Klario-primary-and-secondary-Logo.png`;
 
 /** White header strip with the Klario logo, centered. */
 export function emailHeaderRow(): string {
   return `<tr>
     <td align="center" style="background:${COLORS.header};padding:24px 32px;">
-      <img src="${LOGO_URL}" alt="Klario" width="122" height="27" style="display:block;border:0;outline:none;text-decoration:none;height:27px;width:122px;" />
+      <img src="${LOGO_URL}" alt="Klario" width="131" height="27" style="display:block;border:0;outline:none;text-decoration:none;height:27px;width:131px;" />
     </td>
   </tr>`;
 }

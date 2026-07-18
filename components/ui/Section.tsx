@@ -16,6 +16,8 @@ type Props = {
   heading?: string;
   emphasis?: string;
   intro?: string;
+  /** Optional subtitle rendered directly under the label (split layout). */
+  sub?: { lead: string; emphasis?: string };
   children: React.ReactNode;
   className?: string;
 };
@@ -29,6 +31,7 @@ export function Section({
   heading,
   emphasis,
   intro,
+  sub,
   children,
   className,
 }: Props) {
@@ -79,6 +82,22 @@ export function Section({
                   />
                   <span className="relative">{label}</span>
                 </h2>
+              )}
+              {sub && (
+                <p
+                  className={cn(
+                    "mt-7 max-w-md text-balance text-lg leading-relaxed md:text-xl",
+                    subHeadingColor
+                  )}
+                >
+                  {sub.lead}
+                  {sub.emphasis && (
+                    <>
+                      {" "}
+                      <span className="italic text-gold">{sub.emphasis}</span>
+                    </>
+                  )}
+                </p>
               )}
             </ScrollReveal>
 

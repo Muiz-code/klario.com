@@ -6,7 +6,7 @@ import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
 import { Loader } from "@/components/ui/Loader";
 import { deviceFingerprint } from "@/lib/fingerprint";
-import wordmark from "@/public/klarioLogoLight.png";
+import wordmark from "@/public/Klario-primary-and-secondary-Logo.png";
 import {
   ArrowRight,
   X,
@@ -389,7 +389,7 @@ export function BetaWizard() {
 
   return (
     <div className={styles.wrap}>
-      <AnimatePresence>{booting && <Loader key="beta-loader" />}</AnimatePresence>
+      <AnimatePresence>{booting && <Loader key="beta-loader" message="Welcome to the beta" quick />}</AnimatePresence>
       {showTerms && (
         <div
           className={styles.termsOverlay}

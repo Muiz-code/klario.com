@@ -92,7 +92,7 @@ export const FOOTER = {
       links: [
         { label: "Unified Dashboard", href: "#features" },
         { label: "KlarioAI Advisor", href: "#features" },
-        { label: "Smart Savings", href: "#features" },
+        { label: "Debt Management", href: "#features" },
         { label: "Bill Payments", href: "#features" },
         { label: "Financial Manager", href: "#features" },
       ],
@@ -386,11 +386,11 @@ export const SOLUTION = {
       body: "Ask anything. \"How much did I spend on food?\" \"Can I afford this?\" Get real answers, not generic tips.",
     },
     {
-      id: "savings",
-      icon: "PiggyBank",
-      eyebrow: "Smart Savings",
-      title: "Save without thinking about it.",
-      body: "Set a goal. Klario opens a real bank savings account in your name and funds it automatically on schedule.",
+      id: "debt",
+      icon: "TrendingDown",
+      eyebrow: "Debt Management",
+      title: "Get on top of every debt.",
+      body: "See what you owe across every lender in one place, and let KlarioAI map out a repayment plan you can actually keep.",
     },
     {
       id: "bills",

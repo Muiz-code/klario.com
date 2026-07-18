@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -8,6 +9,8 @@ import { Container } from "@/components/ui/Container";
 import { Logo } from "./Logo";
 import { SITE, FOOTER } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { GuillocheRosette } from "@/components/ui/Engraving";
+import emblem from "@/public/klario-sub-logo.png";
 
 const socialIcons: Record<string, React.ReactNode> = {
   Twitter: (
@@ -121,10 +124,19 @@ function FooterLinkItem({ link }: { link: FooterLink }) {
 
 export function Footer() {
   return (
-    <footer className="relative isolate overflow-hidden bg-[#0a0a0c] text-bg">
+    <footer className="relative isolate overflow-hidden bg-ink text-bg">
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[55%] bg-[radial-gradient(80%_70%_at_70%_40%,rgba(120,140,200,0.16),transparent_65%),radial-gradient(60%_60%_at_15%_30%,rgba(80,90,160,0.10),transparent_60%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[55%] bg-[radial-gradient(80%_70%_at_70%_40%,rgba(193,154,107,0.12),transparent_65%),radial-gradient(60%_60%_at_15%_30%,rgba(78,44,32,0.18),transparent_60%)]"
+      />
+      {/* Engine-turned guilloche rosette bleeding off the top-right corner. */}
+      <GuillocheRosette className="pointer-events-none absolute right-[-6%] top-[-20%] z-0 h-[78%] w-auto opacity-[0.13]" />
+      {/* Engraved medallion watermark - like the seal on a certificate. */}
+      <Image
+        src={emblem}
+        alt=""
+        aria-hidden
+        className="emblem-watermark absolute -bottom-28 -right-24 h-auto w-[380px] opacity-[0.055] md:w-[560px]"
       />
 
       <section className="relative">
@@ -153,10 +165,10 @@ export function Footer() {
         </Container>
       </section>
 
-      <div className="relative mt-4 overflow-hidden rounded-t-[28px] border-t border-x border-bg/8 bg-[#0d0e12]/80 backdrop-blur-xl md:mt-8 md:rounded-t-[36px]">
+      <div className="relative mt-4 overflow-hidden rounded-t-[28px] border-t border-x border-bg/8 bg-[#0b0a0c]/85 backdrop-blur-xl md:mt-8 md:rounded-t-[36px]">
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_50%_-10%,rgba(212,168,83,0.07),transparent_55%),radial-gradient(60%_60%_at_80%_20%,rgba(120,90,200,0.10),transparent_60%),radial-gradient(70%_50%_at_10%_70%,rgba(60,90,180,0.08),transparent_60%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_50%_-10%,rgba(193,154,107,0.08),transparent_55%),radial-gradient(60%_60%_at_80%_20%,rgba(78,44,32,0.16),transparent_60%),radial-gradient(70%_50%_at_10%_70%,rgba(193,154,107,0.06),transparent_60%)]"
         />
         <span
           aria-hidden

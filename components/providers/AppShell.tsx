@@ -1,15 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AnimatePresence } from "framer-motion";
-import { Loader } from "@/components/ui/Loader";
+import { useEffect } from "react";
 import { NewsletterPopup } from "@/components/ui/NewsletterPopup";
 
-const LOADER_DURATION = 2000;
-
+// The page-load / route reveal is handled globally by RouteTransition (in the
+// root layout). AppShell just restores scroll on the landing page and mounts
+// the newsletter popup.
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [ready, setReady] = useState(false);
-
   useEffect(() => {
     if (typeof window !== "undefined") {
       if ("scrollRestoration" in window.history) {
@@ -17,22 +14,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       }
       window.scrollTo(0, 0);
     }
-    const t = setTimeout(() => setReady(true), LOADER_DURATION);
-    return () => clearTimeout(t);
   }, []);
-
-  useEffect(() => {
-    document.documentElement.style.overflow = ready ? "" : "hidden";
-    return () => {
-      document.documentElement.style.overflow = "";
-    };
-  }, [ready]);
 
   return (
     <>
-      <AnimatePresence>{!ready && <Loader key="loader" />}</AnimatePresence>
-      {ready && children}
-      {ready && <NewsletterPopup />}
+      {children}
+      <NewsletterPopup />
     </>
   );
 }

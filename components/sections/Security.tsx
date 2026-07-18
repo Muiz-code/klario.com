@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
 import {
   Fingerprint,
   ShieldCheck,
@@ -11,7 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Section } from "@/components/ui/Section";
-import { staggerContainer, staggerItem } from "@/components/ui/ScrollReveal";
+import { StackedCards } from "@/components/ui/StackedCards";
 import { SECURITY } from "@/lib/constants";
 
 const icons: Record<string, LucideIcon> = {
@@ -23,8 +22,6 @@ const icons: Record<string, LucideIcon> = {
   DatabaseZap,
 };
 
-const cardVariant: Variants = staggerItem;
-
 export function Security() {
   return (
     <Section
@@ -35,35 +32,24 @@ export function Security() {
       emphasis={SECURITY.emphasis}
       intro={SECURITY.intro}
     >
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.15 }}
-        className="grid gap-5 md:grid-cols-2 lg:grid-cols-3"
-      >
+      {/* Shorter per-card scroll (6 cards) so the section doesn't over-scroll. */}
+      <StackedCards heightClass="h-[50vh] md:h-[58vh]" dimClassName="bg-black">
         {SECURITY.cards.map((c) => {
           const Icon = icons[c.icon];
           return (
-            <motion.article
+            <article
               key={c.title}
-              variants={cardVariant}
-              className="glass-card group relative flex flex-col gap-4 overflow-hidden rounded-2xl p-6 transition-all duration-500 hover:border-emerald-400/40 hover:shadow-[0_24px_60px_-30px_rgba(0,255,135,0.45)]"
+              className="card-edge-engrave-gold relative flex min-h-[340px] flex-col gap-5 overflow-hidden rounded-2xl border border-bg/10 bg-[#141419] p-8 shadow-[0_30px_80px_-34px_rgba(0,0,0,0.85)] md:p-9"
             >
-              <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-emerald-400/10 text-emerald-400 transition-colors group-hover:bg-emerald-400/20">
-                <Icon size={20} strokeWidth={1.75} />
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-gold/20 bg-gold-dim text-gold">
+                <Icon size={22} strokeWidth={1.75} />
               </span>
-              <h3 className="relative font-display text-lg text-bg md:text-xl">
-                {c.title}
-              </h3>
-              <p className="relative text-[14px] leading-relaxed text-bg/65">
-                {c.body}
-              </p>
-            </motion.article>
+              <h3 className="font-display text-xl text-bg md:text-2xl">{c.title}</h3>
+              <p className="max-w-xl text-[15px] leading-relaxed text-bg/65">{c.body}</p>
+            </article>
           );
         })}
-      </motion.div>
-
+      </StackedCards>
     </Section>
   );
 }

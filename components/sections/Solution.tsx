@@ -1,18 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   Landmark,
   Sparkles,
-  PiggyBank,
+  TrendingDown,
   Zap,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
 import { Section } from "@/components/ui/Section";
+import { StackedCards } from "@/components/ui/StackedCards";
+import { AppScreen } from "@/components/ui/AppScreen";
 import { SOLUTION } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 import {
   DashboardVisual,
   AIVisual,
@@ -21,12 +20,10 @@ import {
   ManagerVisual,
 } from "./SolutionVisuals";
 
-const ease = [0.16, 1, 0.3, 1] as const;
-
 const icons: Record<string, LucideIcon> = {
   Landmark,
   Sparkles,
-  PiggyBank,
+  TrendingDown,
   Zap,
   UserRound,
 };
@@ -34,16 +31,12 @@ const icons: Record<string, LucideIcon> = {
 const visuals: Record<string, () => React.ReactNode> = {
   dashboard: DashboardVisual,
   ai: AIVisual,
-  savings: SavingsVisual,
+  debt: SavingsVisual,
   bills: BillsVisual,
   manager: ManagerVisual,
 };
 
 export function Solution() {
-  const [active, setActive] = useState(0);
-  const tab = SOLUTION.tabs[active];
-  const Visual = visuals[tab.id];
-
   return (
     <Section
       id="features"
@@ -51,73 +44,43 @@ export function Solution() {
       heading={SOLUTION.heading}
       emphasis={SOLUTION.emphasis}
     >
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)] lg:gap-14">
-        <ul
-          role="tablist"
-          className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-2 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0"
-        >
-          {SOLUTION.tabs.map((t, i) => {
-            const TabIcon = icons[t.icon];
-            const isActive = i === active;
-            return (
-              <li key={t.id} className="flex-shrink-0 lg:w-full">
-                <button
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => setActive(i)}
-                  className={cn(
-                    "group relative flex w-full items-center gap-3 whitespace-nowrap rounded-xl px-4 py-3 text-left transition-colors lg:px-5 lg:py-4",
-                    isActive
-                      ? "bg-card text-ink"
-                      : "text-body/70 hover:bg-card/50 hover:text-ink"
-                  )}
-                >
-                  {isActive && (
-                    <motion.span
-                      layoutId="solution-active"
-                      transition={{ duration: 0.4, ease }}
-                      className="absolute inset-y-2 left-0 hidden w-[3px] rounded-full bg-gold lg:block"
-                    />
-                  )}
-                  <TabIcon
-                    size={18}
-                    className={isActive ? "text-gold" : "text-body/55"}
-                  />
-                  <span className="font-display text-sm md:text-[15px]">
-                    {t.eyebrow}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-
-        <div className="min-h-[460px]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={tab.id}
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -24 }}
-              transition={{ duration: 0.4, ease }}
-              className="flex flex-col gap-7"
+      {/* Each feature pins and reveals on scroll, with its own app visual. */}
+      <StackedCards heightClass="h-[80vh] md:h-[90vh]">
+        {SOLUTION.tabs.map((t) => {
+          const Icon = icons[t.icon];
+          const Visual = visuals[t.id];
+          return (
+            <article
+              key={t.id}
+              className="card-edge-engrave relative flex flex-col gap-6 overflow-hidden rounded-2xl bg-[#f6f2ea] p-7 shadow-[0_30px_80px_-32px_rgba(60,40,20,0.5)] md:flex-row md:items-center md:gap-9 md:p-9"
             >
-              <div className="flex flex-col gap-3">
-                <h3 className="font-display text-balance text-2xl leading-[1.15] text-ink md:text-3xl lg:text-4xl">
-                  {tab.title}
+              <div className="flex flex-col gap-3 md:flex-1">
+                <span className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-gold">
+                  <Icon size={15} strokeWidth={1.9} />
+                  {t.eyebrow}
+                </span>
+                <h3 className="font-display text-balance text-2xl leading-[1.12] text-ink md:text-3xl">
+                  {t.title}
                 </h3>
-                <p className="max-w-[540px] text-[15px] leading-relaxed text-body/75 md:text-base">
-                  {tab.body}
+                <p className="max-w-[520px] text-[15px] leading-relaxed text-body/75">
+                  {t.body}
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-ink/10 bg-phone-dark p-6 text-white/95 shadow-[0_30px_80px_-30px_rgba(13,13,14,0.4)] md:p-7">
-                <Visual />
+              <div className="flex items-center justify-center md:w-[46%] md:shrink-0">
+                {/* Uses public/screens/<id>.(png|jpg|jpeg|webp) if present, else the mockup.
+                    The dark panel is applied only to the mockup, not the screenshot. */}
+                <AppScreen
+                  base={`/screens/${t.id}`}
+                  alt={`Klario ${t.eyebrow} screen`}
+                  fallback={<Visual />}
+                  fallbackClassName="w-full rounded-2xl border border-ink/10 bg-phone-dark p-5 text-white/95 shadow-[0_30px_80px_-30px_rgba(13,13,14,0.4)] md:p-6"
+                />
               </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
+            </article>
+          );
+        })}
+      </StackedCards>
     </Section>
   );
 }
