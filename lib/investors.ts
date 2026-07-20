@@ -67,6 +67,91 @@ export const INVESTORS = {
     ],
   },
 
+  // ── Market size, target & willingness to pay (all sourced below) ──────
+  // Every external figure carries a `ref` into `market.sources`. Klario's own
+  // numbers come from the two-wave beta; the revenue figures are an explicit
+  // illustration (subscribers × price × 12), never presented as a forecast.
+  market: {
+    label: "Market & willingness to pay",
+    heading: "A massive digital market that",
+    emphasis: "already pays for apps.",
+    intro:
+      "Nigeria is Africa's largest fintech market by users and by transaction volume. The money already moves digitally; what's missing is a layer that makes sense of it, and Nigerians already pay monthly for the apps they value.",
+
+    // Headline market-size stats.
+    size: [
+      { value: "$703B", unit: "≈ ₦1.07 quadrillion", label: "moved through Nigeria's instant-payment rails in 2024, up 79.6% year-on-year", ref: 1 },
+      { value: "64%", unit: "of adults", label: "formally financially included in 2023, up from 56% in 2020", ref: 2 },
+      { value: "5 → 12%", unit: "in three years", label: "share of adults using fintech / non-bank financial services more than doubled", ref: 2 },
+      { value: "$65B", unit: "by 2030", label: "projected African fintech revenue at a 32% CAGR, with Nigeria a top-three market", ref: 3 },
+    ],
+
+    // Proof the users already exist at scale.
+    reach: {
+      heading: "The users already exist, at scale",
+      body: "Single Nigerian fintechs already count tens of millions of accounts, and the average customer holds several. That fragmentation is exactly the gap Klario closes.",
+      stats: [
+        { value: "40M+", label: "OPay active users" },
+        { value: "30M+", label: "PalmPay users" },
+        { value: "430+", label: "fintechs competing for the same wallet" },
+      ],
+      ref: 4,
+    },
+
+    // Who we serve and why they will pay.
+    audience: {
+      heading: "Who we serve, and why they'll pay",
+      body: "Klario's core user is the young, digitally-native Nigerian, students first, then early-career earners, business owners and a premium tier of high-earners. They live on their phones, already juggle three to five finance apps, and are forming the money habits now that compound for decades. We land them early on a free tier and grow with them as their income does.",
+      // Target-audience mix. Students are the beachhead; the free tier is the
+      // on-ramp and paid tiers convert as users age into income.
+      segments: [
+        { label: "Students", pct: 40, primary: true },
+        { label: "Employed", pct: 20 },
+        { label: "Business owners", pct: 20 },
+        { label: "Affluent (top ~1%)", pct: 10 },
+        { label: "Others", pct: 10 },
+      ],
+      reasons: [
+        "Students are digital-native and habit-forming: win them early and Klario becomes the money app they keep as their income grows.",
+        "Every segment already pays monthly for digital value, data, airtime, streaming, so a subscription is a familiar habit, not a new behaviour.",
+        "Our own beta measured the intent directly: a clear majority said they would pay, at a price we can build a business on.",
+      ],
+    },
+
+    // Willingness to pay, benchmarked against what Nigerians already spend.
+    pricing: {
+      heading: "₦3,250 sits inside a band Nigerians already pay",
+      body: "Across two research waves, 70% of respondents were open to paying for Klario, at a median of ₦3,250 per month. That is not a leap of faith, it sits squarely between the digital subscriptions Nigerians already buy every month.",
+      benchmarks: [
+        { name: "Spotify Premium", price: "₦1,600 / mo", ref: 5 },
+        { name: "Klario", price: "₦3,250 / mo", klario: true, ref: 6 },
+        { name: "Netflix", price: "₦2,500-8,500 / mo", ref: 5 },
+      ],
+    },
+
+    // Illustrative revenue model — deliberately labelled, never a forecast.
+    projection: {
+      heading: "What that could mean",
+      body: "A deliberately conservative illustration: subscription revenue alone, at the ₦3,250 beta median, before any partnership or referral upside. Even the largest step here is a small slice of a single incumbent wallet's user base.",
+      columns: ["Paying members", "Subscription ARR", "Share of one incumbent's base"],
+      rows: [
+        ["100,000", "≈ ₦3.9B / yr", "~0.25% of OPay's users"],
+        ["500,000", "≈ ₦19.5B / yr", "~1.25% of OPay's users"],
+        ["1,000,000", "≈ ₦39B / yr", "~2.5% of OPay's users"],
+      ],
+      note: "Illustrative model, not a forecast: paying members × ₦3,250 × 12 months, subscription-only. Klario is pre-revenue; the board-reviewed projection and its assumptions live in the data room.",
+    },
+
+    sources: [
+      "NIBSS instant-payment data, full-year 2024 (reported by Nairametrics & Vanguard, Jan 2025).",
+      "EFInA, Access to Financial Services in Nigeria (A2F) 2023 survey.",
+      "McKinsey, \"Fintech in Africa: The end of the beginning\"; analyst forecasts to 2030.",
+      "Company disclosures, compiled by Fintech News Africa, 2025-26.",
+      "Published Nigerian subscription pricing (TechCabal, Techloy), 2026.",
+      "Klario Beta Insights, two waves combined (n = 331), July 2026.",
+    ],
+  },
+
   product: {
     label: "The product",
     heading: "Clarity, then",

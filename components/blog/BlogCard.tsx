@@ -28,7 +28,7 @@ export function BlogCard({
     >
       <Link
         href={`/blog/${post.slug}`}
-        className="glass-card-dark group relative flex h-full flex-col overflow-hidden rounded-2xl transition-all duration-500 hover:border-gold hover:shadow-[0_24px_60px_-30px_rgba(212,168,83,0.45)]"
+        className="glass-card-dark card-edge-engrave group relative flex h-full flex-col overflow-hidden rounded-2xl transition-all duration-500 hover:border-gold hover:shadow-[0_24px_60px_-30px_rgba(212,168,83,0.45)]"
       >
         <BlogCover
           category={post.category}

@@ -2,9 +2,14 @@
 
 // Self-contained SVG charts for the beta research (no chart library). Brand
 // palette only. Designed to sit on the dark (ink) investor research section.
+// Pies draw and bars fill when scrolled into view (framer-motion whileInView).
+
+import { motion } from "framer-motion";
 
 type Slice = { label: string; value: number; color: string };
 type Bar = { label: string; value: number; suffix?: string };
+
+const ease = [0.16, 1, 0.3, 1] as const;
 
 // Brand tones that read on a dark ground.
 const PIE = ["#E6C989", "#C19A6B", "#F4E4C5", "#9c7a52", "#6b5236"];
@@ -15,7 +20,6 @@ function Donut({ title, sub, data }: { title: string; sub: string; data: Slice[]
   const size = 190;
   const stroke = 30;
   const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
   const cx = size / 2;
   // Cumulative fraction offset per slice, computed up-front so nothing is
   // reassigned mid-render (satisfies the React Compiler immutability rule).
@@ -31,11 +35,13 @@ function Donut({ title, sub, data }: { title: string; sub: string; data: Slice[]
       </div>
       <div className="flex flex-wrap items-center gap-6">
         <svg viewBox={`0 0 ${size} ${size}`} className="h-40 w-40 shrink-0">
+          {/* pathLength/pathOffset are normalised (0-1); framer animates the
+              visible arc from 0 to its slice fraction as it scrolls in. */}
           <g transform={`rotate(-90 ${cx} ${cx})`}>
             {data.map((d, i) => {
               const frac = d.value / total;
               return (
-                <circle
+                <motion.circle
                   key={i}
                   cx={cx}
                   cy={cx}
@@ -43,8 +49,10 @@ function Donut({ title, sub, data }: { title: string; sub: string; data: Slice[]
                   fill="none"
                   stroke={d.color}
                   strokeWidth={stroke}
-                  strokeDasharray={`${frac * c} ${c}`}
-                  strokeDashoffset={`${-cumulative[i] * c}`}
+                  initial={{ pathLength: 0, pathOffset: cumulative[i] }}
+                  whileInView={{ pathLength: frac, pathOffset: cumulative[i] }}
+                  viewport={{ once: true, amount: 0.5 }}
+                  transition={{ duration: 1, delay: i * 0.12, ease }}
                 />
               );
             })}
@@ -79,13 +87,17 @@ function Bars({ title, sub, data }: { title: string; sub: string; data: Bar[] })
         <p className="mt-1 text-[12.5px] text-bg/55">{sub}</p>
       </div>
       <ul className="flex flex-col gap-3.5">
-        {data.map((d) => (
+        {data.map((d, i) => (
           <li key={d.label} className="flex items-center gap-3">
             <span className="w-[42%] shrink-0 text-right text-[12.5px] text-bg/70">{d.label}</span>
             <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-bg/10">
-              <span
+              <motion.span
                 className="block h-full rounded-full"
-                style={{ width: `${Math.max((d.value / max) * 100, 3)}%`, backgroundColor: BAR_GOLD }}
+                style={{ backgroundColor: BAR_GOLD }}
+                initial={{ width: 0 }}
+                whileInView={{ width: `${Math.max((d.value / max) * 100, 3)}%` }}
+                viewport={{ once: true, amount: 0.4 }}
+                transition={{ duration: 0.8, delay: i * 0.07, ease }}
               />
             </span>
             <span className="w-10 shrink-0 font-mono text-[12.5px] text-gold">

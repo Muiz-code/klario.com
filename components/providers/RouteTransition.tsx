@@ -47,13 +47,21 @@ export function RouteTransition({ children }: { children: React.ReactNode }) {
 
   const isInitial = !hasRevealedOnce;
   const home = pathname === "/";
-  const intro = home && isInitial ? "Connect · Track · Understand" : undefined;
+
+  // On a client navigation the intro names the page we're leaving; on first
+  // load / reload there's nothing to leave.
+  const fromName = !revealed || revealed === "/" ? "Home" : pageName(revealed);
+  const intro = isInitial
+    ? home
+      ? "Connect · Track · Understand"
+      : undefined
+    : `Leaving ${fromName}`;
   const message = home
     ? isInitial
       ? "Welcome to Klario"
       : "Going home"
     : `Opening ${pageName(pathname)}`;
-  // Full splash only for the landing page's first load; everything else is quick.
+  // Full splash (dial settle + logo) only for the landing page's first load.
   const quick = !(home && isInitial);
 
   useEffect(() => {

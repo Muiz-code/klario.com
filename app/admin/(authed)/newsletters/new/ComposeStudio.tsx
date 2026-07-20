@@ -234,6 +234,20 @@ export function ComposeStudio({
     setRawHtml(t.html);
   };
 
+  // Vercel's edge DDoS/bot firewall can answer with an HTML "Security
+  // Checkpoint" challenge instead of our JSON API response, and a fetch() can't
+  // solve it. Any non-JSON reply from these JSON-only APIs means we were
+  // intercepted at the edge; tell the user to reload (a full page load clears
+  // the challenge) rather than showing a bare failure.
+  const isSecurityCheckpoint = (res: Response) =>
+    !(res.headers.get("content-type") || "").includes("application/json");
+  const checkpointInfo = {
+    title: "Security check interrupted",
+    message:
+      "Vercel’s firewall briefly challenged this request — usually a short traffic spike. Reload this page, then try again; a full page load clears the check.",
+    ok: false,
+  };
+
   // Uploads an image and returns its public URL (or null on failure). Each
   // editor decides what to do with the URL.
   const uploadImage = async (file: File): Promise<string | null> => {
@@ -242,6 +256,10 @@ export function ComposeStudio({
       const form = new FormData();
       form.append("file", file);
       const res = await fetch("/api/admin/upload-image", { method: "POST", body: form });
+      if (isSecurityCheckpoint(res)) {
+        setInfo(checkpointInfo);
+        return null;
+      }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setInfo({ title: "Image upload failed", message: data.error || "Try again.", ok: false });
@@ -268,6 +286,13 @@ export function ComposeStudio({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ subject: subject.trim(), html }),
       });
+      // Edge firewall challenge: bail with a clear message before trying to
+      // read JSON that isn't there.
+      if (isSecurityCheckpoint(create)) {
+        setConfirm(null);
+        setInfo(checkpointInfo);
+        return;
+      }
       const cData = await create.json().catch(() => ({}));
       if (!create.ok) {
         setConfirm(null);
@@ -286,6 +311,16 @@ export function ComposeStudio({
           chosen.size > 0 ? { emails: [...chosen] } : { segment }
         ),
       });
+      // Draft is already saved at this point; only the send got challenged.
+      if (isSecurityCheckpoint(sendRes)) {
+        setConfirm(null);
+        setInfo({
+          ...checkpointInfo,
+          message:
+            "The draft was saved, but Vercel’s firewall challenged the send. Reload this page, then send it from the newsletters list.",
+        });
+        return;
+      }
       const sData = await sendRes.json().catch(() => ({}));
       setConfirm(null);
       if (!sendRes.ok) {
@@ -296,6 +331,14 @@ export function ComposeStudio({
         title: "Sent",
         message: `Delivered to ${sData.sent} of ${sData.attempted}. ${sData.failed ? sData.failed + " failed." : ""}`,
         ok: true,
+      });
+    } catch {
+      // Network drop, aborted request, or other unexpected failure.
+      setConfirm(null);
+      setInfo({
+        title: "Something went wrong",
+        message: "Check your connection and try again.",
+        ok: false,
       });
     } finally {
       setBusy(null);

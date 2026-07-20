@@ -1,6 +1,7 @@
 import { Container } from "./Container";
 import { SectionLabel } from "./SectionLabel";
 import { ScrollReveal } from "./ScrollReveal";
+import { SectionEngrave } from "./SectionEngrave";
 import { cn } from "@/lib/utils";
 
 type Layout = "stacked" | "split";
@@ -20,6 +21,8 @@ type Props = {
   sub?: { lead: string; emphasis?: string };
   children: React.ReactNode;
   className?: string;
+  /** Render the slow-rotating rosette engraving behind the section (default true). */
+  engrave?: boolean;
 };
 
 export function Section({
@@ -34,10 +37,20 @@ export function Section({
   sub,
   children,
   className,
+  engrave = true,
 }: Props) {
   const split = layout === "split";
   const titleRight = split && titleSide === "right";
   const dark = tone === "dark";
+
+  // Deterministic per-section corner + spin direction, so the rotating rosette
+  // varies down the page without choosing one by hand for each section.
+  const seed = (id ?? label ?? "section")
+    .split("")
+    .reduce((n, ch) => n + ch.charCodeAt(0), 0);
+  const engraveCorner = (["tr", "bl", "br", "tl"] as const)[seed % 4];
+  const engraveSize = (["md", "lg", "sm"] as const)[seed % 3];
+  const engraveReverse = seed % 2 === 0;
 
   const headingColor = dark ? "text-bg" : "text-ink";
   const subHeadingColor = dark ? "text-bg/85" : "text-ink/85";
@@ -53,7 +66,15 @@ export function Section({
         className
       )}
     >
-      <Container>
+      {engrave && (
+        <SectionEngrave
+          tone={tone}
+          position={engraveCorner}
+          size={engraveSize}
+          reverse={engraveReverse}
+        />
+      )}
+      <Container className="relative z-10">
         {split ? (
           <div
             className={cn(

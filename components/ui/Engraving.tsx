@@ -62,8 +62,18 @@ export function CurrencyFan({ className }: { className?: string }) {
 const ROSETTE_N = 80;
 const ROSETTE_ANGLES = Array.from({ length: ROSETTE_N }, (_, i) => ((i * 360) / ROSETTE_N).toFixed(2));
 
-/** A large engine-turned guilloche rosette. Place low-opacity behind content. */
-export function GuillocheRosette({ className }: { className?: string }) {
+/**
+ * A large engine-turned guilloche rosette. Place low-opacity behind content.
+ * The pattern rotates slowly around its own centre (paused for reduced-motion);
+ * pass `reverse` to spin counter-clockwise so adjacent rosettes differ.
+ */
+export function GuillocheRosette({
+  className,
+  reverse = false,
+}: {
+  className?: string;
+  reverse?: boolean;
+}) {
   return (
     <svg
       viewBox="0 0 500 500"
@@ -72,7 +82,12 @@ export function GuillocheRosette({ className }: { className?: string }) {
       preserveAspectRatio="xMidYMid meet"
       className={cn("text-gold", className)}
     >
-      <g stroke="currentColor" strokeWidth="0.4" strokeOpacity="0.75">
+      <g
+        className={cn("engrave-rotate", reverse && "engrave-rotate-rev")}
+        stroke="currentColor"
+        strokeWidth="0.4"
+        strokeOpacity="0.75"
+      >
         {ROSETTE_ANGLES.map((ang, i) => (
           <ellipse
             key={i}

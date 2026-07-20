@@ -19,9 +19,10 @@ export const COLORS = {
   border: "#272B33", // hairlines on dark
 } as const;
 
+// Primary wordmark (3150x649, ratio ~4.85), shown 131x27 in the header.
 const LOGO_URL = `${SITE.url}/Klario-primary-and-secondary-Logo.png`;
 
-/** White header strip with the Klario logo, centered. */
+/** White header strip with the Klario wordmark, centered. */
 export function emailHeaderRow(): string {
   return `<tr>
     <td align="center" style="background:${COLORS.header};padding:24px 32px;">

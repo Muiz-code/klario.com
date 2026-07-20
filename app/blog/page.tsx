@@ -6,6 +6,8 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { BlogIndexGrid } from "@/components/blog/BlogIndexGrid";
 import { NigeriaMoneyStats } from "@/components/blog/NigeriaMoneyStats";
+import { GuillocheRosette } from "@/components/ui/Engraving";
+import { SectionEngrave } from "@/components/ui/SectionEngrave";
 import { getAllPosts } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +36,8 @@ export default async function BlogPage() {
                 "radial-gradient(60% 80% at 50% 0%, rgba(212,168,83,0.14), transparent 70%)",
             }}
           />
-          <Container>
+          <GuillocheRosette className="pointer-events-none absolute right-[-6%] top-[-6%] z-0 h-[70%] w-auto opacity-[0.09]" />
+          <Container className="relative z-10">
             <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 text-center">
               <SectionLabel>Blog</SectionLabel>
               <h1 className="font-display text-balance text-4xl leading-[1.05] text-ink sm:text-5xl md:text-6xl lg:text-[3.5rem]">
@@ -51,8 +54,9 @@ export default async function BlogPage() {
 
         <NigeriaMoneyStats />
 
-        <section className="pt-16 pb-24 md:pt-20 md:pb-32">
-          <Container>
+        <section className="relative pt-16 pb-24 md:pt-20 md:pb-32">
+          <SectionEngrave tone="light" position="bl" size="lg" reverse />
+          <Container className="relative z-10">
             {featured && (
               <div className="mb-8 md:mb-12">
                 <BlogCard post={featured} featured />
