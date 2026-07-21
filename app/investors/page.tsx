@@ -44,7 +44,7 @@ export default function InvestorsPage() {
               <p className="font-mono text-[12px] uppercase tracking-[0.28em] text-gold">
                 {I.hero.eyebrow}
               </p>
-              <h1 className="mt-5 max-w-4xl font-display text-4xl leading-[1.05] text-bg md:text-6xl">
+              <h1 className="mt-5 max-w-4xl font-display text-4xl leading-[1.02] text-bg sm:text-5xl md:text-6xl lg:text-7xl">
                 {I.hero.heading}{" "}
                 <span className="text-gold">{I.hero.emphasis}</span>
               </h1>
@@ -79,13 +79,50 @@ export default function InvestorsPage() {
           </Container>
         </section>
 
+        {/* ── What Klario does (product explainer) ── */}
+        <section className="relative overflow-hidden bg-surface py-24 md:py-32">
+          <SectionEngrave tone="light" position="bl" size="md" reverse />
+          <Container className="relative z-10">
+            <ScrollReveal>
+              <SectionLabel>{I.whatItDoes.label}</SectionLabel>
+              <h2 className="mt-5 max-w-4xl font-display text-4xl leading-[1.02] text-ink sm:text-5xl md:text-6xl lg:text-7xl">
+                {I.whatItDoes.heading}{" "}
+                <span className="text-gold">{I.whatItDoes.emphasis}</span>
+              </h2>
+              <p className="mt-7 max-w-2xl text-[15px] leading-relaxed text-body/75 md:text-lg">
+                {I.whatItDoes.intro}
+              </p>
+            </ScrollReveal>
+            {/* Connect → Understand → Act, numbered so the flow reads in order. */}
+            <div className="mt-14 grid gap-5 md:grid-cols-3">
+              {I.whatItDoes.steps.map((s) => {
+                const Icon = icons[s.icon];
+                return (
+                  <ScrollReveal key={s.step}>
+                    <article className="glass-card card-edge-engrave relative flex h-full flex-col gap-4 overflow-hidden rounded-2xl p-8">
+                      <div className="flex items-center justify-between">
+                        <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-gold/20 bg-gold-dim text-gold">
+                          <Icon size={20} strokeWidth={1.75} />
+                        </span>
+                        <span className="font-display text-3xl text-gold/25 md:text-4xl">{s.step}</span>
+                      </div>
+                      <h3 className="font-display text-xl text-ink md:text-2xl">{s.title}</h3>
+                      <p className="text-[14.5px] leading-relaxed text-body/75">{s.body}</p>
+                    </article>
+                  </ScrollReveal>
+                );
+              })}
+            </div>
+          </Container>
+        </section>
+
         {/* ── Opportunity ── */}
         <section className="relative bg-surface py-24 md:py-32">
           <SectionEngrave tone="light" position="tr" size="lg" />
           <Container className="relative z-10">
             <ScrollReveal>
               <SectionLabel>{I.opportunity.label}</SectionLabel>
-              <h2 className="mt-4 max-w-3xl font-display text-3xl text-ink md:text-5xl">
+              <h2 className="mt-4 max-w-3xl font-display text-4xl text-ink sm:text-5xl md:text-6xl lg:text-7xl">
                 {I.opportunity.heading}{" "}
                 <span className="text-gold">{I.opportunity.emphasis}</span>
               </h2>
@@ -120,7 +157,7 @@ export default function InvestorsPage() {
           <Container className="relative z-10">
             <ScrollReveal>
               <SectionLabel>{I.research.label}</SectionLabel>
-              <h2 className="mt-4 max-w-3xl font-display text-3xl text-bg md:text-5xl">
+              <h2 className="mt-4 max-w-3xl font-display text-4xl text-bg sm:text-5xl md:text-6xl lg:text-7xl">
                 {I.research.heading} <span className="text-gold">{I.research.emphasis}</span>
               </h2>
               <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-bg/65">{I.research.intro}</p>
@@ -163,7 +200,7 @@ export default function InvestorsPage() {
           <Container className="relative z-10">
             <ScrollReveal>
               <SectionLabel>{I.market.label}</SectionLabel>
-              <h2 className="mt-4 max-w-3xl font-display text-3xl text-ink md:text-5xl">
+              <h2 className="mt-4 max-w-3xl font-display text-4xl text-ink sm:text-5xl md:text-6xl lg:text-7xl">
                 {I.market.heading} <span className="text-gold">{I.market.emphasis}</span>
               </h2>
               <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-body/75">{I.market.intro}</p>
@@ -324,7 +361,7 @@ export default function InvestorsPage() {
           <Container className="relative z-10">
             <ScrollReveal>
               <SectionLabel>{I.product.label}</SectionLabel>
-              <h2 className="mt-4 max-w-3xl font-display text-3xl text-bg md:text-5xl">
+              <h2 className="mt-4 max-w-3xl font-display text-4xl text-bg sm:text-5xl md:text-6xl lg:text-7xl">
                 {I.product.heading} <span className="text-gold">{I.product.emphasis}</span>
               </h2>
               <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-bg/65">{I.product.intro}</p>
@@ -354,7 +391,7 @@ export default function InvestorsPage() {
           <Container className="relative z-10">
             <ScrollReveal>
               <SectionLabel>{I.model.label}</SectionLabel>
-              <h2 className="mt-4 max-w-3xl font-display text-3xl text-ink md:text-5xl">
+              <h2 className="mt-4 max-w-3xl font-display text-4xl text-ink sm:text-5xl md:text-6xl lg:text-7xl">
                 {I.model.heading} <span className="text-gold">{I.model.emphasis}</span>
               </h2>
             </ScrollReveal>
@@ -381,7 +418,7 @@ export default function InvestorsPage() {
           <Container className="relative z-10">
             <ScrollReveal>
               <SectionLabel>{I.tiers.label}</SectionLabel>
-              <h2 className="mt-4 max-w-3xl font-display text-3xl text-bg md:text-5xl">
+              <h2 className="mt-4 max-w-3xl font-display text-4xl text-bg sm:text-5xl md:text-6xl lg:text-7xl">
                 {I.tiers.heading} <span className="text-gold">{I.tiers.emphasis}</span>
               </h2>
               <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-bg/65">{I.tiers.intro}</p>
@@ -444,7 +481,7 @@ export default function InvestorsPage() {
           <Container className="relative z-10">
             <ScrollReveal>
               <SectionLabel>{I.competitors.label}</SectionLabel>
-              <h2 className="mt-4 max-w-3xl font-display text-3xl text-ink md:text-5xl">
+              <h2 className="mt-4 max-w-3xl font-display text-4xl text-ink sm:text-5xl md:text-6xl lg:text-7xl">
                 {I.competitors.heading} <span className="text-gold">{I.competitors.emphasis}</span>
               </h2>
               <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-body/75">{I.competitors.intro}</p>
@@ -508,7 +545,7 @@ export default function InvestorsPage() {
           <Container className="relative z-10">
             <ScrollReveal>
               <SectionLabel>{I.economics.label}</SectionLabel>
-              <h2 className="mt-4 max-w-3xl font-display text-3xl text-bg md:text-5xl">
+              <h2 className="mt-4 max-w-3xl font-display text-4xl text-bg sm:text-5xl md:text-6xl lg:text-7xl">
                 {I.economics.heading} <span className="text-gold">{I.economics.emphasis}</span>
               </h2>
               <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-bg/65">{I.economics.intro}</p>
@@ -535,7 +572,7 @@ export default function InvestorsPage() {
           <Container className="relative z-10">
             <ScrollReveal>
               <SectionLabel>{I.outlook.label}</SectionLabel>
-              <h2 className="mt-4 max-w-3xl font-display text-3xl text-ink md:text-5xl">
+              <h2 className="mt-4 max-w-3xl font-display text-4xl text-ink sm:text-5xl md:text-6xl lg:text-7xl">
                 {I.outlook.heading} <span className="text-gold">{I.outlook.emphasis}</span>
               </h2>
               <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-body/75">{I.outlook.intro}</p>
@@ -563,7 +600,7 @@ export default function InvestorsPage() {
           <Container className="relative z-10">
             <ScrollReveal>
               <SectionLabel>Two ways to back Klario</SectionLabel>
-              <h2 className="mt-4 max-w-3xl font-display text-3xl text-bg md:text-5xl">
+              <h2 className="mt-4 max-w-3xl font-display text-4xl text-bg sm:text-5xl md:text-6xl lg:text-7xl">
                 Choose the track that fits <span className="text-gold">how you invest.</span>
               </h2>
             </ScrollReveal>
@@ -609,7 +646,7 @@ export default function InvestorsPage() {
             <ScrollReveal>
               <div className="glass-card card-edge-engrave relative overflow-hidden rounded-3xl p-8 md:p-14">
                 <SectionLabel>{I.ask.label}</SectionLabel>
-                <h2 className="mt-4 max-w-3xl font-display text-3xl text-ink md:text-5xl">
+                <h2 className="mt-4 max-w-3xl font-display text-4xl text-ink sm:text-5xl md:text-6xl lg:text-7xl">
                   {I.ask.heading} <span className="text-gold">{I.ask.emphasis}</span>
                 </h2>
                 <p className="mt-6 max-w-2xl text-[15px] leading-relaxed text-body/75">{I.ask.body}</p>

@@ -20,6 +20,7 @@ function Donut({ title, sub, data }: { title: string; sub: string; data: Slice[]
   const size = 190;
   const stroke = 30;
   const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
   const cx = size / 2;
   // Cumulative fraction offset per slice, computed up-front so nothing is
   // reassigned mid-render (satisfies the React Compiler immutability rule).
@@ -35,28 +36,35 @@ function Donut({ title, sub, data }: { title: string; sub: string; data: Slice[]
       </div>
       <div className="flex flex-wrap items-center gap-6">
         <svg viewBox={`0 0 ${size} ${size}`} className="h-40 w-40 shrink-0">
-          {/* pathLength/pathOffset are normalised (0-1); framer animates the
-              visible arc from 0 to its slice fraction as it scrolls in. */}
-          <g transform={`rotate(-90 ${cx} ${cx})`}>
-            {data.map((d, i) => {
-              const frac = d.value / total;
-              return (
+          {/* Each slice is a full-circumference dash whose visible length is
+              animated via strokeDashoffset. We deliberately avoid framer's
+              normalised pathLength here: it relies on the SVG `pathLength`
+              attribute, which WebKit (all iOS browsers) ignores on <circle>,
+              leaving the arcs invisible on mobile. A real-circumference dash
+              with an animated offset draws identically and works everywhere.
+              Per-slice rotation (start angle, -90 = 12 o'clock) positions the
+              arc; the offset animates from c (hidden) to c - arc (drawn). */}
+          {data.map((d, i) => {
+            const arc = (d.value / total) * c;
+            const startAngle = -90 + cumulative[i] * 360;
+            return (
+              <g key={i} transform={`rotate(${startAngle} ${cx} ${cx})`}>
                 <motion.circle
-                  key={i}
                   cx={cx}
                   cy={cx}
                   r={r}
                   fill="none"
                   stroke={d.color}
                   strokeWidth={stroke}
-                  initial={{ pathLength: 0, pathOffset: cumulative[i] }}
-                  whileInView={{ pathLength: frac, pathOffset: cumulative[i] }}
+                  strokeDasharray={c}
+                  initial={{ strokeDashoffset: c }}
+                  whileInView={{ strokeDashoffset: c - arc }}
                   viewport={{ once: true, amount: 0.5 }}
                   transition={{ duration: 1, delay: i * 0.12, ease }}
                 />
-              );
-            })}
-          </g>
+              </g>
+            );
+          })}
           <text x={cx} y={cx - 4} textAnchor="middle" className="fill-bg font-mono" fontSize="26" fontWeight="700">
             {total}
           </text>

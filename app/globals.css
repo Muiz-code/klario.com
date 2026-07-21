@@ -93,6 +93,25 @@
     letter-spacing: -0.025em;
   }
 
+  /* Hollow / outlined lettering: transparent fill with a hairline stroke in
+     the current text colour, so headings read as an outline. Stroke width
+     scales a little at the largest sizes via the modifier below. Degrades to
+     solid text anywhere -webkit-text-stroke is unsupported (paint-order keeps
+     the stroke crisp over any fill fallback). */
+  .text-outline {
+    -webkit-text-stroke: 1.5px currentColor;
+    /* Blank only the fill: `color` stays the inherited text colour, so the
+       stroke's currentColor still resolves to it (color:transparent would
+       blank the stroke too). */
+    -webkit-text-fill-color: transparent;
+    paint-order: stroke;
+  }
+  @media (min-width: 1024px) {
+    .text-outline {
+      -webkit-text-stroke-width: 2px;
+    }
+  }
+
   .font-serif-italic {
     font-family: var(--font-serif), Georgia, serif;
     font-style: italic;

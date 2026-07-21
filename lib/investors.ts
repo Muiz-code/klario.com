@@ -13,6 +13,38 @@ export const INVESTORS = {
     secondaryCta: { label: "Talk to the founders", href: "mailto:invest@klario.finance?subject=Intro%20call" },
   },
 
+  // Plain-language product explainer, kept to claims already made elsewhere
+  // (read-only access, KlarioAI, automated savings, in-app bills, human tier).
+  // No metrics here on purpose - this is the "what it actually does" mental
+  // model an investor needs before the market case.
+  whatItDoes: {
+    label: "What Klario does",
+    heading: "Scattered accounts become",
+    emphasis: "one clear answer.",
+    intro:
+      "Most Nigerians manage money across three to five banking apps and a mental tally. Klario replaces that with a single place to see everything, understand it in plain naira, and act, without exporting a statement or opening another app.",
+    steps: [
+      {
+        icon: "Landmark",
+        step: "01",
+        title: "Connect every account",
+        body: "Link each Nigerian bank with read-only access. Balances, income and spending flow into one live dashboard, no manual entry, no spreadsheets.",
+      },
+      {
+        icon: "Bot",
+        step: "02",
+        title: "Understand it in naira",
+        body: "KlarioAI sorts every transaction and answers the real questions, “where did my money go?”, “can I afford this?”, in language that models how Nigerians actually earn and spend.",
+      },
+      {
+        icon: "Zap",
+        step: "03",
+        title: "Act without leaving",
+        body: "Turn clarity into action in the same app: automate savings toward a goal, pay bills and airtime, and get guidance, up to a dedicated human advisor at the top tier.",
+      },
+    ],
+  },
+
   // Headline numbers from our own beta research (two waves, July 2026).
   metrics: [
     { value: "331", label: "Nigerians surveyed across two research waves" },

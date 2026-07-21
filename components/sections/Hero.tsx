@@ -77,22 +77,26 @@ export function Hero() {
           variants={lineParent}
           initial="hidden"
           animate="visible"
-          className="font-display text-balance text-4xl leading-[0.95] capitalize sm:text-5xl md:text-6xl lg:text-[5rem]"
+          className="font-display text-balance text-5xl leading-[0.92] capitalize sm:text-6xl md:text-7xl lg:text-[6.5rem] xl:text-[7.5rem]"
         >
+          {/* Cream lines render as hollow outlines (text-outline); the gold
+              emphasis + rotating word stay solid so they read as the accent. */}
           <span className="block overflow-hidden pb-[0.14em]">
-            <motion.span variants={line} className="block text-bg">
+            <motion.span variants={line} className="block text-bg text-outline">
               {HERO.line1.lead}{" "}
-              <span className="italic text-gold">{HERO.line1.emphasis}</span>
+              <span className="italic text-gold [-webkit-text-fill-color:currentColor] [-webkit-text-stroke:0]">
+                {HERO.line1.emphasis}
+              </span>
             </motion.span>
           </span>
           <span className="block overflow-hidden pb-[0.14em]">
-            <motion.span variants={line} className="block text-bg">
+            <motion.span variants={line} className="block text-bg text-outline">
               {HERO.line2.prefix}{" "}
               <WordRotator
                 words={HERO.rotatingWords}
                 interval={4800}
                 scrambleMs={560}
-                className="capitalize italic text-gold"
+                className="capitalize italic text-gold [-webkit-text-fill-color:currentColor] [-webkit-text-stroke:0]"
               />
               {HERO.line2.suffix}
             </motion.span>
