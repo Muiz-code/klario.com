@@ -18,6 +18,7 @@ import {
   Inbox,
   ScrollText,
   ClipboardList,
+  Anchor,
   Crown,
   LogOut,
   Menu,
@@ -40,6 +41,7 @@ const primaryNav = [
 
 const toolsNav = [
   { href: "/p@ss1/beta", label: "Beta responses", icon: ClipboardList },
+  { href: "/p@ss1/anchor-club", label: "Anchor Club", icon: Anchor },
   { href: "/p@ss1/submissions", label: "Submissions", icon: Inbox },
   { href: "/p@ss1/audit", label: "Audit log", icon: ScrollText },
 ];

@@ -247,6 +247,29 @@ create table if not exists public.analytics_events (
 create index if not exists analytics_events_created_idx on public.analytics_events (created_at desc);
 create index if not exists analytics_events_type_idx     on public.analytics_events (type, created_at desc);
 
+-- --- anchor_club (0019): public Anchor Club registrations ------------------
+create table if not exists public.anchor_club (
+  id                 uuid primary key default gen_random_uuid(),
+  created_at         timestamptz not null default now(),
+  ref                text unique,
+  name               text,
+  email              text not null unique,
+  phone              text,
+  institution        text,
+  level              text,
+  area               text,
+  why                text,
+  excites            text[] not null default '{}',
+  challenge          text,
+  notes              jsonb not null default '{}',
+  pledge             boolean not null default false,
+  guidelines         boolean not null default false,
+  user_agent         text,
+  referrer           text,
+  confirmation_sent  boolean not null default false
+);
+create index if not exists anchor_club_created_idx on public.anchor_club (created_at desc);
+
 -- --- Lock everything down: RLS on, no policies -----------------------------
 alter table public.analytics_events enable row level security;
 alter table public.blog_posts       enable row level security;
@@ -261,3 +284,4 @@ alter table public.automation_runs  enable row level security;
 alter table public.segments         enable row level security;
 alter table public.email_templates  enable row level security;
 alter table public.beta_responses   enable row level security;
+alter table public.anchor_club      enable row level security;

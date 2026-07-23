@@ -21,6 +21,14 @@ export const SITE = {
   twitter: "@klariofinance",
 } as const;
 
+// App store + community links used in emails (confirmation + admin sends).
+// Replace the placeholders with the real store / group URLs once live.
+export const APP_LINKS = {
+  ios: "https://apps.apple.com/app/klario",
+  android: "https://play.google.com/store/apps/details?id=finance.klario",
+  whatsapp: "https://chat.whatsapp.com/",
+} as const;
+
 export const CONTACT = {
   label: "Contact",
   heading: "Questions, partnerships,",

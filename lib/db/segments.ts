@@ -3,8 +3,8 @@ import { listSignups } from "@/lib/db/signups";
 import { normalizeEmail } from "@/lib/duplicates";
 import type { MatchType, Rule, SegmentDef } from "@/lib/segments/types";
 import {
-  countAudience,
-  filterAudience,
+  countForSend,
+  filterForSend,
   type Audience,
   type Engagement,
 } from "@/lib/segments/evaluate";
@@ -82,7 +82,7 @@ export function buildBuiltinGroups(aud: Audience): BuiltinGroup[] {
     segments: ["pending", "invited", "active", "unsubscribed"].map((v) => ({
       key: `status:${v}`,
       label: cap(v),
-      count: countAudience(aud, statusDef(v)),
+      count: countForSend(aud, statusDef(v)),
       def: statusDef(v),
     })),
   });
@@ -94,7 +94,7 @@ export function buildBuiltinGroups(aud: Audience): BuiltinGroup[] {
       title: "By source",
       segments: sources.map((v) => {
         const def: SegmentDef = { match: "all", rules: [{ field: "source", op: "is", value: v }] };
-        return { key: `source:${v}`, label: cap(v), count: countAudience(aud, def), def };
+        return { key: `source:${v}`, label: cap(v), count: countForSend(aud, def), def };
       }),
     });
   }
@@ -106,7 +106,7 @@ export function buildBuiltinGroups(aud: Audience): BuiltinGroup[] {
       title: "By device",
       segments: devices.map((v) => {
         const def: SegmentDef = { match: "all", rules: [{ field: "device", op: "is", value: v }] };
-        return { key: `device:${v}`, label: v, count: countAudience(aud, def), def };
+        return { key: `device:${v}`, label: v, count: countForSend(aud, def), def };
       }),
     });
   }
@@ -121,7 +121,7 @@ export function buildBuiltinGroups(aud: Audience): BuiltinGroup[] {
     title: "By engagement",
     segments: engagementSegs.map(({ v, label }) => {
       const def: SegmentDef = { match: "all", rules: [{ field: "engagement", op: "is", value: v }] };
-      return { key: `eng:${v}`, label, count: countAudience(aud, def), def };
+      return { key: `eng:${v}`, label, count: countForSend(aud, def), def };
     }),
   });
 
@@ -198,7 +198,7 @@ export function segmentToDef(s: CustomSegment): SegmentDef {
 /** Resolve a definition to its members against a freshly loaded audience. */
 export async function resolveMembers(def: SegmentDef, limit = 5000) {
   const aud = await loadAudience();
-  const all = filterAudience(aud, def);
+  const all = filterForSend(aud, def);
   return { count: all.length, members: all.slice(0, limit) };
 }
 
@@ -206,6 +206,6 @@ export async function resolveMembers(def: SegmentDef, limit = 5000) {
 export function countCustom(aud: Audience, segments: CustomSegment[]) {
   return segments.map((s) => ({
     segment: s,
-    count: countAudience(aud, segmentToDef(s)),
+    count: countForSend(aud, segmentToDef(s)),
   }));
 }

@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KLARIO Anchor Club — Apply</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --noir: #0B0B0E;
+    --plate: #131019;
+    --cream: #ECE6D8;
+    --gold: #E6C989;
+    --caramel: #C19A6B;
+    --mahogany: #4E2C20;
+    --sans: "Manrope", system-ui, sans-serif;
+    --display: "Space Grotesk", var(--sans);
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+    --edge: 18px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--noir); color: var(--cream); }
+  body {
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .display { font-family: var(--display); font-weight: 700; letter-spacing: -0.02em; }
+
+  /* Focus rings — visible everywhere. */
+  a:focus-visible, button:focus-visible, input:focus-visible,
+  textarea:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  /* ── Page texture: rosette off a corner + faint hatch. Fixed, behind all. ── */
+  #texture { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  #texture .rosette {
+    position: absolute; top: -22vmax; right: -20vmax;
+    width: 78vmax; height: 78vmax; opacity: 0.09; color: var(--caramel);
+  }
+  #texture .hatch { position: absolute; inset: 0; opacity: 0.04; color: var(--caramel); }
+
+  .wrap { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto;
+          padding: clamp(20px, 5vw, 56px); min-height: 100dvh; display: flex; flex-direction: column; }
+
+  /* Top progress rule (steps only). */
+  #progress { position: fixed; top: 0; left: 0; height: 2px; width: 0%;
+              background: var(--gold); z-index: 5; transition: width .5s cubic-bezier(.16,1,.3,1); }
+  @media (prefers-reduced-motion: reduce) { #progress { transition: none; } }
+
+  /* ── Sub-mark ── */
+  .submark { display: block; color: var(--cream); }
+  .submark path { fill: none; stroke: currentColor; stroke-width: 6; stroke-linecap: round; }
+
+  /* ── HERO ── */
+  .hero { flex: 1; display: grid; grid-template-columns: 1.05fr 0.95fr; align-items: center; gap: 40px; }
+  .hero-mark { color: var(--cream); width: 46px; height: 46px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.32em;
+             text-transform: uppercase; color: var(--caramel); margin: 22px 0 20px; }
+  .hero h1 { font-family: var(--display); font-weight: 700; line-height: 1.02;
+             letter-spacing: -0.025em; font-size: clamp(34px, 5.2vw, 62px); max-width: 15ch; }
+  .hero p.lede { color: color-mix(in srgb, var(--cream) 72%, transparent);
+                 margin: 24px 0 32px; max-width: 46ch; font-size: clamp(15px, 1.6vw, 18px); }
+  .hero-side { position: relative; height: 100%; min-height: 300px; }
+  .hero-side .submark { position: absolute; right: -34%; top: 50%; transform: translateY(-50%);
+                        width: 132%; opacity: 0.08; color: var(--cream); }
+  .meta { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.06em;
+          color: color-mix(in srgb, var(--cream) 55%, transparent); margin-top: 18px; }
+
+  /* Gold CTA — the one button. */
+  .cta {
+    display: inline-flex; align-items: center; gap: 10px; cursor: pointer;
+    font-family: var(--sans); font-weight: 600; font-size: 15px;
+    background: var(--gold); color: #17130A; border: none;
+    padding: 14px 26px; border-radius: 12px; transition: transform .18s ease, filter .18s ease;
+    min-height: 48px;
+  }
+  .cta:hover { transform: translateY(-1px); filter: brightness(1.04); }
+  .cta:disabled { opacity: 0.34; cursor: not-allowed; transform: none; filter: none; }
+  .cta .arrow { transition: transform .18s ease; }
+  .cta:not(:disabled):hover .arrow { transform: translateX(3px); }
+
+  .ghost {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    font-family: var(--sans); font-weight: 600; font-size: 14px;
+    background: transparent; color: var(--cream);
+    border: 1px solid color-mix(in srgb, var(--caramel) 40%, transparent);
+    padding: 12px 20px; border-radius: 11px; transition: border-color .18s ease, background .18s ease;
+    min-height: 46px;
+  }
+  .ghost:hover { border-color: var(--caramel); background: color-mix(in srgb, var(--caramel) 8%, transparent); }
+
+  /* ── STEP SCREENS ── */
+  .step { flex: 1; display: flex; flex-direction: column; justify-content: center;
+          max-width: 640px; margin: 0 auto; width: 100%; padding: 8px 0; }
+  .stepnum { font-family: var(--mono); font-size: 13px; letter-spacing: 0.14em; color: var(--gold); }
+  .rule { height: 1px; width: 100%; margin: 14px 0 26px;
+          background: color-mix(in srgb, var(--caramel) 22%, transparent); }
+  .step h2 { font-family: var(--display); font-weight: 700; letter-spacing: -0.02em;
+             line-height: 1.1; font-size: clamp(24px, 3.4vw, 34px); }
+  .hint { font-family: var(--mono); font-size: 12px; letter-spacing: 0.02em;
+          color: color-mix(in srgb, var(--cream) 48%, transparent); margin-top: 12px; }
+  .qgap { margin-top: 28px; }
+
+  /* Option cards — fill with a caramel hairline when selected, never a solid block. */
+  .opts { display: grid; gap: 10px; }
+  .opts.two { grid-template-columns: 1fr 1fr; }
+  .opt {
+    display: flex; align-items: center; gap: 13px; text-align: left; cursor: pointer;
+    background: transparent; color: var(--cream); font-family: var(--sans); font-size: 15px;
+    border: 1px solid color-mix(in srgb, var(--caramel) 24%, transparent);
+    border-radius: 12px; padding: 15px 17px; transition: border-color .18s ease, background .18s ease;
+    min-height: 52px; width: 100%;
+  }
+  .opt:hover { border-color: color-mix(in srgb, var(--caramel) 55%, transparent); }
+  .opt .box { width: 18px; height: 18px; border-radius: 5px; flex: none;
+              border: 1px solid color-mix(in srgb, var(--caramel) 55%, transparent);
+              display: grid; place-items: center; transition: border-color .18s ease; }
+  .opt .box.round { border-radius: 50%; }
+  .opt .box svg { width: 12px; height: 12px; opacity: 0; transition: opacity .15s ease; color: var(--gold); }
+  .opt[aria-checked="true"], .opt[aria-pressed="true"] {
+    border-color: var(--gold);
+    background: color-mix(in srgb, var(--gold) 8%, transparent);
+  }
+  .opt[aria-checked="true"] .box, .opt[aria-pressed="true"] .box { border-color: var(--gold); }
+  .opt[aria-checked="true"] .box svg, .opt[aria-pressed="true"] .box svg { opacity: 1; }
+
+  /* Fields */
+  label.field { display: block; margin-bottom: 16px; }
+  label.field > span.lbl { display: block; font-family: var(--mono); font-size: 11.5px;
+                           letter-spacing: 0.1em; text-transform: uppercase;
+                           color: color-mix(in srgb, var(--cream) 55%, transparent); margin-bottom: 8px; }
+  input.txt, textarea.txt {
+    width: 100%; font-family: var(--sans); font-size: 16px; color: var(--cream);
+    background: color-mix(in srgb, var(--cream) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--caramel) 28%, transparent);
+    border-radius: 11px; padding: 14px 15px; transition: border-color .18s ease;
+  }
+  input.txt::placeholder, textarea.txt::placeholder { color: color-mix(in srgb, var(--cream) 32%, transparent); }
+  input.txt:focus, textarea.txt:focus { border-color: var(--gold); outline: none; }
+  textarea.txt { resize: vertical; min-height: 130px; line-height: 1.55; }
+  .subnote { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.02em;
+             color: color-mix(in srgb, var(--cream) 45%, transparent); margin-top: 7px; }
+  .counter { font-family: var(--mono); font-size: 12px; text-align: right; margin-top: 8px;
+             color: color-mix(in srgb, var(--cream) 45%, transparent); }
+  .counter.over { color: var(--caramel); }
+  .otherwrap { margin-top: 10px; }
+  .err { font-family: var(--sans); font-size: 13.5px; color: color-mix(in srgb, var(--cream) 66%, transparent);
+         margin-top: 12px; }
+  .err::before { content: "— "; color: var(--caramel); }
+
+  /* Agree checkboxes (step 07) */
+  .agree { display: flex; gap: 13px; align-items: flex-start; cursor: pointer; padding: 15px 0;
+           border-top: 1px solid color-mix(in srgb, var(--caramel) 16%, transparent); }
+  .agree:last-of-type { border-bottom: 1px solid color-mix(in srgb, var(--caramel) 16%, transparent); }
+  .agree .box { margin-top: 2px; }
+  .agree span.t { font-size: 14.5px; line-height: 1.5; }
+  .agree a { color: var(--gold); text-underline-offset: 3px; }
+  .whybtn { font-family: var(--mono); font-size: 12px; color: color-mix(in srgb, var(--cream) 50%, transparent); margin-top: 14px; }
+
+  .nav { display: flex; gap: 12px; align-items: center; margin-top: 34px; }
+  .nav .spacer { flex: 1; }
+  .kbd { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em;
+         color: color-mix(in srgb, var(--cream) 38%, transparent); margin-top: 20px; }
+
+  /* ── THE CARD (screen 8) ── */
+  .cardscreen { flex: 1; display: flex; flex-direction: column; align-items: center;
+                justify-content: center; text-align: center; gap: 26px; padding: 20px 0; }
+  #cardStage { width: min(520px, 92vw); }
+  #cardStage svg { width: 100%; height: auto; display: block;
+                   border-radius: var(--edge); box-shadow: 0 40px 90px -30px rgba(0,0,0,.8); }
+  .card-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .next { max-width: 44ch; color: color-mix(in srgb, var(--cream) 68%, transparent); font-size: 15px; }
+  .closer { font-family: var(--display); font-weight: 700; font-size: clamp(19px, 2.4vw, 24px);
+            letter-spacing: -0.02em; color: var(--cream); }
+
+  /* Card assemble stagger + one specular sweep. */
+  .asm { opacity: 0; }
+  .play .asm { animation: rise .6s cubic-bezier(.16,1,.3,1) forwards; }
+  .play .asm.d1 { animation-delay: .05s; } .play .asm.d2 { animation-delay: .18s; }
+  .play .asm.d3 { animation-delay: .32s; } .play .asm.d4 { animation-delay: .46s; }
+  .play .asm.d5 { animation-delay: .60s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  #spec { opacity: 0; }
+  .play #spec { animation: sweep 1.15s ease-in .95s 1 forwards; }
+  @keyframes sweep { 0% { opacity: 0; transform: translateX(-60%); }
+                     18% { opacity: .9; } 100% { opacity: 0; transform: translateX(160%); } }
+  @media (prefers-reduced-motion: reduce) {
+    .asm, .play .asm { animation: none !important; opacity: 1 !important; transform: none !important; }
+    #spec, .play #spec { animation: none !important; opacity: 0 !important; }
+  }
+
+  .hidden { display: none !important; }
+
+  /* Screen slide-in */
+  .screen { animation: fadein .4s cubic-bezier(.16,1,.3,1); }
+  @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .screen { animation: none; } }
+
+  @media (max-width: 760px) {
+    .hero { grid-template-columns: 1fr; gap: 0; }
+    .hero-side { display: none; }
+    .opts.two { grid-template-columns: 1fr; }
+    .nav { position: sticky; bottom: 0; background: linear-gradient(transparent, var(--noir) 30%);
+           padding-top: 18px; margin-top: 24px; }
+  }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<div id="progress" role="progressbar" aria-label="Application progress" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0"></div>
+<div id="texture" aria-hidden="true">
+  <svg class="rosette" viewBox="0 0 600 600" fill="none" id="rosetteBg"></svg>
+  <svg class="hatch" viewBox="0 0 100 100" preserveAspectRatio="none" id="hatchBg"></svg>
+</div>
+
+<div class="wrap">
+  <div id="app" aria-live="polite"></div>
+  <p class="visually-hidden" id="live" aria-live="assertive"></p>
+</div>
+
+<script>
+"use strict";
+const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ── The split-circle sub-mark: concentric rings gapped by a vertical channel. ── */
+function submarkSVG(stroke) {
+  const C = 100, CHAN = 7.6, rings = [69, 50, 33];
+  let d = "";
+  for (const r of rings) {
+    const phi = Math.asin(Math.min(1, CHAN / r));
+    const dx = r * Math.cos(phi), dy = r * Math.sin(phi);
+    const f = (n) => n.toFixed(2);
+    d += `<path d="M ${f(C+dx)} ${f(C-dy)} A ${r} ${r} 0 0 1 ${f(C+dx)} ${f(C+dy)}"/>`;
+    d += `<path d="M ${f(C-dx)} ${f(C+dy)} A ${r} ${r} 0 0 1 ${f(C-dx)} ${f(C-dy)}"/>`;
+  }
+  return `<svg class="submark" viewBox="0 0 200 200" fill="none" ${stroke ? `style="color:${stroke}"` : ""} aria-hidden="true">${d}</svg>`;
+}
+
+/* ── Guilloché: hypotrochoid rosette as one SVG path. ── */
+function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+function guillochePath(R, r, d, cx, cy) {
+  // Round to integers so gcd terminates; clamp loops/steps so the path string
+  // can never blow up (a non-integer r would make gcd loop and overflow).
+  R = Math.round(R); r = Math.max(1, Math.round(r));
+  const loops = Math.min(24, r / gcd(R, r));
+  const steps = Math.min(6000, Math.max(1600, Math.round(loops * 240)));
+  const k = (R - r) / r;
+  let out = "";
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * loops * 2 * Math.PI;
+    const x = (R - r) * Math.cos(t) + d * Math.cos(k * t);
+    const y = (R - r) * Math.sin(t) - d * Math.sin(k * t);
+    out += (i === 0 ? "M" : "L") + (cx + x).toFixed(1) + " " + (cy + y).toFixed(1) + " ";
+  }
+  return out.trim();
+}
+function rosetteMarkup(size, stroke, sw) {
+  const c = size / 2;
+  const layers = [
+    guillochePath(size * 0.44, size * 0.13, size * 0.19, c, c),
+    guillochePath(size * 0.40, size * 0.108, size * 0.155, c, c),
+    guillochePath(size * 0.34, size * 0.15, size * 0.10, c, c),
+  ];
+  return layers.map((d) =>
+    `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-opacity="0.85"/>`
+  ).join("");
+}
+
+// Background rosette + hatch.
+document.getElementById("rosetteBg").innerHTML = rosetteMarkup(600, "currentColor", 0.5);
+(function hatch() {
+  let l = "";
+  for (let i = -10; i < 110; i += 3.2) l += `<line x1="${i}" y1="0" x2="${i - 30}" y2="100" stroke="currentColor" stroke-width="0.18"/>`;
+  document.getElementById("hatchBg").innerHTML = l;
+})();
+
+/* ── State ── */
+const AREAS = ["Artificial Intelligence prompting","UI/UX Design","Software Engineering","Product Management","Digital Marketing","Finance & Investing"];
+const EXCITES = ["Learning practical skills","Building my portfolio","Networking with other students","Working on a real startup","Leadership opportunities","Financial education","Career development","Helping shape Klario"];
+const CHALLENGES = ["Getting internships","Learning practical skills","Building a portfolio","Networking","Managing my finances","Finding mentors","Staying consistent"];
+const GUIDELINES_URL = "https://klario.finance/anchor-club-guidelines";
+
+const state = {
+  area: null, areaOther: "",
+  name: "", email: "", whatsapp: "",
+  institution: "", level: "",
+  why: "",
+  excites: [],
+  challenge: null, challengeOther: "",
+  showUp: false, guidelines: false,
+};
+let step = 0; // 0 hero, 1..7 questions, 8 card
+const TOTAL = 7;
+const app = document.getElementById("app");
+const live = document.getElementById("live");
+const progress = document.getElementById("progress");
+const esc = (s) => (s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const CHECK = `<svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ARROW = `<svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function setProgress() {
+  const pct = step >= 1 && step <= TOTAL ? (step / TOTAL) * 100 : (step > TOTAL ? 100 : 0);
+  progress.style.width = pct + "%";
+  progress.setAttribute("aria-valuenow", Math.min(step, TOTAL));
+}
+function announce(msg) { live.textContent = msg; }
+
+/* ── Validation ── */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function validate(s) {
+  switch (s) {
+    case 1: return state.area === "__other__" ? (state.areaOther.trim() ? "" : "Type the area you want to grow in.") : (state.area ? "" : "Pick one to continue.");
+    case 2:
+      if (state.name.trim().length < 2) return "Please enter your full name.";
+      if (!EMAIL_RE.test(state.email.trim())) return "That email doesn't look right yet.";
+      if (state.whatsapp.replace(/\D/g, "").length < 7) return "Add a WhatsApp number we can reach you on.";
+      return "";
+    case 3:
+      if (state.institution.trim().length < 2) return "Where do you study?";
+      if (state.level.trim().length < 1) return "Add your level of study.";
+      return "";
+    case 4: return state.why.trim().length < 3 ? "A sentence or two is plenty." : "";
+    case 5: return state.excites.length ? "" : "Choose at least one.";
+    case 6: return state.challenge === "__other__" ? (state.challengeOther.trim() ? "" : "Tell us the challenge.") : (state.challenge ? "" : "Pick the closest one.");
+    case 7: return state.showUp && state.guidelines ? "" : "Tick both to send your application.";
+    default: return "";
+  }
+}
+
+/* ── Navigation ── */
+function go(next) {
+  if (next > step && step >= 1 && step <= TOTAL) {
+    const e = validate(step);
+    if (e) { showErr(e); return; }
+  }
+  step = Math.max(0, Math.min(next, 8));
+  render();
+  window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+}
+function showErr(msg) {
+  const el = document.getElementById("err");
+  if (el) { el.textContent = msg; el.classList.remove("hidden"); announce(msg); }
+}
+
+document.addEventListener("keydown", (ev) => {
+  if (ev.target.tagName === "TEXTAREA" && ev.key === "Enter" && !ev.shiftKey) return; // let textarea newline
+  if (ev.key === "Enter") {
+    if (step === 0) { ev.preventDefault(); go(1); return; }
+    if (step >= 1 && step <= TOTAL) {
+      ev.preventDefault();
+      if (ev.shiftKey) go(step - 1);
+      else if (step === TOTAL) submit();
+      else go(step + 1);
+    }
+  }
+});
+
+/* ── Render ── */
+function render() {
+  setProgress();
+  if (step === 0) return renderHero();
+  if (step === 8) return renderCard();
+  return renderStep(step);
+}
+
+function renderHero() {
+  app.innerHTML = `
+    <section class="hero screen">
+      <div class="hero-main">
+        <div class="hero-mark">${submarkSVG("var(--cream)")}</div>
+        <div class="eyebrow">KLARIO ANCHOR CLUB</div>
+        <h1 class="display">A student club for people who want to actually build something.</h1>
+        <p class="lede">Get real product experience, mentorship, and first access to the Klario beta — plus merch and a network of students building alongside you. We select a small founding cohort. This is where you tell us who you are.</p>
+        <button class="cta" id="start">Let's do this ${ARROW}</button>
+        <div class="meta">7 questions · about 3 minutes</div>
+      </div>
+      <div class="hero-side" aria-hidden="true">${submarkSVG("var(--cream)")}</div>
+    </section>`;
+  document.getElementById("start").onclick = () => go(1);
+}
+
+function stepShell(inner) {
+  return `<section class="step screen">
+    <div class="stepnum mono">${String(step).padStart(2, "0")} / ${String(TOTAL).padStart(2, "0")}</div>
+    <div class="rule"></div>
+    ${inner}
+    <div class="err hidden" id="err"></div>
+    <div class="nav">
+      ${step > 1 ? `<button class="ghost" id="back">Back</button>` : `<span></span>`}
+      <span class="spacer"></span>
+      <button class="cta" id="next">${step === TOTAL ? "Send application" : "Next"} ${ARROW}</button>
+    </div>
+    <div class="kbd mono">Enter to continue · Shift+Enter to go back</div>
+  </section>`;
+}
+
+function singleOpts(list, sel, onpick, name) {
+  return `<div class="opts qgap" role="radiogroup" aria-label="${esc(name)}">
+    ${list.map((o) => `
+      <button class="opt" role="radio" aria-checked="${sel === o}" data-v="${esc(o)}">
+        <span class="box round">${CHECK}</span><span>${esc(o)}</span>
+      </button>`).join("")}
+    <button class="opt" role="radio" aria-checked="${sel === "__other__"}" data-v="__other__">
+      <span class="box round">${CHECK}</span><span>Other</span>
+    </button>
+  </div>`;
+}
+
+function renderStep(s) {
+  let inner = "";
+  if (s === 1) {
+    inner = `<h2 class="display">Which area do you want to grow in?</h2>
+      ${singleOpts(AREAS, state.area, null, "Area")}
+      <div class="otherwrap ${state.area === "__other__" ? "" : "hidden"}" id="otherArea">
+        <input class="txt" id="areaOther" placeholder="Name the area" value="${esc(state.areaOther)}" aria-label="Other area" />
+      </div>`;
+  } else if (s === 2) {
+    inner = `<h2 class="display">Your details</h2>
+      <div class="qgap">
+        <label class="field"><span class="lbl">Full name</span>
+          <input class="txt" id="name" autocomplete="name" placeholder="Ada Okoro" value="${esc(state.name)}" /></label>
+        <label class="field"><span class="lbl">Email address</span>
+          <input class="txt" id="email" type="email" inputmode="email" autocomplete="email" placeholder="you@email.com" value="${esc(state.email)}" /></label>
+        <label class="field" style="margin-bottom:6px"><span class="lbl">WhatsApp number</span>
+          <input class="txt" id="whatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="+234 ..." value="${esc(state.whatsapp)}" /></label>
+        <div class="subnote mono">We use WhatsApp for the cohort group. Nothing else.</div>
+      </div>`;
+  } else if (s === 3) {
+    inner = `<h2 class="display">Where do you study?</h2>
+      <div class="qgap">
+        <label class="field"><span class="lbl">Institution</span>
+          <input class="txt" id="institution" autocomplete="organization" placeholder="University of Lagos" value="${esc(state.institution)}" /></label>
+        <label class="field"><span class="lbl">Level of study</span>
+          <input class="txt" id="level" placeholder="e.g. 300 Level, ND II, Postgraduate" value="${esc(state.level)}" /></label>
+      </div>`;
+  } else if (s === 4) {
+    const n = state.why.length;
+    inner = `<h2 class="display">Why do you want to join the Anchor Club?</h2>
+      <div class="hint">Plain and honest beats polished. There's no wrong answer here.</div>
+      <div class="qgap">
+        <textarea class="txt" id="why" placeholder="What are you hoping to get out of this?">${esc(state.why)}</textarea>
+        <div class="counter mono ${n > 500 ? "over" : ""}" id="whyCount">${n} / 500</div>
+      </div>`;
+  } else if (s === 5) {
+    inner = `<h2 class="display">What excites you about joining?</h2>
+      <div class="hint">Pick as many as ring true.</div>
+      <div class="opts qgap" role="group" aria-label="What excites you">
+        ${EXCITES.map((o) => `
+          <button class="opt" role="checkbox" aria-pressed="${state.excites.includes(o)}" data-v="${esc(o)}">
+            <span class="box">${CHECK}</span><span>${esc(o)}</span>
+          </button>`).join("")}
+      </div>`;
+  } else if (s === 6) {
+    inner = `<h2 class="display">What's the biggest challenge you're facing right now?</h2>
+      ${singleOpts(CHALLENGES, state.challenge, null, "Challenge")}
+      <div class="otherwrap ${state.challenge === "__other__" ? "" : "hidden"}" id="otherChal">
+        <input class="txt" id="chalOther" placeholder="Name the challenge" value="${esc(state.challengeOther)}" aria-label="Other challenge" />
+      </div>`;
+  } else if (s === 7) {
+    inner = `<h2 class="display">Two things to agree to.</h2>
+      <div class="qgap">
+        <label class="agree">
+          <span class="box" role="checkbox" aria-checked="${state.showUp}" id="ck_show" tabindex="0">${CHECK}</span>
+          <span class="t">I'll show up. Anchors are expected to give a few hours a week and take part in their circle.</span>
+        </label>
+        <label class="agree">
+          <span class="box" role="checkbox" aria-checked="${state.guidelines}" id="ck_guide" tabindex="0">${CHECK}</span>
+          <span class="t">I've read and agree to the <a href="${GUIDELINES_URL}" target="_blank" rel="noopener">Community Guidelines</a>.</span>
+        </label>
+        <div class="whybtn mono" id="whyDisabled">Tick both to enable the button below.</div>
+      </div>`;
+  }
+  app.innerHTML = stepShell(inner);
+  wireStep(s);
+  announce(`Step ${s} of ${TOTAL}`);
+}
+
+function wireStep(s) {
+  const back = document.getElementById("back"); if (back) back.onclick = () => go(step - 1);
+  const next = document.getElementById("next");
+  next.onclick = () => (step === TOTAL ? submit() : go(step + 1));
+
+  app.querySelectorAll(".opt").forEach((btn) => {
+    btn.onclick = () => {
+      const v = btn.getAttribute("data-v");
+      if (s === 1) {
+        state.area = v; renderStep(1);
+        if (v === "__other__") setTimeout(() => document.getElementById("areaOther")?.focus(), 30);
+        else if (v !== "__other__") setTimeout(() => go(2), 180);
+      } else if (s === 6) {
+        state.challenge = v; renderStep(6);
+        if (v === "__other__") setTimeout(() => document.getElementById("chalOther")?.focus(), 30);
+        else setTimeout(() => go(7), 180);
+      } else if (s === 5) {
+        const i = state.excites.indexOf(v);
+        if (i >= 0) state.excites.splice(i, 1); else state.excites.push(v);
+        btn.setAttribute("aria-pressed", state.excites.includes(v));
+      }
+    };
+  });
+
+  const bind = (id, key) => { const el = document.getElementById(id); if (el) el.oninput = () => { state[key] = el.value; if (id === "why") { const n = el.value.length; const c = document.getElementById("whyCount"); c.textContent = n + " / 500"; c.classList.toggle("over", n > 500); } if (key === "showUp" || key === "guidelines") updateStep7(); }; };
+  bind("areaOther", "areaOther"); bind("name", "name"); bind("email", "email"); bind("whatsapp", "whatsapp");
+  bind("institution", "institution"); bind("level", "level"); bind("why", "why"); bind("chalOther", "challengeOther");
+
+  if (s === 7) {
+    const toggle = (id, key) => {
+      const el = document.getElementById(id);
+      const flip = () => { state[key] = !state[key]; el.setAttribute("aria-checked", state[key]); updateStep7(); };
+      el.onclick = flip;
+      el.onkeydown = (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); flip(); } };
+    };
+    toggle("ck_show", "showUp"); toggle("ck_guide", "guidelines");
+    updateStep7();
+  }
+  // autofocus first field
+  const first = app.querySelector("input.txt, textarea.txt");
+  if (first && (s === 2 || s === 3 || s === 4)) setTimeout(() => first.focus(), 40);
+}
+
+function updateStep7() {
+  const ok = state.showUp && state.guidelines;
+  const next = document.getElementById("next");
+  const why = document.getElementById("whyDisabled");
+  if (next) next.disabled = !ok;
+  if (why) why.textContent = ok ? "Ready when you are." : "Tick both to enable the button below.";
+}
+
+/* ── Submit → card ── */
+function submit() {
+  const e = validate(7); if (e) { showErr(e); return; }
+  go(8);
+}
+
+function memberNumber() {
+  // A founding-cohort card number. Not a scarcity claim — just this card's id.
+  const n = 1 + Math.floor(Math.random() * 240);
+  return "No. " + String(n).padStart(4, "0");
+}
+let CARD_NO = null;
+
+function cardSVG(forExport) {
+  const W = 1040, H = 640;
+  const name = state.name.trim() || "Anchor Member";
+  const area = state.area === "__other__" ? state.areaOther.trim() : (state.area || "");
+  if (!CARD_NO) CARD_NO = memberNumber();
+  const rose = rosetteMarkup(560, "#C19A6B", 0.7);
+  const mark = (() => {
+    const C = 100, CHAN = 7.6, rings = [69, 50, 33]; let d = "";
+    for (const r of rings) { const phi = Math.asin(CHAN / r), dx = r * Math.cos(phi), dy = r * Math.sin(phi), f = (n) => n.toFixed(2);
+      d += `<path d="M ${f(C+dx)} ${f(C-dy)} A ${r} ${r} 0 0 1 ${f(C+dx)} ${f(C+dy)}" fill="none" stroke="#ECE6D8" stroke-width="7" stroke-linecap="round"/>`;
+      d += `<path d="M ${f(C-dx)} ${f(C+dy)} A ${r} ${r} 0 0 1 ${f(C-dx)} ${f(C-dy)}" fill="none" stroke="#ECE6D8" stroke-width="7" stroke-linecap="round"/>`; }
+    return d;
+  })();
+  const cls = (c) => (forExport ? "" : `class="${c}"`);
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Manrope, sans-serif">
+    <defs>
+      <clipPath id="cc"><rect x="0" y="0" width="${W}" height="${H}" rx="20"/></clipPath>
+      <linearGradient id="spg" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+        <stop offset="0.5" stop-color="#fff" stop-opacity="0.14"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <g clip-path="url(#cc)">
+      <rect x="0" y="0" width="${W}" height="${H}" fill="#0B0B0E"/>
+      <rect x="0" y="0" width="${W}" height="${H}" fill="#131019" opacity="0.6"/>
+      <g transform="translate(${W - 300}, ${H - 300})" opacity="0.10">${rose}</g>
+      <rect x="8" y="8" width="${W - 16}" height="${H - 16}" rx="15" fill="none" stroke="#C19A6B" stroke-opacity="0.4" stroke-width="1.4"/>
+      <g ${cls("asm d1")} transform="translate(56, 52) scale(0.5)">${mark}</g>
+      <text ${cls("asm d2")} x="120" y="92" fill="#C19A6B" font-family="'JetBrains Mono', monospace" font-size="15" letter-spacing="4">ANCHOR CLUB · FOUNDING COHORT</text>
+      <text ${cls("asm d3")} x="56" y="330" fill="#ECE6D8" font-family="'Space Grotesk', sans-serif" font-weight="700" font-size="72" letter-spacing="-2">${esc(name)}</text>
+      <text ${cls("asm d4")} x="58" y="392" fill="#E6C989" font-family="Manrope, sans-serif" font-weight="600" font-size="24">${esc(area || "Anchor")}</text>
+      <line ${cls("asm d4")} x1="56" y1="470" x2="${W - 56}" y2="470" stroke="#C19A6B" stroke-opacity="0.25" stroke-width="1"/>
+      <text ${cls("asm d5")} x="56" y="540" fill="#ECE6D8" opacity="0.55" font-family="'JetBrains Mono', monospace" font-size="17" letter-spacing="1">${CARD_NO}</text>
+      <text ${cls("asm d5")} x="${W - 56}" y="540" text-anchor="end" fill="#ECE6D8" opacity="0.55" font-family="'JetBrains Mono', monospace" font-size="17" letter-spacing="1">KLARIO.FINANCE</text>
+      ${forExport ? "" : `<rect id="spec" x="-${W}" y="0" width="${W}" height="${H}" fill="url(#spg)"/>`}
+    </g>
+  </svg>`;
+}
+
+function renderCard() {
+  progress.style.width = "100%";
+  app.innerHTML = `<section class="cardscreen screen">
+    <div id="cardStage">${cardSVG(false)}</div>
+    <div class="card-actions">
+      <button class="cta" id="dl">Download card</button>
+      <button class="ghost" id="sh">Share</button>
+    </div>
+    <p class="next">Applications are read by a person, not a bot. If you're a fit for the founding cohort, you'll hear from us on WhatsApp within about a week.</p>
+    <p class="closer display">Build with us, not for us.</p>
+  </section>`;
+  const stage = document.getElementById("cardStage");
+  if (!reduced) requestAnimationFrame(() => stage.querySelector("svg").parentElement.classList.add("play"));
+  else stage.classList.add("play");
+  document.getElementById("dl").onclick = downloadCard;
+  document.getElementById("sh").onclick = shareCard;
+  announce("Your Anchor Club card is ready.");
+}
+
+/* ── Export card as PNG (self-contained: SVG → canvas). ── */
+async function cardBlob() {
+  await (document.fonts ? document.fonts.ready : Promise.resolve());
+  const svg = cardSVG(true);
+  const url = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svg)));
+  const img = new Image();
+  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+  const scale = 2, W = 1040, H = 640;
+  const cv = document.createElement("canvas"); cv.width = W * scale; cv.height = H * scale;
+  const ctx = cv.getContext("2d"); ctx.scale(scale, scale); ctx.drawImage(img, 0, 0, W, H);
+  return await new Promise((res) => cv.toBlob(res, "image/png"));
+}
+async function downloadCard() {
+  try {
+    const blob = await cardBlob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "klario-anchor-card.png";
+    a.click(); URL.revokeObjectURL(a.href);
+  } catch { announce("Could not generate the image. Please screenshot the card."); }
+}
+async function shareCard() {
+  const text = "I just applied to the KLARIO Anchor Club — a student builder programme. ";
+  try {
+    const blob = await cardBlob();
+    const file = new File([blob], "klario-anchor-card.png", { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ title: "KLARIO Anchor Club", text, files: [file] }); return;
+    }
+    if (navigator.share) { await navigator.share({ title: "KLARIO Anchor Club", text, url: "https://klario.finance" }); return; }
+  } catch {}
+  try { await navigator.clipboard.writeText(text + "https://klario.finance"); announce("Message copied."); } catch {}
+}
+
+render();
+</script>
+</body>
+</html>

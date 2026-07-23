@@ -82,3 +82,32 @@ export function countAudience(aud: Audience, def: SegmentDef): number {
   }
   return n;
 }
+
+/**
+ * Does this segment deliberately target unsubscribed people? True only when a
+ * rule is literally `status is unsubscribed`, e.g. the built-in "By status →
+ * Unsubscribed" segment. Everything else (opened, clicked, all, source, …) is
+ * treated as a normal audience that must never include unsubscribed people.
+ */
+export function targetsUnsubscribed(def: SegmentDef): boolean {
+  return def.rules.some(
+    (r) => r.field === "status" && r.op === "is" && r.value === "unsubscribed"
+  );
+}
+
+/**
+ * Send-safe view of a segment: the matched rows minus anyone who has
+ * unsubscribed, unless the segment explicitly targets unsubscribed. Use this
+ * (not filterAudience) anywhere the result feeds a send, a count shown next to
+ * a send, or the recipient list an admin reviews before sending, so unsubscribed
+ * people are never listed, counted, or mailed.
+ */
+export function filterForSend(aud: Audience, def: SegmentDef): Signup[] {
+  const rows = filterAudience(aud, def);
+  if (targetsUnsubscribed(def)) return rows;
+  return rows.filter((s) => s.status !== "unsubscribed");
+}
+
+export function countForSend(aud: Audience, def: SegmentDef): number {
+  return filterForSend(aud, def).length;
+}

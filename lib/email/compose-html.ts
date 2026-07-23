@@ -8,6 +8,7 @@
  */
 import { COLORS, wrapDocument } from "./brand";
 import { inlineEmailStyles } from "./rich-to-email";
+import { renderButtonRow, type EmailButton } from "./linkButtons";
 
 /**
  * Builds the full email from the rich-text editor's body HTML: inlines the
@@ -59,6 +60,9 @@ export type ComposeInput = {
   ctaLabel?: string;
   ctaHref?: string;
   images?: string[];
+  /** A row of link buttons (App Store, Play, WhatsApp, …). Rendered in place of
+   *  the single CTA when provided. */
+  buttons?: EmailButton[];
 };
 
 const F = "Helvetica,Arial,sans-serif";
@@ -96,14 +100,17 @@ export function buildEmailHtml(input: ComposeInput): string {
       )}</h1>`
     : "";
 
+  // A row of link buttons takes priority; otherwise fall back to the single CTA.
+  const buttonRow = input.buttons?.length ? renderButtonRow(input.buttons) : "";
   const ctaBlock =
-    ctaLabel && ctaHref
+    buttonRow ||
+    (ctaLabel && ctaHref
       ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:8px;"><tr><td style="border-radius:999px;background:${COLORS.gold};"><a href="${escapeAttr(
           ctaHref
         )}" target="_blank" style="display:inline-block;padding:14px 30px;font-family:${F};font-size:15px;font-weight:700;color:${COLORS.ink};text-decoration:none;border-radius:999px;">${escapeHtml(
           ctaLabel
         )} &#8594;</a></td></tr></table>`
-      : "";
+      : "");
 
   const inner = `
   ${imageBlock}

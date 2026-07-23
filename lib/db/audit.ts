@@ -5,7 +5,8 @@ export type AuditAction =
   | "newsletter"
   | "test_send"
   | "import"
-  | "automation";
+  | "automation"
+  | "anchor_email";
 
 export type AuditEvent = {
   id: string;

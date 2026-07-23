@@ -89,7 +89,18 @@ export function Navbar({ theme = "auto" }: { theme?: "auto" | "light" }) {
 
           <Logo onDark={onDark} />
 
-          <div className="flex justify-end">
+          <div className="flex items-center justify-end gap-3">
+            <Button
+              href="/anchor-club"
+              size="md"
+              variant="outline"
+              className={cn(
+                "hidden lg:inline-flex",
+                onDark && "border-bg/25 text-bg hover:border-bg hover:bg-bg/10"
+              )}
+            >
+              Join Anchor Club
+            </Button>
             <Button href="/beta" size="md">
               Get Started
             </Button>
@@ -145,10 +156,18 @@ export function Navbar({ theme = "auto" }: { theme?: "auto" | "light" }) {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 + NAV_LINKS.length * 0.07, duration: 0.45, ease }}
-              className="mt-6"
+              className="mt-6 flex flex-col items-center gap-3"
             >
               <Button href="/beta" size="lg" onClick={() => setOpen(false)}>
                 Get Started
+              </Button>
+              <Button
+                href="/anchor-club"
+                size="lg"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
+                Join Anchor Club
               </Button>
             </motion.div>
           </motion.div>
