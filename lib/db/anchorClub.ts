@@ -43,6 +43,23 @@ export type AnchorResponseInput = {
   referrer?: string | null;
 };
 
+/** Look up a registration by its public reference (KAC-XXXX-XXXX) for the card page. */
+export async function getAnchorResponseByRef(
+  ref: string
+): Promise<AnchorResponse | null> {
+  const db = supabaseAdmin();
+  const { data, error } = await db
+    .from("anchor_club")
+    .select("*")
+    .eq("ref", ref.trim().toUpperCase())
+    .maybeSingle();
+  if (error) {
+    console.error("[db] getAnchorResponseByRef failed:", error.message);
+    return null;
+  }
+  return (data as AnchorResponse) ?? null;
+}
+
 /** Look up an existing registration by email (to detect a repeat submission). */
 export async function getAnchorResponseByEmail(
   email: string

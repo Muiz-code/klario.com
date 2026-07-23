@@ -208,7 +208,12 @@ export function AnchorResponsesView({
     });
   const recipients = responses
     .filter((r) => selected.has(r.id))
-    .map((r) => ({ id: r.id, name: r.name || r.email.split("@")[0], email: r.email }));
+    .map((r) => ({
+      id: r.id,
+      name: r.name || r.email.split("@")[0],
+      email: r.email,
+      ref: r.ref || "",
+    }));
 
   const exportCsv = () => {
     const head = [

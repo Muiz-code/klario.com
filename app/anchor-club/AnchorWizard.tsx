@@ -7,6 +7,9 @@ import { NIGERIAN_INSTITUTIONS, STUDY_LEVELS } from "./institutions";
 import styles from "./anchor.module.css";
 
 const SUB_LOGO = "/klario-submark.png";
+// Once someone registers, we keep their card locally so a reload shows it again
+// (instead of the empty form) and they can't re-register from this browser.
+const STORAGE_KEY = "klario_anchor_registration";
 
 // ── Question data ──
 const AREAS = [
@@ -115,6 +118,7 @@ export function AnchorWizard() {
   const [ref, setRef] = useState<string | null>(null);
   const [alreadyFilled, setAlreadyFilled] = useState(false);
   const [played, setPlayed] = useState(false);
+  const [booted, setBooted] = useState(false);
   const reducedRef = useRef(false);
   const liveRef = useRef<HTMLParagraphElement>(null);
 
@@ -122,6 +126,33 @@ export function AnchorWizard() {
     reducedRef.current = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
+  }, []);
+
+  // Restore a prior registration (if any) so reloads land on the card, not the
+  // form — this is also what stops a second registration from this browser.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved?.ref) {
+          setRef(saved.ref);
+          setAlreadyFilled(!!saved.alreadyFilled);
+          setS((p) => ({
+            ...p,
+            name: saved.name || "",
+            area: saved.area || "",
+            institution: saved.institution || "",
+            level: saved.level || "",
+            email: saved.email || "",
+          }));
+          setStep(8);
+        }
+      }
+    } catch {
+      /* ignore malformed storage */
+    }
+    setBooted(true);
   }, []);
 
   const announce = (msg: string) => {
@@ -241,6 +272,23 @@ export function AnchorWizard() {
       }
       if (data.alreadyFilled) setAlreadyFilled(true);
       setRef(data.ref as string);
+      // Persist so a reload shows the card and blocks a repeat registration.
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            ref: data.ref,
+            name: s.name,
+            area: s.area === OTHER ? s.areaOther : s.area || "",
+            institution: s.institution,
+            level: s.level,
+            email: s.email,
+            alreadyFilled: !!data.alreadyFilled,
+          })
+        );
+      } catch {
+        /* storage may be unavailable; not fatal */
+      }
       setStep(8);
       window.scrollTo({ top: 0, behavior: "auto" });
       announce("Your Anchor Club card is ready.");
@@ -331,6 +379,10 @@ export function AnchorWizard() {
         : [...p.excites, value],
     }));
   };
+
+  // Hold the first paint until we've checked storage, so a returning applicant
+  // doesn't flash the empty hero before their card appears.
+  if (!booted) return <div className={styles.root} />;
 
   return (
     <div className={styles.root}>

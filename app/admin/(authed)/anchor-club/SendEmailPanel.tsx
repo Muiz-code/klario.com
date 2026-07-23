@@ -4,7 +4,7 @@ import { useState } from "react";
 import { X, Send, Mail, Plus, Trash2 } from "lucide-react";
 import { APP_LINKS } from "@/lib/constants";
 
-export type Recipient = { id: string; name: string; email: string };
+export type Recipient = { id: string; name: string; email: string; ref?: string };
 
 type LinkButton = { label: string; url: string; variant: "primary" | "outline" };
 
@@ -70,8 +70,11 @@ export function SendEmailPanel({
   const [heading, setHeading] = useState(TEMPLATES[0].heading);
   const [body, setBody] = useState(TEMPLATES[0].body);
   const [links, setLinks] = useState<LinkButton[]>(TEMPLATES[0].links);
+  const [includeCardLink, setIncludeCardLink] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const withRef = recipients.filter((r) => r.ref).length;
 
   const applyTemplate = (i: number) => {
     const t = TEMPLATES[i];
@@ -98,11 +101,12 @@ export function SendEmailPanel({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          emails: recipients.map((r) => r.email),
+          recipients: recipients.map((r) => ({ email: r.email, ref: r.ref || "" })),
           subject,
           heading,
           body,
           buttons: links,
+          includeCardLink,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -291,6 +295,26 @@ export function SendEmailPanel({
               ))}
             </div>
           </div>
+
+          {/* Per-recipient card download link (for accepted anchors) */}
+          <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-bg/12 bg-bg/[0.02] px-3 py-2.5">
+            <input
+              type="checkbox"
+              checked={includeCardLink}
+              onChange={(e) => setIncludeCardLink(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-gold"
+            />
+            <span className="text-[13px] text-bg/75">
+              Add each person&apos;s <strong>card download link</strong> — a
+              personalised &ldquo;Download your card&rdquo; button per recipient.
+              {withRef < recipients.length && (
+                <span className="mt-0.5 block text-[12px] text-amber-300/80">
+                  {recipients.length - withRef} selected have no reference and will
+                  be skipped for the card link.
+                </span>
+              )}
+            </span>
+          </label>
 
           {error && (
             <div className="rounded-lg border border-red-400/30 bg-red-400/10 px-3 py-2 text-[13px] text-red-300">
