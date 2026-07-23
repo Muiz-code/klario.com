@@ -6,7 +6,7 @@ import { PageTexture, cardSVGMarkup } from "./engraving";
 import { NIGERIAN_INSTITUTIONS, STUDY_LEVELS } from "./institutions";
 import styles from "./anchor.module.css";
 
-const SUB_LOGO = "/New%20Klario%20Logo/klario-Sub-Logo.png";
+const SUB_LOGO = "/klario-submark.png";
 
 // ── Question data ──
 const AREAS = [
