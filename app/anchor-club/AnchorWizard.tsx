@@ -110,6 +110,34 @@ const Arrow = () => (
   </svg>
 );
 
+// A hand-drawn underline that scales with the word (two slightly-offset marker
+// strokes; non-scaling-stroke keeps the line weight even when stretched).
+const FreehandUnderline = () => (
+  <svg
+    className={styles.underline}
+    viewBox="0 0 240 16"
+    preserveAspectRatio="none"
+    fill="none"
+    aria-hidden="true"
+  >
+    <path
+      d="M4 10.5 C 46 4.5, 78 12.5, 118 8 C 156 4, 190 12, 236 6.5"
+      stroke="currentColor"
+      strokeWidth={4}
+      strokeLinecap="round"
+      vectorEffect="non-scaling-stroke"
+    />
+    <path
+      d="M8 13 C 52 8.5, 86 14.5, 126 10.5 C 162 7, 198 13.5, 232 9.5"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      vectorEffect="non-scaling-stroke"
+      opacity={0.55}
+    />
+  </svg>
+);
+
 export function AnchorWizard() {
   const [step, setStep] = useState(0);
   const [s, setS] = useState<State>(EMPTY);
@@ -548,7 +576,7 @@ export function AnchorWizard() {
         return (
           <>
             <h2 className={styles.display}>What excites you about joining?</h2>
-            <div className={styles.hint}>Pick as many as ring true.</div>
+            <div className={styles.hint}>Choose all that apply — pick as many as you like.</div>
             <div
               className={cx(styles.opts, styles.qgap)}
               role="group"
@@ -651,11 +679,16 @@ function Hero({ onStart }: { onStart: () => void }) {
         <img src={SUB_LOGO} alt="" className={styles.heroMark} aria-hidden="true" />
         <div className={styles.eyebrow}>KLARIO ANCHOR CLUB</div>
         <h1 className={styles.display}>
-          A club for people who want to actually build something.
+          A club for people who want to actually{" "}
+          <span className={styles.underlineWord}>
+            build
+            <FreehandUnderline />{" "}
+          </span>
+          something.
         </h1>
         <p className={styles.lede}>
           Get real product experience, mentorship, and first access to the Klario
-          beta — plus merch and a network of people building alongside you. We
+          beta, plus merch and a network of people building alongside you. We
           select a small founding cohort. This is where you tell us who you are.
         </p>
         <button type="button" className={styles.cta} onClick={onStart}>

@@ -55,11 +55,12 @@ export const NEWSLETTER = {
 
 export const FOOTER = {
   cta: {
-    heading: "Take control of your money",
+    heading: "Connect. Track. Understand.",
     emphasis: "with Klario.",
-    primary: "Join the beta",
-    secondary: "See how it works",
-    secondaryHref: "#features",
+    primary: "Join Anchor Club",
+    primaryHref: "/anchor-club",
+    secondary: "Get Started",
+    secondaryHref: "/beta",
   },
   getStarted: {
     title: "Get Started",

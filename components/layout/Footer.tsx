@@ -141,14 +141,15 @@ export function Footer() {
 
       <section className="relative">
         <Container className="flex flex-col items-start gap-8 pt-20 pb-16 md:pt-32 md:pb-28">
-          <h2 className="font-display max-w-4xl text-[2.5rem] leading-[1.02] tracking-tight md:text-[3.75rem] lg:text-[4.75rem]">
-            <span className="block">{FOOTER.cta.heading}</span>
+          <h2 className="font-display max-w-5xl text-[3rem] leading-[1.0] tracking-tight md:text-[4.75rem] lg:text-[6.25rem]">
+            {/* Cream line clipped to a hollow outline; gold accent stays solid. */}
+            <span className="block text-outline">{FOOTER.cta.heading}</span>
             <span className="block italic text-gold">{FOOTER.cta.emphasis}</span>
           </h2>
 
           <div className="flex flex-wrap items-center gap-3">
             <Link
-              href="/beta"
+              href={FOOTER.cta.primaryHref}
               className="inline-flex items-center gap-2 rounded-2xl bg-bg px-6 py-3.5 text-sm font-medium text-ink transition-all hover:scale-[1.02] hover:bg-bg/90 md:rounded-full"
             >
               {FOOTER.cta.primary}
