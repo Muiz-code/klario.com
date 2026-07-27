@@ -14,6 +14,17 @@ import { RESEND_REPLY_TO } from "@/lib/email/client";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
+/**
+ * Lightweight check used by the wizard's email step: has this email already
+ * registered? Returns { exists }. Only reveals a boolean (no data).
+ */
+export async function GET(req: Request) {
+  const email = validateEmail(new URL(req.url).searchParams.get("email"));
+  if (!email) return NextResponse.json({ exists: false });
+  const prior = await getAnchorResponseByEmail(email);
+  return NextResponse.json({ exists: !!prior });
+}
+
 function cleanArray(value: unknown, max: number): string[] {
   if (!Array.isArray(value)) return [];
   const out = value
@@ -66,10 +77,17 @@ export async function POST(req: Request) {
     );
   }
 
-  // Already registered? Keep their original spot and ref.
+  // Already registered? Block it — each person joins the Anchor Club once.
   const prior = await getAnchorResponseByEmail(email);
-  if (prior && prior.ref) {
-    return NextResponse.json({ ok: true, ref: prior.ref, alreadyFilled: true });
+  if (prior) {
+    return NextResponse.json(
+      {
+        error:
+          "This email has already been used to register. Each person can join the Anchor Club once.",
+        alreadyRegistered: true,
+      },
+      { status: 409 }
+    );
   }
 
   const name = clean(body.name, 80) ?? null;

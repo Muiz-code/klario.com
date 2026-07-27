@@ -143,6 +143,7 @@ export function AnchorWizard() {
   const [s, setS] = useState<State>(EMPTY);
   const [err, setErr] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [ref, setRef] = useState<string | null>(null);
   const [alreadyFilled, setAlreadyFilled] = useState(false);
   const [played, setPlayed] = useState(false);
@@ -327,6 +328,41 @@ export function AnchorWizard() {
     }
   }, [s, submitting, validate]);
 
+  // Advance from a step. On the contact step we first check the email isn't
+  // already registered, so a repeat applicant is stopped up front (not after
+  // filling everything). Other steps advance normally.
+  const handleNext = useCallback(async () => {
+    if (step === TOTAL) return submit();
+    if (step !== 2) return go(step + 1);
+
+    const e = validate(2);
+    if (e) {
+      setErr(e);
+      announce(e);
+      return;
+    }
+    if (checking) return;
+    setChecking(true);
+    try {
+      const res = await fetch(
+        `/api/anchor-response?email=${encodeURIComponent(s.email.trim())}`
+      );
+      const data = await res.json().catch(() => ({}));
+      if (data.exists) {
+        const msg =
+          "This email has already been used to register — each person can join the Anchor Club once.";
+        setErr(msg);
+        announce(msg);
+        return;
+      }
+    } catch {
+      // If the check fails (network), let them through; the submit still guards.
+    } finally {
+      setChecking(false);
+    }
+    advanceTo(3);
+  }, [step, checking, s.email, validate, submit, go, advanceTo]);
+
   // Keyboard: Enter to advance, Shift+Enter to go back (textarea keeps newline).
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
@@ -340,13 +376,12 @@ export function AnchorWizard() {
       } else if (step >= 1 && step <= TOTAL) {
         ev.preventDefault();
         if (ev.shiftKey) go(step - 1);
-        else if (step === TOTAL) submit();
-        else go(step + 1);
+        else handleNext();
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [step, go, submit]);
+  }, [step, go, handleNext]);
 
   // Autofocus the first text field on entering a text step.
   useEffect(() => {
@@ -431,9 +466,9 @@ export function AnchorWizard() {
             <StepShell
               step={step}
               err={err}
-              submitting={submitting}
+              submitting={submitting || checking}
               onBack={() => go(step - 1)}
-              onNext={() => (step === TOTAL ? submit() : go(step + 1))}
+              onNext={handleNext}
             >
               {renderStep()}
             </StepShell>
