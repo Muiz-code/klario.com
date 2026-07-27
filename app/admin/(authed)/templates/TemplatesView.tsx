@@ -46,7 +46,7 @@ export function TemplatesView({
   const [notice, setNotice] = useState<string | null>(null);
 
   const use = (t: TemplateItem) =>
-    router.push(`/p@ss1/newsletters/new?template=${encodeURIComponent(t.id)}`);
+    router.push(`/marketing/newsletters/new?template=${encodeURIComponent(t.id)}`);
 
   const requestDelete = (t: TemplateItem) =>
     setConfirmState({

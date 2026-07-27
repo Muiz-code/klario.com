@@ -17,7 +17,7 @@ function getSession(): string {
 }
 
 function isAdmin(path: string): boolean {
-  return path.startsWith("/p@ss1") || path.startsWith("/admin");
+  return path.startsWith("/marketing") || path.startsWith("/admin");
 }
 
 function send(payload: Record<string, unknown>) {

@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminEntry() {
   const email = await getAdminEmail();
-  if (email) redirect("/p@ss1/dashboard");
+  if (email) redirect("/marketing/dashboard");
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center px-4">

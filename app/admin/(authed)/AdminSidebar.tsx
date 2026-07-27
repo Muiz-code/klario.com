@@ -27,23 +27,23 @@ import {
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
 const primaryNav = [
-  { href: "/p@ss1/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/p@ss1/newsletters", label: "Campaigns", icon: Megaphone },
-  { href: "/p@ss1/blog", label: "Blog", icon: Newspaper },
-  { href: "/p@ss1/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/p@ss1/subscribers", label: "Audience", icon: Users },
-  { href: "/p@ss1/automations", label: "Automations", icon: Workflow },
-  { href: "/p@ss1/segments", label: "Segments", icon: Layers },
-  { href: "/p@ss1/templates", label: "Templates", icon: LayoutTemplate },
-  { href: "/p@ss1/reports", label: "Reports", icon: FileText },
-  { href: "/p@ss1/settings", label: "Settings", icon: Settings },
+  { href: "/marketing/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/marketing/newsletters", label: "Campaigns", icon: Megaphone },
+  { href: "/marketing/blog", label: "Blog", icon: Newspaper },
+  { href: "/marketing/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/marketing/subscribers", label: "Audience", icon: Users },
+  { href: "/marketing/automations", label: "Automations", icon: Workflow },
+  { href: "/marketing/segments", label: "Segments", icon: Layers },
+  { href: "/marketing/templates", label: "Templates", icon: LayoutTemplate },
+  { href: "/marketing/reports", label: "Reports", icon: FileText },
+  { href: "/marketing/settings", label: "Settings", icon: Settings },
 ];
 
 const toolsNav = [
-  { href: "/p@ss1/beta", label: "Beta responses", icon: ClipboardList },
-  { href: "/p@ss1/anchor-club", label: "Anchor Club", icon: Anchor },
-  { href: "/p@ss1/submissions", label: "Submissions", icon: Inbox },
-  { href: "/p@ss1/audit", label: "Audit log", icon: ScrollText },
+  { href: "/marketing/beta", label: "Beta responses", icon: ClipboardList },
+  { href: "/marketing/anchor-club", label: "Anchor Club", icon: Anchor },
+  { href: "/marketing/submissions", label: "Submissions", icon: Inbox },
+  { href: "/marketing/audit", label: "Audit log", icon: ScrollText },
 ];
 
 export function AdminSidebar({ email }: { email: string }) {
@@ -57,14 +57,14 @@ export function AdminSidebar({ email }: { email: string }) {
     } catch {
       // ignore; still navigate away
     }
-    router.push("/p@ss1");
+    router.push("/marketing");
     router.refresh();
   };
 
   const isActive = (href: string) => {
-    // usePathname() can return either the public "/p@ss1/..." URL or the
+    // usePathname() can return either the public "/marketing/..." URL or the
     // rewritten "/admin/..." path, so match against both forms.
-    const internal = href.replace("/p@ss1", "/admin");
+    const internal = href.replace("/marketing", "/admin");
     const match = (base: string) =>
       pathname === base || pathname.startsWith(base + "/");
     return match(href) || match(internal);
@@ -149,7 +149,7 @@ export function AdminSidebar({ email }: { email: string }) {
         {/* Quick compose */}
         <div className="px-3 pb-2">
           <Link
-            href="/p@ss1/newsletters/new"
+            href="/marketing/newsletters/new"
             onClick={() => setOpen(false)}
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-3 py-2.5 text-sm font-semibold text-ink transition-transform hover:scale-[1.01]"
           >

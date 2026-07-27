@@ -174,17 +174,17 @@ export default async function DashboardPage({
       {/* Quick actions */}
       <div className="grid gap-4 md:grid-cols-3">
         <Action
-          href="/p@ss1/subscribers"
+          href="/marketing/subscribers"
           title="Manage subscribers"
           body="Import a CSV, search, filter, and send the welcome email."
         />
         <Action
-          href="/p@ss1/analytics"
+          href="/marketing/analytics"
           title="Analytics"
           body="See visits, clicks, top pages and the most-read blog posts."
         />
         <Action
-          href="/p@ss1/newsletters/new"
+          href="/marketing/newsletters/new"
           title="Compose mail"
           body="Pick a template, write your message, add an image, send to the list."
         />
@@ -201,7 +201,7 @@ export default async function DashboardPage({
         <Panel
           className="lg:col-span-4"
           title="Recent activity"
-          action={{ href: "/p@ss1/audit", label: "View all" }}
+          action={{ href: "/marketing/audit", label: "View all" }}
         >
           {events.length > 0 ? (
             <ul className="flex flex-col gap-3">
@@ -233,7 +233,7 @@ export default async function DashboardPage({
           className="lg:col-span-7"
           title="Top campaign performance"
           subtitle="Your most recent sends"
-          action={{ href: "/p@ss1/newsletters", label: "View all campaigns" }}
+          action={{ href: "/marketing/newsletters", label: "View all campaigns" }}
         >
           {campaigns.length > 0 ? (
             <div className="overflow-x-auto">

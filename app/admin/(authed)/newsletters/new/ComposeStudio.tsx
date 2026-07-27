@@ -300,7 +300,7 @@ export function ComposeStudio({
         return;
       }
       if (which === "save") {
-        router.push("/p@ss1/newsletters");
+        router.push("/marketing/newsletters");
         router.refresh();
         return;
       }

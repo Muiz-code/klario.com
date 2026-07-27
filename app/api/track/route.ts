@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   const str = (v: unknown) => (typeof v === "string" ? v : null);
   const path = str(body.path);
   // Never record admin traffic.
-  if (path && (path.startsWith("/p@ss1") || path.startsWith("/admin"))) {
+  if (path && (path.startsWith("/marketing") || path.startsWith("/admin"))) {
     return new NextResponse(null, { status: 204 });
   }
 

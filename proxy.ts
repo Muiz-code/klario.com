@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 
-// Admin UI is served at the obfuscated /p@ss1 path (rewritten to /admin in
-// next.config.ts). The login screen lives at the /p@ss1 root and stays public.
-const LOGIN_PATHS = new Set(["/p@ss1", "/p@ss1/"]);
+// Admin UI is served at the obfuscated /marketing path (rewritten to /admin in
+// next.config.ts). The login screen lives at the /marketing root and stays public.
+const LOGIN_PATHS = new Set(["/marketing", "/marketing/"]);
 
 export async function proxy(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl;
@@ -13,14 +13,14 @@ export async function proxy(req: NextRequest): Promise<NextResponse> {
   if (LOGIN_PATHS.has(pathname)) return res;
 
   const isAdminApi = pathname.startsWith("/api/admin");
-  const isAdminUi = pathname.startsWith("/p@ss1");
+  const isAdminUi = pathname.startsWith("/marketing");
 
   if ((isAdminApi || isAdminUi) && !isAdmin) {
     if (isAdminApi) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const url = req.nextUrl.clone();
-    url.pathname = "/p@ss1";
+    url.pathname = "/marketing";
     url.search = "";
     return NextResponse.redirect(url);
   }
@@ -29,5 +29,5 @@ export async function proxy(req: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  matcher: ["/p@ss1/:path*", "/api/admin/:path*"],
+  matcher: ["/marketing/:path*", "/api/admin/:path*"],
 };

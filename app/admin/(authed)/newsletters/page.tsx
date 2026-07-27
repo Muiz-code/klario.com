@@ -19,7 +19,7 @@ export default async function NewslettersPage() {
           </p>
         </div>
         <Link
-          href="/p@ss1/newsletters/new"
+          href="/marketing/newsletters/new"
           className="inline-flex shrink-0 items-center gap-2 rounded-full bg-gold px-4 py-2 text-sm font-medium text-ink hover:scale-[1.02]"
         >
           Compose mail

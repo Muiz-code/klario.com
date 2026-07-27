@@ -110,7 +110,7 @@ export function SegmentsView({
       SESSION_KEY,
       JSON.stringify({ label, emails: r.members.map((m) => m.email) })
     );
-    router.push("/p@ss1/newsletters/new");
+    router.push("/marketing/newsletters/new");
   };
 
   const requestDelete = (id: string, name: string) => {

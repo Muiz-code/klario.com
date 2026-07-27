@@ -40,7 +40,7 @@ export function PostRowActions({
         </Link>
       )}
       <Link
-        href={`/p@ss1/blog/${id}`}
+        href={`/marketing/blog/${id}`}
         aria-label="Edit"
         className="rounded-md p-1.5 text-bg/55 hover:bg-gold/10 hover:text-gold"
       >

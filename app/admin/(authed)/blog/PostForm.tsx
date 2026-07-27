@@ -115,7 +115,7 @@ export function PostForm({ initial }: { initial?: PostFormValues }) {
     const data = await res.json().catch(() => ({}));
     setBusy(false);
     if (res.ok) {
-      router.push("/p@ss1/blog");
+      router.push("/marketing/blog");
       router.refresh();
     } else {
       setError(data.error || "Something went wrong.");
@@ -127,7 +127,7 @@ export function PostForm({ initial }: { initial?: PostFormValues }) {
       <div className="flex items-center justify-between gap-4">
         <div>
           <Link
-            href="/p@ss1/blog"
+            href="/marketing/blog"
             className="inline-flex items-center gap-1.5 text-xs text-bg/50 hover:text-gold"
           >
             <ArrowLeft size={14} /> Back to posts

@@ -10,7 +10,7 @@ export default async function AuthedLayout({
   children: React.ReactNode;
 }) {
   const email = await getAdminEmail();
-  if (!email) redirect("/p@ss1");
+  if (!email) redirect("/marketing");
 
   return (
     <div className="min-h-dvh md:pl-64">

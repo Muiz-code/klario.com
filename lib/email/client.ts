@@ -12,7 +12,7 @@ export const resend = new Resend(apiKey || "re_missing_key");
 // Primary tab far more often than a brand-only name. Applies to every send —
 // Anchor Club, beta, contact/forms, and segment newsletters.
 export const RESEND_FROM =
-  process.env.RESEND_FROM || "Dan from Klario <hello@klario.finance>";
+  process.env.RESEND_FROM || "Dan from KLARIO <hello@klario.finance>";
 export const RESEND_REPLY_TO =
   process.env.RESEND_REPLY_TO || "hello@klario.finance";
 export const ADMIN_NOTIFY_EMAIL =

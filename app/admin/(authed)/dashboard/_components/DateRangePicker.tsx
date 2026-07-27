@@ -103,12 +103,12 @@ export function DateRangePicker({ from, to }: { from: string; to: string }) {
   const apply = (f: string, t: string) => {
     setOpen(false);
     const range = Date.parse(f) <= Date.parse(t) ? { f, t } : { f: t, t: f };
-    router.push(`/p@ss1/dashboard?from=${range.f}&to=${range.t}`);
+    router.push(`/marketing/dashboard?from=${range.f}&to=${range.t}`);
   };
 
   const reset = () => {
     setOpen(false);
-    router.push("/p@ss1/dashboard");
+    router.push("/marketing/dashboard");
   };
 
   return (

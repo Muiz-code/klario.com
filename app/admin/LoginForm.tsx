@@ -39,7 +39,7 @@ export function LoginForm() {
         return;
       }
       setToast({ kind: "success", message: "Signed in. Redirecting..." });
-      router.push("/p@ss1/dashboard");
+      router.push("/marketing/dashboard");
       router.refresh();
     } catch (err) {
       setToast({

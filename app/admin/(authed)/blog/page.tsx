@@ -25,7 +25,7 @@ export default async function AdminBlogPage() {
         <div className="flex flex-wrap items-center gap-3">
           <SeedButton />
           <Link
-            href="/p@ss1/blog/new"
+            href="/marketing/blog/new"
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-semibold text-ink transition-transform hover:scale-[1.02]"
           >
             <PenLine size={16} />
