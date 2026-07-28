@@ -407,9 +407,12 @@ export function ComposeStudio({
         setInfo({ title: "Sending failed", message: sData.error || "Saved as draft, but not sent.", ok: false });
         return;
       }
+      const queued = sData.queued ?? sData.sent ?? 0;
       setInfo({
-        title: "Sent",
-        message: `Delivered to ${sData.sent} of ${sData.attempted}. ${sData.failed ? sData.failed + " failed." : ""}`,
+        title: sData.background ? "Sending in the background" : "Sent",
+        message: sData.background
+          ? `Queued ${queued} recipient${queued === 1 ? "" : "s"}. ${sData.sent ?? 0} delivered so far — the rest keep sending automatically.`
+          : `Delivered to ${sData.sent ?? 0} of ${queued}.${sData.failed ? " " + sData.failed + " failed." : ""}`,
         ok: true,
       });
     } catch {

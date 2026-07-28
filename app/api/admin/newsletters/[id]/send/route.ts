@@ -134,6 +134,19 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   await enqueueRecipients(id, recipients);
   const counts = await getQueueCounts(id);
 
+  // If nothing landed in the queue despite having recipients, the queue table
+  // (migration 0021) isn't in the database — surface that instead of a fake
+  // "delivered to 0" success.
+  if (counts.total === 0) {
+    return NextResponse.json(
+      {
+        error:
+          "Couldn't queue recipients. The send queue isn't set up — run migration 0021_newsletter_send_queue.sql in Supabase, then try again.",
+      },
+      { status: 503 }
+    );
+  }
+
   const auditId = await createAuditEvent({
     action: "newsletter",
     actor: await getAdminEmail(),
