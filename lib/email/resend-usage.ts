@@ -1,5 +1,6 @@
 import { resendTimeToMs } from "@/lib/email/resend-time";
 import { sweepResendEmails, isTestAddress } from "@/lib/email/resend-list";
+import { cacheGetJSON, cacheSetJSON } from "@/lib/redis";
 
 /**
  * Resend send usage, read live from Resend itself (the `emails.list` API), for a
@@ -114,10 +115,18 @@ async function computeUsage(): Promise<ResendUsage> {
 /** Cached (60s) live Resend usage. Never throws — returns an error field.
  *  Pass `force` to bypass the cache (the meter's manual refresh button). */
 export async function getResendUsage(force = false): Promise<ResendUsage> {
-  if (!force && cache && Date.now() - cache.at < CACHE_TTL_MS) return cache.value;
+  if (!force) {
+    if (cache && Date.now() - cache.at < CACHE_TTL_MS) return cache.value;
+    const shared = await cacheGetJSON<ResendUsage>("resend:usage");
+    if (shared) {
+      cache = { at: Date.now(), value: shared };
+      return shared;
+    }
+  }
   try {
     const value = await computeUsage();
     cache = { at: Date.now(), value };
+    void cacheSetJSON("resend:usage", value, Math.ceil(CACHE_TTL_MS / 1000));
     return value;
   } catch (e) {
     const message = e instanceof Error ? e.message : "Resend request failed";

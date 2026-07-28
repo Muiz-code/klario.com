@@ -182,6 +182,46 @@ export async function pingSendWorker(baseOrigin?: string): Promise<void> {
 }
 
 /**
+ * Publish a durable job to QStash (Upstash) that re-invokes the worker with
+ * automatic retries — so a large send survives a dropped `after()` or a failed
+ * self-ping. Returns false (→ caller falls back to a direct ping) when QStash
+ * isn't configured or the target isn't publicly reachable (e.g. localhost).
+ */
+async function publishToQStash(url: string, secret: string): Promise<boolean> {
+  const token = process.env.QSTASH_TOKEN;
+  if (!token) return false;
+  if (/localhost|127\.0\.0\.1/.test(url)) return false; // QStash can't reach dev
+  try {
+    const res = await fetch(`https://qstash.upstash.io/v2/publish/${url}`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "Upstash-Method": "GET",
+        "Upstash-Delay": "2s",
+        "Upstash-Retries": "3",
+        // QStash strips this prefix and forwards it to our worker as `Authorization`.
+        "Upstash-Forward-Authorization": `Bearer ${secret}`,
+      },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Schedule the next worker run. Prefers QStash (durable, retried) when set up;
+ * otherwise a best-effort self-ping. Either way the worker keeps draining until
+ * the queue is empty.
+ */
+export async function scheduleSendWorker(baseOrigin?: string): Promise<void> {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return;
+  const durable = await publishToQStash(workerUrl(baseOrigin), secret);
+  if (!durable) await pingSendWorker(baseOrigin);
+}
+
+/**
  * Kick the worker from a request handler. Uses `after()` so the outbound request
  * survives past the response — this is what lets a large send keep draining
  * without a minute-by-minute cron (so no Vercel Pro needed). The worker returns

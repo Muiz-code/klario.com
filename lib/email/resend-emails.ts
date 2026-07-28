@@ -1,5 +1,6 @@
 import { resendTimeToMs } from "@/lib/email/resend-time";
 import { sweepResendEmails, isTestAddress } from "@/lib/email/resend-list";
+import { cacheGetJSON, cacheSetJSON } from "@/lib/redis";
 
 /**
  * Every individual email from Resend — campaigns AND transactional sends (the
@@ -93,10 +94,18 @@ export async function getResendEmails(
 ): Promise<MailReport> {
   const { sinceMs, untilMs, key } = resolveRange(query);
   const hit = cache.get(key);
-  if (!force && hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value;
+  if (!force) {
+    if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value;
+    const shared = await cacheGetJSON<MailReport>(`resend:emails:${key}`);
+    if (shared) {
+      cache.set(key, { at: Date.now(), value: shared });
+      return shared;
+    }
+  }
   try {
     const value = await compute(sinceMs, untilMs);
     cache.set(key, { at: Date.now(), value });
+    void cacheSetJSON(`resend:emails:${key}`, value, Math.ceil(CACHE_TTL_MS / 1000));
     return value;
   } catch (e) {
     const message = e instanceof Error ? e.message : "Resend request failed";

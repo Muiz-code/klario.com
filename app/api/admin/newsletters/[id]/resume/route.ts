@@ -1,6 +1,6 @@
 import { NextResponse, after } from "next/server";
 import { getAdminEmail } from "@/lib/supabase/server";
-import { drainForBudget, pingSendWorker } from "@/lib/email/newsletterSender";
+import { drainForBudget, scheduleSendWorker } from "@/lib/email/newsletterSender";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   const origin = new URL(req.url).origin;
   after(async () => {
     const stillPending = await drainForBudget(BUDGET_MS);
-    if (stillPending) await pingSendWorker(origin);
+    if (stillPending) await scheduleSendWorker(origin);
   });
 
   return NextResponse.json({ ok: true, accepted: true }, { status: 202 });
