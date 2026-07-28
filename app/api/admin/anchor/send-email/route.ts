@@ -78,6 +78,18 @@ export async function POST(req: Request) {
         .slice(0, 6)
     : [];
 
+  // PDF (or other) attachments — Resend takes them by URL (path).
+  const attachments = Array.isArray(body.attachments)
+    ? body.attachments
+        .filter((a): a is Record<string, unknown> => !!a && typeof a === "object")
+        .map((a) => ({
+          filename: typeof a.filename === "string" ? a.filename.slice(0, 200) : "attachment.pdf",
+          path: typeof a.url === "string" ? a.url.trim() : "",
+        }))
+        .filter((a) => URL_RE.test(a.path))
+        .slice(0, 5)
+    : [];
+
   if (recipients.length === 0) {
     return NextResponse.json(
       { error: "No valid recipients selected." },
@@ -113,13 +125,20 @@ export async function POST(req: Request) {
         subject,
         html: buildEmailHtml({ heading: heading || undefined, body: message, buttons: btns }),
         text: message + buttonsText(btns),
+        attachments: attachments.length ? attachments : undefined,
       };
     });
   } else {
     // One shared brand email for everyone.
     const html = buildEmailHtml({ heading: heading || undefined, body: message, buttons });
     const text = message + buttonsText(buttons);
-    messages = recipients.map((r) => ({ to: r.email, subject, html, text }));
+    messages = recipients.map((r) => ({
+      to: r.email,
+      subject,
+      html,
+      text,
+      attachments: attachments.length ? attachments : undefined,
+    }));
   }
 
   const results = await sendBatch(messages);

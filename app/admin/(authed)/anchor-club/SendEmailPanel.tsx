@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { X, Send, Mail, Plus, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { X, Send, Mail, Plus, Trash2, Video, FileText } from "lucide-react";
 import { APP_LINKS } from "@/lib/constants";
 
 export type Recipient = { id: string; name: string; email: string; ref?: string };
@@ -71,10 +71,46 @@ export function SendEmailPanel({
   const [body, setBody] = useState(TEMPLATES[0].body);
   const [links, setLinks] = useState<LinkButton[]>(TEMPLATES[0].links);
   const [includeCardLink, setIncludeCardLink] = useState(false);
+  const [attachments, setAttachments] = useState<{ filename: string; url: string }[]>([]);
+  const [uploading, setUploading] = useState<null | "video" | "pdf">(null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const pdfRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
 
   const withRef = recipients.filter((r) => r.ref).length;
+
+  const uploadFile = async (file: File): Promise<string | null> => {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch("/api/admin/upload-image", { method: "POST", body: form });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data.error || "Upload failed.");
+      return null;
+    }
+    return data.url as string;
+  };
+  const handlePdf = async (file: File) => {
+    setUploading("pdf");
+    try {
+      const url = await uploadFile(file);
+      if (url) setAttachments((a) => [...a, { filename: file.name, url }].slice(0, 5));
+    } finally {
+      setUploading(null);
+      if (pdfRef.current) pdfRef.current.value = "";
+    }
+  };
+  const handleVideo = async (file: File) => {
+    setUploading("video");
+    try {
+      const url = await uploadFile(file);
+      if (url) addLink({ label: "▶ Watch the video", url, variant: "primary" });
+    } finally {
+      setUploading(null);
+      if (videoRef.current) videoRef.current.value = "";
+    }
+  };
 
   const applyTemplate = (i: number) => {
     const t = TEMPLATES[i];
@@ -107,6 +143,7 @@ export function SendEmailPanel({
           body,
           buttons: links,
           includeCardLink,
+          attachments,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -245,6 +282,24 @@ export function SendEmailPanel({
                 >
                   <Plus size={12} /> Custom
                 </button>
+                <button
+                  type="button"
+                  onClick={() => videoRef.current?.click()}
+                  disabled={uploading === "video"}
+                  className="inline-flex items-center gap-1 rounded-md border border-bg/15 px-2 py-1 text-[12px] text-bg/70 hover:border-gold/40 hover:text-gold disabled:opacity-40"
+                >
+                  <Video size={12} /> {uploading === "video" ? "Uploading…" : "Upload video"}
+                </button>
+                <input
+                  ref={videoRef}
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime,video/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleVideo(f);
+                  }}
+                />
               </div>
             </div>
 
@@ -294,6 +349,58 @@ export function SendEmailPanel({
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* PDF attachments */}
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className={label + " mb-0"}>Attachments (PDF)</span>
+              <button
+                type="button"
+                onClick={() => pdfRef.current?.click()}
+                disabled={uploading === "pdf" || attachments.length >= 5}
+                className="inline-flex items-center gap-1.5 rounded-md border border-bg/15 px-2 py-1 text-[12px] text-bg/70 hover:border-gold/40 hover:text-gold disabled:opacity-40"
+              >
+                <FileText size={12} /> {uploading === "pdf" ? "Uploading…" : "Attach PDF"}
+              </button>
+            </div>
+            <input
+              ref={pdfRef}
+              type="file"
+              accept="application/pdf,.pdf"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handlePdf(f);
+              }}
+            />
+            {attachments.length === 0 ? (
+              <p className="text-[12px] text-bg/40">
+                Attach a PDF to send with the email (max 5).
+              </p>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {attachments.map((a, i) => (
+                  <div
+                    key={a.url}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-bg/10 bg-bg/[0.03] px-3 py-2"
+                  >
+                    <span className="flex items-center gap-2 truncate text-[13px] text-bg/85">
+                      <FileText size={13} className="shrink-0 text-gold" />
+                      <span className="truncate">{a.filename}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
+                      aria-label={`Remove ${a.filename}`}
+                      className="shrink-0 text-bg/50 hover:text-red-300"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Per-recipient card download link (for accepted anchors) */}
