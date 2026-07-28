@@ -10,7 +10,6 @@ import { normalizeEmail } from "@/lib/duplicates";
 import { createAuditEvent } from "@/lib/db/audit";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { enqueueRecipients, getQueueCounts } from "@/lib/db/newsletterQueue";
-import { processSendChunk, triggerSendWorker } from "@/lib/email/newsletterSender";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -160,16 +159,14 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   });
   await markNewsletterSending(id, { auditId, recipientCount: counts.total });
 
-  // Send the first chunk now for instant feedback, then hand off to the worker.
-  const first = await processSendChunk(id, 400);
-  triggerSendWorker();
-
+  // Recipients are queued. The progress modal drives the batches from here (one
+  // at a time, so no double-sending); if it's closed early, /resume hands the
+  // rest to the background worker.
   return NextResponse.json({
     ok: true,
-    queued: counts.pending + first.sent + first.failed,
-    sent: first.sent,
-    failed: first.failed,
-    remaining: first.remaining,
-    background: !first.done,
+    id,
+    queued: counts.total,
+    sent: counts.sent,
+    pending: counts.pending,
   });
 }

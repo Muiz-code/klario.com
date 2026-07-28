@@ -12,6 +12,7 @@ import {
   Video,
   FileText,
 } from "lucide-react";
+import { SendProgressModal } from "./SendProgressModal";
 
 // Email-safe button-style link (video / PDF). Rendered inline into the HTML.
 function mediaButtonHtml(url: string, label: string): string {
@@ -168,6 +169,7 @@ export function ComposeStudio({
   const writeVideoRef = useRef<HTMLInputElement>(null);
   const [confirm, setConfirm] = useState<ConfirmState>(null);
   const [info, setInfo] = useState<{ title: string; message: string; ok?: boolean } | null>(null);
+  const [progress, setProgress] = useState<{ id: string; total: number } | null>(null);
 
   // The HTML that will actually be sent (and previewed).
   const html = useMemo(() => {
@@ -407,14 +409,8 @@ export function ComposeStudio({
         setInfo({ title: "Sending failed", message: sData.error || "Saved as draft, but not sent.", ok: false });
         return;
       }
-      const queued = sData.queued ?? sData.sent ?? 0;
-      setInfo({
-        title: sData.background ? "Sending in the background" : "Sent",
-        message: sData.background
-          ? `Queued ${queued} recipient${queued === 1 ? "" : "s"}. ${sData.sent ?? 0} delivered so far — the rest keep sending automatically.`
-          : `Delivered to ${sData.sent ?? 0} of ${queued}.${sData.failed ? " " + sData.failed + " failed." : ""}`,
-        ok: true,
-      });
+      // Open the live progress modal, which drives the send batch by batch.
+      setProgress({ id: cData.id as string, total: sData.queued ?? 0 });
     } catch {
       // Network drop, aborted request, or other unexpected failure.
       setConfirm(null);
@@ -853,6 +849,17 @@ export function ComposeStudio({
         loading={busy === "send"}
       />
       <InfoModal state={info} onClose={() => setInfo(null)} />
+      {progress && (
+        <SendProgressModal
+          newsletterId={progress.id}
+          total={progress.total}
+          onClose={() => {
+            setProgress(null);
+            router.push("/marketing/newsletters");
+            router.refresh();
+          }}
+        />
+      )}
     </div>
   );
 }
