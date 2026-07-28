@@ -20,7 +20,7 @@ function mediaButtonHtml(url: string, label: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-  return `\n<table role="presentation" cellpadding="0" cellspacing="0" style="margin:18px auto;"><tr><td align="center" style="border-radius:999px;background:#D4A853;"><a href="${u}" target="_blank" style="display:inline-block;padding:13px 28px;font-family:Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#0E1116;text-decoration:none;border-radius:999px;">${l}</a></td></tr></table>\n`;
+  return `\n<table role="presentation" cellpadding="0" cellspacing="0" style="margin:18px auto;"><tr><td align="center" style="border-radius:999px;background:#B98D3E;"><a href="${u}" target="_blank" style="display:inline-block;padding:13px 28px;font-family:Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#17130A;text-decoration:none;border-radius:999px;">${l}</a></td></tr></table>\n`;
 }
 import type { GalleryTemplate } from "@/lib/email/gallery";
 import { buildRichEmail } from "@/lib/email/compose-html";
@@ -537,6 +537,61 @@ export function ComposeStudio({
             />
           )}
 
+          {/* PDF attachments */}
+          <div className="flex flex-col gap-2 rounded-xl border border-bg/12 bg-bg/4 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-bg/45">
+                Attachments (PDF)
+              </span>
+              <button
+                type="button"
+                onClick={() => pdfRef.current?.click()}
+                disabled={busy === "pdf" || !configured || attachments.length >= 5}
+                className="inline-flex items-center gap-1.5 rounded-full border border-bg/15 px-2.5 py-1 text-[11px] text-bg/75 hover:border-gold/50 hover:text-bg disabled:opacity-40"
+              >
+                <FileText size={12} />
+                {busy === "pdf" ? "Uploading..." : "Attach PDF"}
+              </button>
+            </div>
+            <input
+              ref={pdfRef}
+              type="file"
+              accept="application/pdf,.pdf"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) attachPdf(f);
+              }}
+            />
+            {attachments.length === 0 ? (
+              <span className="text-[12px] text-bg/45">
+                Attach a PDF to send with the email (max 5, 15&nbsp;MB each).
+              </span>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {attachments.map((a, i) => (
+                  <div
+                    key={a.url}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-bg/10 bg-bg/[0.03] px-3 py-2"
+                  >
+                    <span className="flex items-center gap-2 truncate text-[13px] text-bg/85">
+                      <FileText size={13} className="shrink-0 text-gold" />
+                      <span className="truncate">{a.filename}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
+                      aria-label={`Remove ${a.filename}`}
+                      className="shrink-0 text-bg/50 hover:text-red-300"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Audience */}
           <div className="flex flex-col gap-2">
             <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-bg/45">
@@ -651,61 +706,6 @@ export function ComposeStudio({
             </div>
           </div>
 
-          {/* PDF attachments */}
-          <div className="flex flex-col gap-2 rounded-xl border border-bg/12 bg-bg/4 p-3">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-bg/45">
-                Attachments (PDF)
-              </span>
-              <button
-                type="button"
-                onClick={() => pdfRef.current?.click()}
-                disabled={busy === "pdf" || !configured || attachments.length >= 5}
-                className="inline-flex items-center gap-1.5 rounded-full border border-bg/15 px-2.5 py-1 text-[11px] text-bg/75 hover:border-gold/50 hover:text-bg disabled:opacity-40"
-              >
-                <FileText size={12} />
-                {busy === "pdf" ? "Uploading..." : "Attach PDF"}
-              </button>
-            </div>
-            <input
-              ref={pdfRef}
-              type="file"
-              accept="application/pdf,.pdf"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) attachPdf(f);
-              }}
-            />
-            {attachments.length === 0 ? (
-              <span className="text-[12px] text-bg/45">
-                Attach a PDF to send with the email (max 5, 15&nbsp;MB each).
-              </span>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                {attachments.map((a, i) => (
-                  <div
-                    key={a.url}
-                    className="flex items-center justify-between gap-2 rounded-lg border border-bg/10 bg-bg/[0.03] px-3 py-2"
-                  >
-                    <span className="flex items-center gap-2 truncate text-[13px] text-bg/85">
-                      <FileText size={13} className="shrink-0 text-gold" />
-                      <span className="truncate">{a.filename}</span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
-                      aria-label={`Remove ${a.filename}`}
-                      className="shrink-0 text-bg/50 hover:text-red-300"
-                    >
-                      <X size={13} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -810,6 +810,7 @@ function HtmlEditor(props: {
 }) {
   const textRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const videoFileRef = useRef<HTMLInputElement>(null);
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [videoLabel, setVideoLabel] = useState("▶ Watch the video");
@@ -826,6 +827,13 @@ function HtmlEditor(props: {
     insertAtCursor(mediaButtonHtml(url, videoLabel.trim() || "Watch the video"));
     setVideoOpen(false);
     setVideoUrl("");
+  };
+
+  // Upload a video file — we host it and use the returned URL as the link.
+  const handleVideoUpload = async (file: File) => {
+    const url = await props.uploadImage(file);
+    if (url) setVideoUrl(url);
+    if (videoFileRef.current) videoFileRef.current.value = "";
   };
 
   const handleFile = async (file: File) => {
@@ -891,12 +899,35 @@ function HtmlEditor(props: {
         {videoOpen && (
           <div className="flex flex-col gap-2 rounded-xl border border-gold/25 bg-gold/[0.05] p-3">
             <span className="text-[12px] text-bg/70">
-              Video link — inserts a button that opens the video.
+              Inserts a button that opens the video. Upload a file (we host it and
+              link it) or paste a YouTube / video link.
             </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => videoFileRef.current?.click()}
+                disabled={props.uploading || !props.configured}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-bg/15 px-3 py-1.5 text-[12px] text-bg/80 hover:border-gold/50 hover:text-bg disabled:opacity-40"
+              >
+                <Video size={12} />
+                {props.uploading ? "Uploading…" : "Upload a video"}
+              </button>
+              <span className="text-[11px] text-bg/45">or paste a link below</span>
+            </div>
+            <input
+              ref={videoFileRef}
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime,video/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleVideoUpload(f);
+              }}
+            />
             <input
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://youtu.be/… or any video URL"
+              placeholder="https://youtu.be/… or a hosted video URL"
               className="w-full rounded-lg border border-bg/15 bg-bg/4 px-3 py-2 text-[13px] text-bg placeholder:text-bg/40 focus:border-gold/60 focus:outline-none"
             />
             <input

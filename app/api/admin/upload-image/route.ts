@@ -6,18 +6,29 @@ export const runtime = "nodejs";
 const BUCKET = "email-assets";
 const IMAGE_MAX = 5 * 1024 * 1024; // 5 MB
 const PDF_MAX = 15 * 1024 * 1024; // 15 MB
+const VIDEO_MAX = 50 * 1024 * 1024; // 50 MB
+const VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
 const ALLOWED = new Set([
   "image/png",
   "image/jpeg",
   "image/gif",
   "image/webp",
   "application/pdf",
+  ...VIDEO_TYPES,
 ]);
 
+const EXT: Record<string, string> = {
+  "application/pdf": "pdf",
+  "video/mp4": "mp4",
+  "video/webm": "webm",
+  "video/quicktime": "mov",
+};
+
 /**
- * Upload an image or PDF to the public `email-assets` Storage bucket and return
- * its public URL, for embedding / linking in composed emails. Create the bucket
- * once in Supabase (Storage > New bucket > name "email-assets", public).
+ * Upload an image, PDF, or video to the public `email-assets` Storage bucket and
+ * return its public URL — for embedding an image, attaching a PDF, or linking a
+ * hosted video in composed emails. Create the bucket once in Supabase
+ * (Storage > New bucket > name "email-assets", public).
  */
 export async function POST(req: Request) {
   let file: File | null = null;
@@ -39,15 +50,18 @@ export async function POST(req: Request) {
     );
   }
   const isPdf = file.type === "application/pdf";
-  const maxBytes = isPdf ? PDF_MAX : IMAGE_MAX;
+  const isVideo = VIDEO_TYPES.has(file.type);
+  const maxBytes = isVideo ? VIDEO_MAX : isPdf ? PDF_MAX : IMAGE_MAX;
   if (file.size > maxBytes) {
-    return NextResponse.json(
-      { error: isPdf ? "PDF too large (max 15 MB)." : "Image too large (max 5 MB)." },
-      { status: 413 }
-    );
+    const label = isVideo
+      ? "Video too large (max 50 MB)."
+      : isPdf
+        ? "PDF too large (max 15 MB)."
+        : "Image too large (max 5 MB).";
+    return NextResponse.json({ error: label }, { status: 413 });
   }
 
-  const ext = isPdf ? "pdf" : file.type.split("/")[1] || "png";
+  const ext = EXT[file.type] || file.type.split("/")[1] || "bin";
   const rand = Math.random().toString(36).slice(2, 10);
   const path = `${new Date().toISOString().slice(0, 10)}/${rand}.${ext}`;
 
