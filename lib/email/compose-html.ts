@@ -19,6 +19,8 @@ export function buildRichEmail(opts: {
   subject?: string;
   ctaLabel?: string;
   ctaHref?: string;
+  videoLabel?: string;
+  videoHref?: string;
 }): string {
   const raw =
     opts.bodyHtml?.trim() ||
@@ -46,7 +48,20 @@ export function buildRichEmail(opts: {
         )} &#8594;</a></td></tr></table>`
       : "";
 
-  const inner = `<tr><td class="px" style="padding:42px 40px;font-family:Helvetica,Arial,sans-serif;">${body}${cta}</td></tr>`;
+  // Optional video button (a hosted/YouTube link — email can't embed playback).
+  const videoHref = (opts.videoHref || "").trim();
+  const videoLabel = (opts.videoLabel || "").trim() || "▶ Watch the video";
+  const video = videoHref
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:${
+        cta ? "12" : "8"
+      }px;"><tr><td style="border-radius:999px;background:#B98D3E;"><a href="${escapeAttr(
+        videoHref
+      )}" target="_blank" style="display:inline-block;padding:14px 30px;font-family:Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#17130A;text-decoration:none;border-radius:999px;">${escapeHtml(
+        videoLabel
+      )}</a></td></tr></table>`
+    : "";
+
+  const inner = `<tr><td class="px" style="padding:42px 40px;font-family:Helvetica,Arial,sans-serif;">${body}${cta}${video}</td></tr>`;
   return wrapDocument({
     preheader: opts.subject || "A note from Klario.",
     title: opts.subject || "Klario",

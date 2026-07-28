@@ -87,6 +87,8 @@ export function ComposeStudio({
   const [bodyHtml, setBodyHtml] = useState("");
   const [ctaLabel, setCtaLabel] = useState("");
   const [ctaHref, setCtaHref] = useState("");
+  const [videoText, setVideoText] = useState("▶ Watch the video");
+  const [videoHref, setVideoHref] = useState("");
 
   // HTML-mode source
   const [rawHtml, setRawHtml] = useState("");
@@ -146,16 +148,24 @@ export function ComposeStudio({
   const [busy, setBusy] = useState<null | "save" | "send" | "image" | "pdf">(null);
   const [attachments, setAttachments] = useState<{ filename: string; url: string }[]>([]);
   const pdfRef = useRef<HTMLInputElement>(null);
+  const writeVideoRef = useRef<HTMLInputElement>(null);
   const [confirm, setConfirm] = useState<ConfirmState>(null);
   const [info, setInfo] = useState<{ title: string; message: string; ok?: boolean } | null>(null);
 
   // The HTML that will actually be sent (and previewed).
   const html = useMemo(() => {
     if (mode === "write") {
-      return buildRichEmail({ bodyHtml, subject, ctaLabel, ctaHref });
+      return buildRichEmail({
+        bodyHtml,
+        subject,
+        ctaLabel,
+        ctaHref,
+        videoLabel: videoText,
+        videoHref,
+      });
     }
     return rawHtml;
-  }, [mode, bodyHtml, subject, ctaLabel, ctaHref, rawHtml]);
+  }, [mode, bodyHtml, subject, ctaLabel, ctaHref, videoText, videoHref, rawHtml]);
 
   const chosenList = people.filter((p) => chosen.has(p.email));
 
@@ -313,6 +323,13 @@ export function ComposeStudio({
       setBusy(null);
       if (pdfRef.current) pdfRef.current.value = "";
     }
+  };
+
+  // Upload a video for Write mode → its hosted URL becomes the button link.
+  const handleWriteVideo = async (file: File) => {
+    const url = await uploadImage(file);
+    if (url) setVideoHref(url);
+    if (writeVideoRef.current) writeVideoRef.current.value = "";
   };
 
   const validate = (): string | null => {
@@ -521,6 +538,52 @@ export function ComposeStudio({
                     placeholder="https://klario.finance"
                     className={INPUT}
                   />
+                </div>
+              </details>
+
+              <details className="rounded-xl border border-bg/10 bg-bg/4 px-4 py-3">
+                <summary className="cursor-pointer text-[12px] font-medium uppercase tracking-[0.14em] text-bg/45">
+                  Add a video button (optional)
+                </summary>
+                <div className="mt-3 flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => writeVideoRef.current?.click()}
+                      disabled={busy === "image" || !configured}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-bg/15 px-3 py-1.5 text-[12px] text-bg/80 hover:border-gold/50 hover:text-bg disabled:opacity-40"
+                    >
+                      <Video size={12} />
+                      {busy === "image" ? "Uploading…" : "Upload a video"}
+                    </button>
+                    <span className="text-[11px] text-bg/45">
+                      or paste a YouTube / video link
+                    </span>
+                  </div>
+                  <input
+                    ref={writeVideoRef}
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime,video/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleWriteVideo(f);
+                    }}
+                  />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <input
+                      value={videoText}
+                      onChange={(e) => setVideoText(e.target.value)}
+                      placeholder="Button text (▶ Watch the video)"
+                      className={INPUT}
+                    />
+                    <input
+                      value={videoHref}
+                      onChange={(e) => setVideoHref(e.target.value)}
+                      placeholder="https://youtu.be/… or hosted video URL"
+                      className={INPUT}
+                    />
+                  </div>
                 </div>
               </details>
             </div>
