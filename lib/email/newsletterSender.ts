@@ -1,7 +1,9 @@
 import { after } from "next/server";
 import { getNewsletter, markNewsletterSent } from "@/lib/db/newsletters";
+import { setAuditSendCounts } from "@/lib/db/audit";
 import {
-  getPendingChunk,
+  claimChunk,
+  reclaimStale,
   markQueueRows,
   getQueueCounts,
   newslettersWithPending,
@@ -41,17 +43,25 @@ export async function processSendChunk(
   const newsletter = await getNewsletter(newsletterId);
   if (!newsletter) return { sent: 0, failed: 0, remaining: 0, done: true };
 
-  const chunk = await getPendingChunk(newsletterId, chunkSize);
+  // Recover any rows claimed by a worker that never finished, then atomically
+  // claim this chunk so no other worker can grab the same recipients.
+  await reclaimStale(newsletterId);
+  const chunk = await claimChunk(newsletterId, chunkSize);
   if (chunk.length === 0) {
+    // Nothing left to claim. Only finalize once no rows are pending at all
+    // (there may still be rows claimed and in-flight in another worker).
     const counts = await getQueueCounts(newsletterId);
-    if (counts.total > 0) {
+    if (newsletter.send_audit_id) {
+      await setAuditSendCounts(newsletter.send_audit_id, counts.sent, counts.failed);
+    }
+    if (counts.total > 0 && counts.pending === 0) {
       await markNewsletterSent(newsletterId, {
         recipientCount: counts.total,
         sentCount: counts.sent,
         status: counts.sent > 0 ? "sent" : "failed",
       });
     }
-    return { sent: 0, failed: 0, remaining: 0, done: true };
+    return { sent: 0, failed: 0, remaining: counts.pending, done: counts.pending === 0 };
   }
 
   const attachments = (newsletter.attachments ?? [])
@@ -107,6 +117,10 @@ export async function processSendChunk(
   if (invitedIds.length) await markInvited(invitedIds);
 
   const counts = await getQueueCounts(newsletterId);
+  // Keep the audit log's SENT column climbing live as the queue drains.
+  if (newsletter.send_audit_id) {
+    await setAuditSendCounts(newsletter.send_audit_id, counts.sent, counts.failed);
+  }
   const done = counts.pending === 0;
   if (done) {
     await markNewsletterSent(newsletterId, {

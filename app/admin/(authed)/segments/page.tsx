@@ -30,6 +30,7 @@ export default async function SegmentsPage() {
       name: segment.name,
       match: segment.match_type,
       rules: segment.rules,
+      category: segment.category ?? null,
       count,
       def: segmentToDef(segment),
     }));

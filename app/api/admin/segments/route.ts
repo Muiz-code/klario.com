@@ -30,7 +30,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { name?: unknown; match_type?: unknown; rules?: unknown };
+  let body: {
+    name?: unknown;
+    match_type?: unknown;
+    rules?: unknown;
+    category?: unknown;
+  };
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -46,8 +51,10 @@ export async function POST(req: Request) {
   if (rules.length === 0) {
     return NextResponse.json({ error: "Add at least one rule." }, { status: 400 });
   }
+  const category =
+    typeof body.category === "string" ? body.category.trim().slice(0, 60) : null;
 
-  const segment = await createSegment({ name, match_type, rules });
+  const segment = await createSegment({ name, match_type, rules, category });
   if (!segment) {
     return NextResponse.json({ error: "Could not save segment." }, { status: 502 });
   }

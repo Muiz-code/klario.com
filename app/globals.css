@@ -71,6 +71,31 @@
     display: none;
   }
 
+  /* Inner scroll areas (admin panels, modals, tables): a subtle brand-tinted
+     scrollbar instead of the bright default. html/body stay hidden (rules
+     above win on specificity). */
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(193, 154, 107, 0.32);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(193, 154, 107, 0.55);
+  }
+  /* Firefox: thin, brand-tinted thumb (html keeps `none` above). */
+  *:not(html) {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(193, 154, 107, 0.4) transparent;
+  }
+
   body {
     font-family: var(--font-sans), system-ui, sans-serif;
     font-weight: 400;

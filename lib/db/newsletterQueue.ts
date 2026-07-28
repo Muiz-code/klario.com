@@ -58,7 +58,7 @@ export async function enqueueRecipients(
   return counts.pending;
 }
 
-/** The next chunk of pending recipients for a newsletter. */
+/** The next chunk of unclaimed pending recipients (a read-only peek). */
 export async function getPendingChunk(
   newsletterId: string,
   limit: number
@@ -69,6 +69,7 @@ export async function getPendingChunk(
     .select("id, email, first_name, signup_id")
     .eq("newsletter_id", newsletterId)
     .eq("status", "pending")
+    .is("claimed_at", null)
     .order("created_at", { ascending: true })
     .limit(limit);
   if (error) {
@@ -76,6 +77,52 @@ export async function getPendingChunk(
     return [];
   }
   return (data ?? []) as QueueRow[];
+}
+
+/**
+ * Atomically claim the next chunk and return only the rows THIS caller won.
+ * Two workers may pick the same candidates, but the UPDATE (guarded by
+ * `claimed_at is null`) lets each row be claimed once — so no recipient is ever
+ * sent twice. Call reclaimStale() first to recover claims from dead workers.
+ */
+export async function claimChunk(
+  newsletterId: string,
+  limit: number
+): Promise<QueueRow[]> {
+  const db = supabaseAdmin();
+  const candidates = await getPendingChunk(newsletterId, limit);
+  if (candidates.length === 0) return [];
+  const { data, error } = await db
+    .from("newsletter_send_queue")
+    .update({ claimed_at: new Date().toISOString() })
+    .in(
+      "id",
+      candidates.map((c) => c.id)
+    )
+    .eq("status", "pending")
+    .is("claimed_at", null)
+    .select("id, email, first_name, signup_id");
+  if (error) {
+    console.error("[queue] claimChunk failed:", error.message);
+    return [];
+  }
+  return (data ?? []) as QueueRow[];
+}
+
+/** Reset claims older than `olderThanMs` (a worker that died mid-send). */
+export async function reclaimStale(
+  newsletterId: string,
+  olderThanMs = 180_000
+): Promise<void> {
+  const db = supabaseAdmin();
+  const cutoff = new Date(Date.now() - olderThanMs).toISOString();
+  const { error } = await db
+    .from("newsletter_send_queue")
+    .update({ claimed_at: null })
+    .eq("newsletter_id", newsletterId)
+    .eq("status", "pending")
+    .lt("claimed_at", cutoff);
+  if (error) console.error("[queue] reclaimStale failed:", error.message);
 }
 
 /** Mark queue rows as sent or failed after a send attempt. */

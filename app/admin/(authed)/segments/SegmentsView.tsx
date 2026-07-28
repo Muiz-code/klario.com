@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Download, Send, Plus, Trash2, X } from "lucide-react";
+import { Eye, Download, Send, Plus, Trash2, X, Pencil } from "lucide-react";
 import { ConfirmModal, type ConfirmState } from "../_components/Modal";
 import {
   FIELDS,
@@ -21,9 +21,27 @@ export type CustomSegmentRow = {
   name: string;
   match: MatchType;
   rules: Rule[];
+  category: string | null;
   count: number;
   def: SegmentDef;
 };
+
+/**
+ * What the builder opens with. `id` present → editing a stored custom segment
+ * (PUT). No `id` → creating one (POST) — either blank, or pre-filled by
+ * "editing" a built-in. `hideKey`, when set, is the built-in card key to hide
+ * once the fork saves, so a built-in you edit doesn't linger as a duplicate.
+ */
+type BuilderInit = {
+  id?: string;
+  name: string;
+  match: MatchType;
+  rules: Rule[];
+  category: string | null;
+  hideKey?: string;
+};
+
+const HIDDEN_BUILTINS_KEY = "klario_hidden_builtins";
 
 type Member = {
   id: string;
@@ -60,8 +78,79 @@ export function SegmentsView({
     members: Member[];
   } | null>(null);
   const [builderOpen, setBuilderOpen] = useState(false);
+  const [editing, setEditing] = useState<BuilderInit | null>(null);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Built-in cards are computed live, not stored, so "deleting" one just hides
+  // its card. Remembered per-browser in localStorage.
+  const [hiddenBuiltins, setHiddenBuiltins] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(HIDDEN_BUILTINS_KEY);
+      if (raw) setHiddenBuiltins(JSON.parse(raw) as string[]);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  const persistHidden = (next: string[]) => {
+    setHiddenBuiltins(next);
+    try {
+      localStorage.setItem(HIDDEN_BUILTINS_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  };
+  const hideBuiltin = (key: string) => {
+    if (!hiddenBuiltins.includes(key)) persistHidden([...hiddenBuiltins, key]);
+  };
+  const restoreBuiltins = () => persistHidden([]);
+  const visibleGroups = groups
+    .map((g) => ({
+      ...g,
+      segments: g.segments.filter((s) => !hiddenBuiltins.includes(s.key)),
+    }))
+    .filter((g) => g.segments.length > 0);
+
+  // Distinct existing categories (for the builder's datalist) + grouped custom
+  // segments for the categorized display.
+  const categories = [
+    ...new Set(custom.map((s) => s.category?.trim()).filter(Boolean) as string[]),
+  ].sort();
+  const grouped = [
+    ...categories.map((cat) => ({
+      cat,
+      items: custom.filter((s) => (s.category?.trim() || "") === cat),
+    })),
+    { cat: "", items: custom.filter((s) => !s.category?.trim()) },
+  ].filter((g) => g.items.length > 0);
+
+  const openCreate = () => {
+    setEditing(null);
+    setBuilderOpen(true);
+  };
+  const openEdit = (s: CustomSegmentRow) => {
+    setEditing({
+      id: s.id,
+      name: s.name,
+      match: s.match,
+      rules: s.rules,
+      category: s.category,
+    });
+    setBuilderOpen(true);
+  };
+  // "Edit" a built-in by forking it into an editable custom segment. Saving
+  // creates the custom copy and hides the original built-in card.
+  const openForkBuiltin = (label: string, def: SegmentDef, key: string) => {
+    setEditing({
+      name: label,
+      match: def.match,
+      rules: def.rules.map((r) => ({ ...r })),
+      category: null,
+      hideKey: key,
+    });
+    setBuilderOpen(true);
+  };
 
   const resolve = async (
     def: SegmentDef
@@ -160,7 +249,7 @@ export function SegmentsView({
           <h2 className="font-display text-lg text-bg">Custom segments</h2>
           <button
             type="button"
-            onClick={() => setBuilderOpen(true)}
+            onClick={openCreate}
             className="inline-flex items-center gap-1.5 rounded-full bg-gold px-3.5 py-1.5 text-[12px] font-medium text-ink transition-transform hover:scale-[1.02]"
           >
             <Plus size={14} /> New segment
@@ -173,36 +262,57 @@ export function SegmentsView({
             audience.
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {custom.map((s) => (
-              <div
-                key={s.id}
-                className="flex flex-col gap-3 rounded-2xl border border-bg/10 bg-bg/4 p-4"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-bg">{s.name}</p>
-                    <p className="mt-0.5 truncate text-[11px] text-bg/45">
-                      {ruleSummary(s.match, s.rules)}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => requestDelete(s.id, s.name)}
-                    aria-label="Delete segment"
-                    className="shrink-0 rounded-md p-1 text-bg/40 hover:bg-red-400/10 hover:text-red-300"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-                <div className="flex items-end justify-between">
-                  <p className="font-display text-2xl text-bg">
-                    {s.count.toLocaleString()}
-                    <span className="ml-1 text-[12px] font-normal text-bg/40">
-                      {pct(s.count, total)}
-                    </span>
+          <div className="flex flex-col gap-6">
+            {grouped.map((grp) => (
+              <div key={grp.cat || "__uncat"} className="flex flex-col gap-3">
+                {(grp.cat || grouped.length > 1) && (
+                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-bg/40">
+                    {grp.cat || "Uncategorized"}
                   </p>
-                  {actions(s.name, s.def, `custom:${s.id}`)}
+                )}
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {grp.items.map((s) => (
+                    <div
+                      key={s.id}
+                      className="flex flex-col gap-3 rounded-2xl border border-bg/10 bg-bg/4 p-4"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-bg">{s.name}</p>
+                          <p className="mt-0.5 truncate text-[11px] text-bg/45">
+                            {ruleSummary(s.match, s.rules)}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => openEdit(s)}
+                            aria-label="Edit segment"
+                            className="rounded-md p-1 text-bg/40 hover:bg-bg/10 hover:text-bg"
+                          >
+                            <Pencil size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => requestDelete(s.id, s.name)}
+                            aria-label="Delete segment"
+                            className="rounded-md p-1 text-bg/40 hover:bg-red-400/10 hover:text-red-300"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <p className="font-display text-2xl text-bg">
+                          {s.count.toLocaleString()}
+                          <span className="ml-1 text-[12px] font-normal text-bg/40">
+                            {pct(s.count, total)}
+                          </span>
+                        </p>
+                        {actions(s.name, s.def, `custom:${s.id}`)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
@@ -211,7 +321,7 @@ export function SegmentsView({
       </section>
 
       {/* Built-in groups */}
-      {groups.map((g) => (
+      {visibleGroups.map((g) => (
         <section key={g.key} className="flex flex-col gap-3">
           <h2 className="font-display text-lg text-bg">{g.title}</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -220,7 +330,37 @@ export function SegmentsView({
                 key={seg.key}
                 className="flex flex-col gap-3 rounded-2xl border border-bg/10 bg-bg/4 p-4"
               >
-                <p className="truncate text-[13px] text-bg/60">{seg.label}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="min-w-0 truncate text-[13px] text-bg/60">
+                    {seg.label}
+                  </p>
+                  <div className="flex shrink-0 items-center gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openForkBuiltin(
+                          `${g.title.replace(/^By /, "")} · ${seg.label}`,
+                          seg.def,
+                          seg.key
+                        )
+                      }
+                      aria-label="Edit as custom segment"
+                      title="Edit — saves an editable custom copy"
+                      className="rounded-md p-1 text-bg/40 hover:bg-bg/10 hover:text-bg"
+                    >
+                      <Pencil size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => hideBuiltin(seg.key)}
+                      aria-label="Hide this segment"
+                      title="Hide this built-in card"
+                      className="rounded-md p-1 text-bg/40 hover:bg-red-400/10 hover:text-red-300"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
                 <div className="flex items-end justify-between">
                   <p className="font-display text-2xl text-bg">
                     {seg.count.toLocaleString()}
@@ -236,14 +376,32 @@ export function SegmentsView({
         </section>
       ))}
 
+      {hiddenBuiltins.length > 0 && (
+        <button
+          type="button"
+          onClick={restoreBuiltins}
+          className="self-start text-[12px] text-bg/45 underline underline-offset-4 hover:text-bg/70"
+        >
+          Restore {hiddenBuiltins.length} hidden built-in card
+          {hiddenBuiltins.length === 1 ? "" : "s"}
+        </button>
+      )}
+
       {viewer && (
         <MembersModal viewer={viewer} onClose={() => setViewer(null)} />
       )}
       {builderOpen && (
         <SegmentBuilder
-          onClose={() => setBuilderOpen(false)}
-          onSaved={() => {
+          initial={editing}
+          categories={categories}
+          onClose={() => {
             setBuilderOpen(false);
+            setEditing(null);
+          }}
+          onSaved={() => {
+            if (editing?.hideKey) hideBuiltin(editing.hideKey);
+            setBuilderOpen(false);
+            setEditing(null);
             router.refresh();
           }}
         />
@@ -343,17 +501,25 @@ function MembersModal({
 }
 
 function SegmentBuilder({
+  initial,
+  categories,
   onClose,
   onSaved,
 }: {
+  initial: BuilderInit | null;
+  categories: string[];
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [name, setName] = useState("");
-  const [match, setMatch] = useState<MatchType>("all");
-  const [rules, setRules] = useState<Rule[]>([
-    { field: "status", op: "is", value: "active" },
-  ]);
+  const isEdit = !!initial?.id;
+  const [name, setName] = useState(initial?.name ?? "");
+  const [category, setCategory] = useState(initial?.category ?? "");
+  const [match, setMatch] = useState<MatchType>(initial?.match ?? "all");
+  const [rules, setRules] = useState<Rule[]>(
+    initial?.rules?.length
+      ? initial.rules.map((r) => ({ ...r }))
+      : [{ field: "status", op: "is", value: "active" }]
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -378,10 +544,11 @@ function SegmentBuilder({
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/segments", {
-        method: "POST",
+      const url = isEdit ? `/api/admin/segments/${initial!.id}` : "/api/admin/segments";
+      const res = await fetch(url, {
+        method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, match_type: match, rules }),
+        body: JSON.stringify({ name, match_type: match, rules, category }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -402,8 +569,17 @@ function SegmentBuilder({
         aria-modal="true"
         className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col bg-[#0d0e12] shadow-2xl"
       >
-        <header className="flex items-center justify-between border-b border-bg/10 px-6 py-4">
-          <h2 className="font-display text-lg text-bg">New segment</h2>
+        <header className="flex items-start justify-between border-b border-bg/10 px-6 py-4">
+          <div>
+            <h2 className="font-display text-lg text-bg">
+              {initial ? "Edit segment" : "New segment"}
+            </h2>
+            {initial?.hideKey && (
+              <p className="mt-0.5 text-[11px] text-bg/45">
+                Saves an editable copy of this built-in and hides the original.
+              </p>
+            )}
+          </div>
           <button type="button" onClick={onClose} aria-label="Close" className="text-bg/55 hover:text-bg">
             <X size={18} />
           </button>
@@ -420,6 +596,24 @@ function SegmentBuilder({
               placeholder="e.g. Engaged iOS users"
               className="w-full rounded-lg border border-bg/15 bg-bg/4 px-3 py-2 text-sm text-bg placeholder:text-bg/35 focus:border-gold/50 focus:outline-none"
             />
+          </label>
+
+          <label className="mt-4 flex flex-col gap-1.5">
+            <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-bg/45">
+              Category (optional)
+            </span>
+            <input
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              list="segment-categories"
+              placeholder="Type a new category, or pick one"
+              className="w-full rounded-lg border border-bg/15 bg-bg/4 px-3 py-2 text-sm text-bg placeholder:text-bg/35 focus:border-gold/50 focus:outline-none"
+            />
+            <datalist id="segment-categories">
+              {categories.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
           </label>
 
           <div className="mt-5 flex items-center gap-2 text-[13px] text-bg/70">
@@ -525,7 +719,7 @@ function SegmentBuilder({
             disabled={busy || !name.trim()}
             className="rounded-full bg-gold px-4 py-2 text-[13px] font-medium text-ink transition-transform hover:scale-[1.02] disabled:opacity-40 disabled:hover:scale-100"
           >
-            {busy ? "Saving..." : "Save segment"}
+            {busy ? "Saving..." : isEdit ? "Save changes" : "Save segment"}
           </button>
         </footer>
       </aside>

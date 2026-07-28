@@ -9,6 +9,7 @@ export type MatchType = "all" | "any";
 export type RuleField =
   | "status"
   | "source"
+  | "mailed"
   | "device"
   | "engagement"
   | "banks"
@@ -54,7 +55,32 @@ export const FIELDS: FieldMeta[] = [
       { value: "never", label: "Never engaged" },
     ],
   },
-  { field: "source", label: "Source", ops: ["is", "is_not", "contains"], valueType: "text" },
+  {
+    field: "mailed",
+    label: "Emailed",
+    ops: ["is"],
+    valueType: "select",
+    values: [
+      { value: "ever", label: "Has been emailed" },
+      { value: "never", label: "Never emailed (unsent)" },
+      { value: "today", label: "Emailed today" },
+      { value: "not_today", label: "Not emailed today" },
+    ],
+  },
+  {
+    field: "source",
+    label: "Source",
+    ops: ["is", "is_not"],
+    valueType: "select",
+    values: [
+      { value: "anchor-club", label: "Anchor Club" },
+      { value: "beta", label: "Beta testers" },
+      { value: "import", label: "Import" },
+      { value: "newsletter", label: "Newsletter" },
+      { value: "ambassador", label: "Ambassador" },
+      { value: "contact", label: "Contact form" },
+    ],
+  },
   { field: "device", label: "Device", ops: ["is", "is_not"], valueType: "text" },
   { field: "banks", label: "Banks", ops: ["contains"], valueType: "text" },
   { field: "name", label: "Name / email", ops: ["contains"], valueType: "text" },

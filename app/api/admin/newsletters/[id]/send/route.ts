@@ -10,6 +10,7 @@ import { normalizeEmail } from "@/lib/duplicates";
 import { createAuditEvent } from "@/lib/db/audit";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { enqueueRecipients, getQueueCounts } from "@/lib/db/newsletterQueue";
+import { getResendRecipients } from "@/lib/email/resend-recipients";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -49,8 +50,13 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
 
   let segment: Segment = "all";
   let emails: string[] | null = null;
+  let allowResend = false; // bypass the dedup guard on purpose
   try {
-    const body = (await req.json()) as { segment?: unknown; emails?: unknown };
+    const body = (await req.json()) as {
+      segment?: unknown;
+      emails?: unknown;
+      allowResend?: unknown;
+    };
     if (typeof body.segment === "string" && SEGMENTS.has(body.segment as Segment)) {
       segment = body.segment as Segment;
     }
@@ -60,6 +66,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
         .map((e) => e.trim().toLowerCase())
         .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
     }
+    if (body.allowResend === true) allowResend = true;
   } catch {
     // no body -> default "all"
   }
@@ -129,6 +136,41 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     return NextResponse.json({ error: "No recipients in that audience." }, { status: 400 });
   }
 
+  // Dedup guard: unless the admin explicitly allows it, drop anyone who already
+  // received THIS campaign (same subject, any past draft) — read from Resend,
+  // the complete record. This is what stops the same mail going out 5×.
+  let skippedDuplicates = 0;
+  if (!allowResend && newsletter.subject) {
+    try {
+      const prior = await getResendRecipients(
+        { subject: newsletter.subject, days: 45 },
+        true // fresh, so a just-completed send is reflected
+      );
+      const already = new Set(prior.recipients.map((r) => r.email.toLowerCase()));
+      if (already.size > 0) {
+        const before = recipients.length;
+        recipients = recipients.filter((r) => !already.has(r.email.toLowerCase()));
+        skippedDuplicates = before - recipients.length;
+      }
+    } catch {
+      // Resend hiccup — don't block the send; queue idempotency still guards
+      // against same-draft duplicates.
+    }
+  }
+
+  if (recipients.length === 0) {
+    return NextResponse.json({
+      ok: true,
+      id,
+      queued: 0,
+      sent: 0,
+      pending: 0,
+      noop: true,
+      skippedDuplicates,
+      message: `Everyone in this audience already received "${newsletter.subject}" (${skippedDuplicates} skipped). Tick "send again" to override.`,
+    });
+  }
+
   // Enqueue (idempotent per email), then flag the newsletter as sending.
   await enqueueRecipients(id, recipients);
   const counts = await getQueueCounts(id);
@@ -144,6 +186,21 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       },
       { status: 503 }
     );
+  }
+
+  // A re-send to an audience that's already fully sent queues 0 new recipients
+  // (the queue is idempotent). Don't create an empty audit event or a fake
+  // "sending" state — tell the admin nothing new was queued.
+  if (counts.pending === 0) {
+    return NextResponse.json({
+      ok: true,
+      id,
+      queued: 0,
+      sent: counts.sent,
+      pending: 0,
+      noop: true,
+      message: "Everyone in this audience was already sent this newsletter — 0 new to send.",
+    });
   }
 
   const auditId = await createAuditEvent({
@@ -168,5 +225,6 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     queued: counts.total,
     sent: counts.sent,
     pending: counts.pending,
+    skippedDuplicates,
   });
 }

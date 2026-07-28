@@ -21,10 +21,16 @@ type Progress = {
 export function SendProgressModal({
   newsletterId,
   total,
+  batchSize = 50,
+  pauseMs = 800,
   onClose,
 }: {
   newsletterId: string;
   total: number;
+  /** How many to send per batch (first N, then the next N…). */
+  batchSize?: number;
+  /** Pause between batches so the send is visibly paced (and gentler). */
+  pauseMs?: number;
   onClose: () => void;
 }) {
   const [p, setP] = useState<Progress>({
@@ -36,19 +42,24 @@ export function SendProgressModal({
     done: total === 0,
     pendingSample: [],
   });
+  const [batchNo, setBatchNo] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const cancelled = useRef(false);
+  const totalBatches = batchSize > 0 ? Math.ceil(total / batchSize) : 1;
 
   useEffect(() => {
     cancelled.current = false;
     (async () => {
-      // Keep sending the next batch until the queue is drained.
+      // Send batch by batch until the queue is drained: first `batchSize`, then
+      // the next, and so on — the queue drains in insertion order.
       // eslint-disable-next-line no-constant-condition
       while (true) {
         if (cancelled.current) return;
         try {
           const res = await fetch(`/api/admin/newsletters/${newsletterId}/process`, {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ size: batchSize }),
           });
           const data = await res.json().catch(() => ({}));
           if (!res.ok) {
@@ -57,6 +68,9 @@ export function SendProgressModal({
             continue;
           }
           if (cancelled.current) return;
+          if ((data.batchSent ?? 0) + (data.batchFailed ?? 0) > 0) {
+            setBatchNo((n) => n + 1);
+          }
           setP({
             total: data.total ?? total,
             sent: data.sent ?? 0,
@@ -67,7 +81,7 @@ export function SendProgressModal({
             pendingSample: data.pendingSample ?? [],
           });
           if (data.done) return;
-          await new Promise((r) => setTimeout(r, 250)); // let the UI breathe
+          await new Promise((r) => setTimeout(r, pauseMs)); // pace the batches
         } catch {
           setError("Network hiccup — retrying…");
           await new Promise((r) => setTimeout(r, 2500));
@@ -77,7 +91,7 @@ export function SendProgressModal({
     return () => {
       cancelled.current = true;
     };
-  }, [newsletterId, total]);
+  }, [newsletterId, total, batchSize, pauseMs]);
 
   const pct = p.total > 0 ? Math.round(((p.sent + p.failed) / p.total) * 100) : 100;
 
@@ -167,9 +181,11 @@ export function SendProgressModal({
 
           {!p.done && (
             <p className="text-center text-[12px] text-bg/45">
-              {p.batchSent > 0
-                ? `Last batch: ${p.batchSent} sent · sending the next…`
-                : "Sending the next batch…"}
+              {batchNo > 0
+                ? `Batch ${batchNo}${
+                    totalBatches > 1 ? ` of ~${totalBatches}` : ""
+                  } · ${p.batchSent} sent · sending the next ${batchSize}…`
+                : `Sending in batches of ${batchSize}…`}
             </p>
           )}
 

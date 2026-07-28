@@ -102,6 +102,10 @@ create index if not exists nsq_newsletter_idx
   on public.newsletter_send_queue (newsletter_id);
 alter table public.newsletter_send_queue enable row level security;
 alter table public.newsletters add column if not exists send_audit_id uuid;
+-- Atomic claiming (0022) so concurrent workers never send a recipient twice.
+alter table public.newsletter_send_queue add column if not exists claimed_at timestamptz;
+create index if not exists nsq_claimable_idx
+  on public.newsletter_send_queue (newsletter_id, status, claimed_at) where status = 'pending';
 
 -- --- settings: single config row -------------------------------------------
 create table if not exists public.settings (
@@ -183,6 +187,7 @@ create table if not exists public.segments (
   updated_at  timestamptz not null default now()
 );
 create index if not exists segments_created_idx on public.segments (created_at desc);
+alter table public.segments add column if not exists category text;
 
 -- --- email_templates (0006) ------------------------------------------------
 create table if not exists public.email_templates (

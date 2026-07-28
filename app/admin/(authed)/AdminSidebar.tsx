@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -23,33 +23,88 @@ import {
   LogOut,
   Menu,
   X,
+  ChevronDown,
 } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
-const primaryNav = [
-  { href: "/marketing/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/marketing/newsletters", label: "Campaigns", icon: Megaphone },
-  { href: "/marketing/blog", label: "Blog", icon: Newspaper },
-  { href: "/marketing/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/marketing/subscribers", label: "Audience", icon: Users },
-  { href: "/marketing/automations", label: "Automations", icon: Workflow },
-  { href: "/marketing/segments", label: "Segments", icon: Layers },
-  { href: "/marketing/templates", label: "Templates", icon: LayoutTemplate },
-  { href: "/marketing/reports", label: "Reports", icon: FileText },
-  { href: "/marketing/settings", label: "Settings", icon: Settings },
-];
-
-const toolsNav = [
-  { href: "/marketing/beta", label: "Beta responses", icon: ClipboardList },
-  { href: "/marketing/anchor-club", label: "Anchor Club", icon: Anchor },
-  { href: "/marketing/submissions", label: "Submissions", icon: Inbox },
-  { href: "/marketing/audit", label: "Audit log", icon: ScrollText },
+// Sidebar navigation grouped into collapsible accordion sections.
+const NAV_GROUPS = [
+  {
+    key: "overview",
+    title: "Overview",
+    items: [
+      { href: "/marketing/dashboard", label: "Overview", icon: LayoutDashboard },
+      { href: "/marketing/analytics", label: "Analytics", icon: BarChart3 },
+      { href: "/marketing/reports", label: "Reports", icon: FileText },
+    ],
+  },
+  {
+    key: "campaigns",
+    title: "Campaigns",
+    items: [
+      { href: "/marketing/newsletters", label: "Campaigns", icon: Megaphone },
+      { href: "/marketing/automations", label: "Automations", icon: Workflow },
+      { href: "/marketing/templates", label: "Templates", icon: LayoutTemplate },
+      { href: "/marketing/segments", label: "Segments", icon: Layers },
+    ],
+  },
+  {
+    key: "audience",
+    title: "Audience",
+    items: [
+      { href: "/marketing/subscribers", label: "Audience", icon: Users },
+      { href: "/marketing/beta", label: "Beta responses", icon: ClipboardList },
+      { href: "/marketing/anchor-club", label: "Anchor Club", icon: Anchor },
+      { href: "/marketing/submissions", label: "Submissions", icon: Inbox },
+    ],
+  },
+  {
+    key: "content",
+    title: "Content",
+    items: [{ href: "/marketing/blog", label: "Blog", icon: Newspaper }],
+  },
+  {
+    key: "system",
+    title: "System",
+    items: [
+      { href: "/marketing/audit", label: "Audit log", icon: ScrollText },
+      { href: "/marketing/settings", label: "Settings", icon: Settings },
+    ],
+  },
 ];
 
 export function AdminSidebar({ email }: { email: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  const groupMatch = (href: string) => {
+    const internal = href.replace("/marketing", "/admin");
+    return (
+      pathname === href ||
+      pathname.startsWith(href + "/") ||
+      pathname === internal ||
+      pathname.startsWith(internal + "/")
+    );
+  };
+  const activeGroupKey = NAV_GROUPS.find((g) =>
+    g.items.some((it) => groupMatch(it.href))
+  )?.key;
+  const [openGroups, setOpenGroups] = useState<Set<string>>(
+    () => new Set(activeGroupKey ? [activeGroupKey] : [NAV_GROUPS[0].key])
+  );
+  // Keep the group holding the current page open as you navigate.
+  useEffect(() => {
+    if (activeGroupKey) {
+      setOpenGroups((prev) =>
+        prev.has(activeGroupKey) ? prev : new Set([activeGroupKey])
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+  // Single-open accordion: opening a group collapses whichever was open.
+  const toggleGroup = (key: string) =>
+    setOpenGroups((prev) => (prev.has(key) ? new Set() : new Set([key])));
 
   const logout = async () => {
     try {
@@ -158,16 +213,36 @@ export function AdminSidebar({ email }: { email: string }) {
           </Link>
         </div>
 
-        {/* Nav */}
+        {/* Nav — accordion groups */}
         <nav className="flex-1 overflow-y-auto px-3 py-2">
-          <ul className="flex flex-col gap-1">
-            {primaryNav.map(renderItem)}
-          </ul>
-
-          <p className="px-3 pb-2 pt-5 text-[10px] font-medium uppercase tracking-[0.18em] text-bg/35">
-            More
-          </p>
-          <ul className="flex flex-col gap-1">{toolsNav.map(renderItem)}</ul>
+          <div className="flex flex-col gap-1">
+            {NAV_GROUPS.map((g) => {
+              const isOpen = openGroups.has(g.key);
+              return (
+                <div key={g.key}>
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(g.key)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-[10px] font-medium uppercase tracking-[0.18em] text-bg/40 transition-colors hover:text-bg/70"
+                  >
+                    {g.title}
+                    <ChevronDown
+                      size={13}
+                      className={
+                        "transition-transform " + (isOpen ? "" : "-rotate-90")
+                      }
+                    />
+                  </button>
+                  {isOpen && (
+                    <ul className="flex flex-col gap-1 pb-1">
+                      {g.items.map(renderItem)}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </nav>
 
         {/* User */}

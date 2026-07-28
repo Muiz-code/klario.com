@@ -128,6 +128,14 @@ export async function getAuditIdsForNewsletter(
   return (data ?? []).map((r) => r.id as string);
 }
 
+const EMAIL_SEND_ACTIONS = new Set<AuditAction>([
+  "newsletter",
+  "beta_invite",
+  "automation",
+  "anchor_email",
+  "test_send",
+]);
+
 export async function listAuditEvents(limit = 200): Promise<AuditEvent[]> {
   const db = supabaseAdmin();
   const { data, error } = await db
@@ -139,7 +147,34 @@ export async function listAuditEvents(limit = 200): Promise<AuditEvent[]> {
     console.error("[db] listAuditEvents failed:", error.message);
     return [];
   }
-  return (data ?? []) as AuditEvent[];
+  const events = (data ?? []) as AuditEvent[];
+
+  // Email-send rows whose SENT is 0 are either (a) sent before SENT was tracked
+  // on the background queue — email_log rows exist, just recompute; or (b) empty
+  // no-op re-sends that queued nobody — no email_log rows, hide them. Check the
+  // actual linked rows to tell which, bounded so the list stays fast.
+  const db2 = supabaseAdmin();
+  const suspects = events
+    .filter((e) => EMAIL_SEND_ACTIONS.has(e.action) && e.sent_count === 0)
+    .slice(0, 40);
+  const emptyIds = new Set<string>();
+  await Promise.all(
+    suspects.map(async (e) => {
+      const c = await recomputeAuditRollups(e.id);
+      if (c.sent === 0 && c.delivered === 0 && c.opened === 0) {
+        emptyIds.add(e.id); // no linked sends → empty no-op, hide it
+        return;
+      }
+      e.sent_count = c.sent;
+      e.failed_count = c.failed;
+      e.delivered_count = c.delivered;
+      e.bounced_count = c.bounced;
+      e.opened_count = c.opened;
+      e.clicked_count = c.clicked;
+    })
+  );
+
+  return emptyIds.size ? events.filter((e) => !emptyIds.has(e.id)) : events;
 }
 
 export type ResendEventType =
@@ -192,7 +227,22 @@ export async function applyResendEvent(opts: {
   await recomputeAuditRollups(row.audit_id);
 }
 
-async function recomputeAuditRollups(auditId: string): Promise<void> {
+export type AuditRollup = {
+  sent: number;
+  failed: number;
+  delivered: number;
+  bounced: number;
+  opened: number;
+  clicked: number;
+};
+
+/**
+ * Recompute an audit event's rollups from its email_log rows. `sent` = every
+ * accepted send (anything not 'failed' — a delivered/bounced/opened row was
+ * still sent). Kept in sync here so the count is right no matter how the send
+ * ran (synchronous or the background queue) and as webhook events arrive.
+ */
+export async function recomputeAuditRollups(auditId: string): Promise<AuditRollup> {
   const db = supabaseAdmin();
   const base = () =>
     db
@@ -200,20 +250,53 @@ async function recomputeAuditRollups(auditId: string): Promise<void> {
       .select("*", { count: "exact", head: true })
       .eq("audit_id", auditId);
 
-  const [delivered, bounced, opened, clicked] = await Promise.all([
+  const [sent, failed, delivered, bounced, opened, clicked] = await Promise.all([
+    base().neq("status", "failed"),
+    base().eq("status", "failed"),
     base().eq("status", "delivered"),
     base().in("status", ["bounced", "complained"]),
     base().not("opened_at", "is", null),
     base().not("clicked_at", "is", null),
   ]);
 
+  const rollup: AuditRollup = {
+    sent: sent.count ?? 0,
+    failed: failed.count ?? 0,
+    delivered: delivered.count ?? 0,
+    bounced: bounced.count ?? 0,
+    opened: opened.count ?? 0,
+    clicked: clicked.count ?? 0,
+  };
+
   await db
     .from("audit_log")
     .update({
-      delivered_count: delivered.count ?? 0,
-      bounced_count: bounced.count ?? 0,
-      opened_count: opened.count ?? 0,
-      clicked_count: clicked.count ?? 0,
+      sent_count: rollup.sent,
+      failed_count: rollup.failed,
+      delivered_count: rollup.delivered,
+      bounced_count: rollup.bounced,
+      opened_count: rollup.opened,
+      clicked_count: rollup.clicked,
     })
     .eq("id", auditId);
+
+  return rollup;
+}
+
+/**
+ * Directly set an audit event's sent/failed counts — used by the background
+ * sender as it drains the queue, so the audit log's SENT column climbs live
+ * (delivered/opened still come from webhooks via recomputeAuditRollups).
+ */
+export async function setAuditSendCounts(
+  auditId: string,
+  sentCount: number,
+  failedCount: number
+): Promise<void> {
+  const db = supabaseAdmin();
+  const { error } = await db
+    .from("audit_log")
+    .update({ sent_count: sentCount, failed_count: failedCount })
+    .eq("id", auditId);
+  if (error) console.error("[db] setAuditSendCounts failed:", error.message);
 }

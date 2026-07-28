@@ -1,8 +1,28 @@
 import { NextResponse } from "next/server";
-import { deleteSegment } from "@/lib/db/segments";
+import { deleteSegment, updateSegment } from "@/lib/db/segments";
 import { getAdminEmail } from "@/lib/supabase/server";
+import { FIELDS, type MatchType, type Rule, type RuleField } from "@/lib/segments/types";
 
 export const runtime = "nodejs";
+
+const VALID_FIELDS = new Set(FIELDS.map((f) => f.field));
+
+function sanitizeRules(input: unknown): Rule[] {
+  if (!Array.isArray(input)) return [];
+  const rules: Rule[] = [];
+  for (const r of input) {
+    if (!r || typeof r !== "object") continue;
+    const { field, op, value } = r as Record<string, unknown>;
+    if (typeof field !== "string" || !VALID_FIELDS.has(field as RuleField)) continue;
+    if (typeof op !== "string") continue;
+    rules.push({
+      field: field as RuleField,
+      op: op as Rule["op"],
+      value: typeof value === "string" ? value.slice(0, 120) : String(value ?? ""),
+    });
+  }
+  return rules.slice(0, 20);
+}
 
 export async function DELETE(
   _req: Request,
@@ -15,4 +35,42 @@ export async function DELETE(
   const ok = await deleteSegment(id);
   if (!ok) return NextResponse.json({ error: "Delete failed." }, { status: 502 });
   return NextResponse.json({ ok: true });
+}
+
+/** Edit an existing custom segment (name, rules, match, category). */
+export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  if (!(await getAdminEmail())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { id } = await ctx.params;
+
+  let body: {
+    name?: unknown;
+    match_type?: unknown;
+    rules?: unknown;
+    category?: unknown;
+  };
+  try {
+    body = (await req.json()) as typeof body;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const name = typeof body.name === "string" ? body.name.trim().slice(0, 80) : "";
+  if (!name) {
+    return NextResponse.json({ error: "A name is required." }, { status: 400 });
+  }
+  const match_type: MatchType = body.match_type === "any" ? "any" : "all";
+  const rules = sanitizeRules(body.rules);
+  if (rules.length === 0) {
+    return NextResponse.json({ error: "Add at least one rule." }, { status: 400 });
+  }
+  const category =
+    typeof body.category === "string" ? body.category.trim().slice(0, 60) : null;
+
+  const segment = await updateSegment(id, { name, match_type, rules, category });
+  if (!segment) {
+    return NextResponse.json({ error: "Could not update segment." }, { status: 502 });
+  }
+  return NextResponse.json({ ok: true, segment });
 }

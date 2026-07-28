@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { listSignups } from "@/lib/db/signups";
+import { getMailedEmails, getEmailsMailedSince } from "@/lib/db/email-log";
 import { normalizeEmail } from "@/lib/duplicates";
 import type { MatchType, Rule, SegmentDef } from "@/lib/segments/types";
 import {
@@ -14,30 +15,50 @@ export type CustomSegment = {
   name: string;
   match_type: MatchType;
   rules: Rule[];
+  category: string | null;
   created_at: string;
   updated_at: string;
 };
 
-/** Load the whole list plus an open/click engagement lookup, once. */
+/** Load the whole list plus open/click + sent/sent-today lookups, once. */
 export async function loadAudience(): Promise<Audience> {
   const db = supabaseAdmin();
-  const [signups, engRes] = await Promise.all([
+  const todayIso = new Date().toISOString().slice(0, 10) + "T00:00:00.000Z";
+  const [signups, engRes, mailedEmails, mailedTodayEmails] = await Promise.all([
     listSignups({ limit: 50000 }),
     db
       .from("email_log")
       .select("email, opened_at, clicked_at")
       .or("opened_at.not.is.null,clicked_at.not.is.null")
       .limit(80000),
+    getMailedEmails(), // ever emailed
+    getEmailsMailedSince(todayIso), // emailed today
   ]);
 
   const engagement = new Map<string, Engagement>();
+  const entry = (e: string): Engagement => {
+    let c = engagement.get(e);
+    if (!c) {
+      c = { opened: false, clicked: false, mailed: false, mailedToday: false };
+      engagement.set(e, c);
+    }
+    return c;
+  };
+
   for (const r of engRes.data ?? []) {
     const e = normalizeEmail(r.email as string | null);
     if (!e) continue;
-    const cur = engagement.get(e) ?? { opened: false, clicked: false };
+    const cur = entry(e);
     if (r.opened_at) cur.opened = true;
     if (r.clicked_at) cur.clicked = true;
-    engagement.set(e, cur);
+  }
+  for (const em of mailedEmails) {
+    const e = normalizeEmail(em);
+    if (e) entry(e).mailed = true;
+  }
+  for (const em of mailedTodayEmails) {
+    const e = normalizeEmail(em);
+    if (e) entry(e).mailedToday = true;
   }
 
   return { signups, engagement };
@@ -162,6 +183,7 @@ export async function createSegment(input: {
   name: string;
   match_type: MatchType;
   rules: Rule[];
+  category?: string | null;
 }): Promise<CustomSegment | null> {
   const db = supabaseAdmin();
   const { data, error } = await db
@@ -170,11 +192,41 @@ export async function createSegment(input: {
       name: input.name,
       match_type: input.match_type,
       rules: input.rules,
+      category: input.category?.trim() || null,
     })
     .select("*")
     .single();
   if (error) {
     console.error("[db] createSegment failed:", error.message);
+    return null;
+  }
+  return data as CustomSegment;
+}
+
+export async function updateSegment(
+  id: string,
+  input: {
+    name: string;
+    match_type: MatchType;
+    rules: Rule[];
+    category?: string | null;
+  }
+): Promise<CustomSegment | null> {
+  const db = supabaseAdmin();
+  const { data, error } = await db
+    .from("segments")
+    .update({
+      name: input.name,
+      match_type: input.match_type,
+      rules: input.rules,
+      category: input.category?.trim() || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+  if (error) {
+    console.error("[db] updateSegment failed:", error.message);
     return null;
   }
   return data as CustomSegment;

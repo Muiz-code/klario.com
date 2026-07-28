@@ -99,6 +99,8 @@ export function ComposeStudio({
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [pickerQuery, setPickerQuery] = useState("");
   const [selectCount, setSelectCount] = useState(100);
+  const [batchSize, setBatchSize] = useState(50);
+  const [allowResend, setAllowResend] = useState(false);
   const [manual, setManual] = useState("");
 
   // Write-mode fields
@@ -389,9 +391,10 @@ export function ComposeStudio({
       const sendRes = await fetch(`/api/admin/newsletters/${cData.id}/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          chosen.size > 0 ? { emails: [...chosen] } : { segment }
-        ),
+        body: JSON.stringify({
+          ...(chosen.size > 0 ? { emails: [...chosen] } : { segment }),
+          allowResend,
+        }),
       });
       // Draft is already saved at this point; only the send got challenged.
       if (isSecurityCheckpoint(sendRes)) {
@@ -407,6 +410,15 @@ export function ComposeStudio({
       setConfirm(null);
       if (!sendRes.ok) {
         setInfo({ title: "Sending failed", message: sData.error || "Saved as draft, but not sent.", ok: false });
+        return;
+      }
+      // Nothing new queued (everyone was already sent) — no fake progress modal.
+      if (sData.noop || (sData.queued ?? 0) === 0) {
+        setInfo({
+          title: "Nothing new to send",
+          message: sData.message || "Everyone in this audience was already sent this newsletter.",
+          ok: true,
+        });
         return;
       }
       // Open the live progress modal, which drives the send batch by batch.
@@ -722,6 +734,50 @@ export function ComposeStudio({
                 ? "Pick recipients below, or use First / Last / Random."
                 : `Sending to all ${segmentTotal}. Refine below if you want a subset.`}
             </p>
+
+            {/* Pacing: send the whole audience in sequential batches (first N,
+                then the next N…) rather than all at once — gentler on
+                deliverability and easy to watch. */}
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-bg/12 bg-bg/4 px-3 py-2.5 text-[12px] text-bg/60">
+              <span>Send in batches of</span>
+              <input
+                type="number"
+                min={1}
+                max={500}
+                value={batchSize}
+                onChange={(e) =>
+                  setBatchSize(
+                    Math.max(1, Math.min(500, Number(e.target.value) || 1))
+                  )
+                }
+                className="w-16 rounded-lg border border-bg/15 bg-bg/4 px-2 py-1 text-center text-[13px] text-bg focus:border-gold/50 focus:outline-none"
+              />
+              <span>
+                at a time, in order, until everyone is sent
+                {(() => {
+                  const n = chosen.size > 0 ? chosen.size : segmentTotal;
+                  const batches = batchSize > 0 ? Math.ceil(n / batchSize) : 1;
+                  return n > 0 && batches > 1 ? ` (~${batches} batches).` : ".";
+                })()}
+              </span>
+            </div>
+
+            {/* Dedup guard: by default we skip anyone who already got THIS
+                campaign (any past send), read from Resend — no more 5× repeats. */}
+            <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-bg/12 bg-bg/4 px-3 py-2.5 text-[12px] text-bg/60">
+              <input
+                type="checkbox"
+                checked={allowResend}
+                onChange={(e) => setAllowResend(e.target.checked)}
+                className="mt-0.5 accent-gold"
+              />
+              <span>
+                <span className="text-bg/80">Send again to people who already got this campaign.</span>{" "}
+                Off by default — we skip anyone already sent this subject (checked
+                against Resend) so nobody gets it twice. Tick only to re-send on
+                purpose.
+              </span>
+            </label>
             <PeoplePicker
               people={filteredPeople}
               total={segmentPeople.length}
@@ -853,6 +909,7 @@ export function ComposeStudio({
         <SendProgressModal
           newsletterId={progress.id}
           total={progress.total}
+          batchSize={batchSize}
           onClose={() => {
             setProgress(null);
             router.push("/marketing/newsletters");

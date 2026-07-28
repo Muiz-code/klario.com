@@ -34,6 +34,7 @@ import { Funnel } from "./_components/Funnel";
 import { DateRangePicker } from "./_components/DateRangePicker";
 import { NotificationBell } from "./_components/NotificationBell";
 import { AudienceGrowth } from "./_components/AudienceGrowth";
+import { ResendUsage } from "./_components/ResendUsage";
 
 export const dynamic = "force-dynamic";
 
@@ -132,10 +133,7 @@ export default async function DashboardPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-xl border border-bg/12 bg-bg/4 px-3 py-2 text-[13px] text-bg/70">
-            <Send size={13} className="text-gold" />
-            <span className="font-medium text-bg">{data.sentToday}</span> sent today
-          </span>
+          <ResendUsage fallbackDay={data.sentToday} />
           <DateRangePicker from={range.from} to={range.to} />
           <NotificationBell failures={configured ? failures : []} />
         </div>

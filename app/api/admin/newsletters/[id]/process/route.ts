@@ -6,12 +6,15 @@ import { getQueueCounts, getPendingChunk } from "@/lib/db/newsletterQueue";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const CHUNK = 200;
+const DEFAULT_BATCH = 50;
+const MAX_BATCH = 500;
 
 /**
  * Send the next batch for a newsletter and report progress. Driven by the send
- * progress modal, one call per batch, so the admin watches the send move. Safe
- * because the modal calls it sequentially (one batch at a time).
+ * progress modal, one call per batch, so the admin watches the send move batch
+ * by batch (first N, then the next N, until the queue is drained). Safe because
+ * the modal calls it sequentially (one batch at a time). The batch size comes
+ * from the modal so the sender can pace the send (default 50).
  */
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   if (!(await getAdminEmail())) {
@@ -19,7 +22,17 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   }
   const { id } = await ctx.params;
 
-  const batch = await processSendChunk(id, CHUNK);
+  let size = DEFAULT_BATCH;
+  try {
+    const body = (await req.json()) as { size?: unknown };
+    if (typeof body.size === "number" && Number.isFinite(body.size)) {
+      size = Math.max(1, Math.min(MAX_BATCH, Math.floor(body.size)));
+    }
+  } catch {
+    // no body -> default batch size
+  }
+
+  const batch = await processSendChunk(id, size);
   const counts = await getQueueCounts(id);
   const pendingSample = (await getPendingChunk(id, 8)).map((r) => r.email);
 

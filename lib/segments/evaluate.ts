@@ -2,7 +2,12 @@ import type { Signup } from "@/lib/db/signups";
 import { normalizeEmail } from "@/lib/duplicates";
 import type { Rule, SegmentDef } from "./types";
 
-export type Engagement = { opened: boolean; clicked: boolean };
+export type Engagement = {
+  opened: boolean;
+  clicked: boolean;
+  mailed: boolean;
+  mailedToday: boolean;
+};
 
 /** The full list plus an engagement lookup, loaded once and filtered in JS. */
 export type Audience = {
@@ -11,7 +16,12 @@ export type Audience = {
 };
 
 const DAY = 86_400_000;
-const NONE: Engagement = { opened: false, clicked: false };
+const NONE: Engagement = {
+  opened: false,
+  clicked: false,
+  mailed: false,
+  mailedToday: false,
+};
 
 function lower(v: string | null | undefined): string {
   return (v ?? "").toLowerCase();
@@ -44,6 +54,17 @@ function ruleMatches(s: Signup, eng: Engagement, r: Rule): boolean {
           : r.value === "clicked"
             ? eng.clicked
             : !eng.opened && !eng.clicked; // "never"
+      return r.op === "is_not" ? !has : has;
+    }
+    case "mailed": {
+      const has =
+        r.value === "ever"
+          ? eng.mailed
+          : r.value === "never"
+            ? !eng.mailed
+            : r.value === "today"
+              ? eng.mailedToday
+              : !eng.mailedToday; // "not_today"
       return r.op === "is_not" ? !has : has;
     }
     case "created_days": {

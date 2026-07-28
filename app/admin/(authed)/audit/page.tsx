@@ -1,7 +1,8 @@
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import { listAuditEvents } from "@/lib/db/audit";
-import { AuditTable } from "./AuditTable";
+import { AuditViews } from "./AuditViews";
 import { StorageCleanupButton } from "./StorageCleanupButton";
+import { SyncFromResendButton } from "./SyncFromResendButton";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,12 @@ export default async function AuditPage() {
             a row to see the recipients.
           </p>
         </div>
-        {configured && <StorageCleanupButton />}
+        {configured && (
+          <div className="flex flex-wrap items-center gap-2">
+            <SyncFromResendButton />
+            <StorageCleanupButton />
+          </div>
+        )}
       </div>
 
       {!configured ? (
@@ -27,7 +33,7 @@ export default async function AuditPage() {
           Supabase is not configured, so there is nothing to show yet.
         </p>
       ) : (
-        <AuditTable events={events} />
+        <AuditViews events={events} />
       )}
     </div>
   );
