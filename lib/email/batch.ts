@@ -1,11 +1,16 @@
 import { resend, RESEND_FROM, RESEND_REPLY_TO } from "./client";
 
+export type EmailAttachment = { filename: string; path: string };
+
 export type BatchMessage = {
   to: string;
   subject: string;
   html: string;
   text: string;
   headers?: Record<string, string>;
+  /** Attachments (e.g. a PDF). When present, the send falls back to per-message
+   *  delivery — Resend's batch endpoint does not carry attachments. */
+  attachments?: EmailAttachment[];
 };
 
 export type BatchResult = {
@@ -31,6 +36,33 @@ function chunk<T>(arr: T[], size: number): T[][] {
  */
 export async function sendBatch(messages: BatchMessage[]): Promise<BatchResult[]> {
   const results: BatchResult[] = [];
+
+  // Attachments can't go through the batch endpoint — send those one at a time.
+  const hasAttachments = messages.some((m) => m.attachments?.length);
+  if (hasAttachments) {
+    for (const m of messages) {
+      try {
+        const { data, error } = await resend.emails.send({
+          from: RESEND_FROM,
+          to: m.to,
+          replyTo: RESEND_REPLY_TO,
+          subject: m.subject,
+          html: m.html,
+          text: m.text,
+          headers: m.headers,
+          attachments: m.attachments,
+        });
+        if (error) {
+          results.push({ to: m.to, ok: false, error: error.message });
+        } else {
+          results.push({ to: m.to, ok: Boolean(data?.id), id: data?.id, error: data?.id ? undefined : "No id returned" });
+        }
+      } catch (e) {
+        results.push({ to: m.to, ok: false, error: e instanceof Error ? e.message : String(e) });
+      }
+    }
+    return results;
+  }
 
   for (const group of chunk(messages, CHUNK)) {
     try {

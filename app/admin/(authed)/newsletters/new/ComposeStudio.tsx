@@ -2,7 +2,26 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Image as ImageIcon, Send, Save, Pencil, Code, X } from "lucide-react";
+import {
+  Image as ImageIcon,
+  Send,
+  Save,
+  Pencil,
+  Code,
+  X,
+  Video,
+  FileText,
+} from "lucide-react";
+
+// Email-safe button-style link (video / PDF). Rendered inline into the HTML.
+function mediaButtonHtml(url: string, label: string): string {
+  const u = url.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  const l = label
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return `\n<table role="presentation" cellpadding="0" cellspacing="0" style="margin:18px auto;"><tr><td align="center" style="border-radius:999px;background:#D4A853;"><a href="${u}" target="_blank" style="display:inline-block;padding:13px 28px;font-family:Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#0E1116;text-decoration:none;border-radius:999px;">${l}</a></td></tr></table>\n`;
+}
 import type { GalleryTemplate } from "@/lib/email/gallery";
 import { buildRichEmail } from "@/lib/email/compose-html";
 import { RichEmailEditor } from "./RichEmailEditor";
@@ -124,7 +143,9 @@ export function ComposeStudio({
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [templates]);
 
-  const [busy, setBusy] = useState<null | "save" | "send" | "image">(null);
+  const [busy, setBusy] = useState<null | "save" | "send" | "image" | "pdf">(null);
+  const [attachments, setAttachments] = useState<{ filename: string; url: string }[]>([]);
+  const pdfRef = useRef<HTMLInputElement>(null);
   const [confirm, setConfirm] = useState<ConfirmState>(null);
   const [info, setInfo] = useState<{ title: string; message: string; ok?: boolean } | null>(null);
 
@@ -271,6 +292,29 @@ export function ComposeStudio({
     }
   };
 
+  // Uploads a PDF and adds it to the email's attachments.
+  const attachPdf = async (file: File) => {
+    setBusy("pdf");
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/admin/upload-image", { method: "POST", body: form });
+      if (isSecurityCheckpoint(res)) {
+        setInfo(checkpointInfo);
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setInfo({ title: "PDF upload failed", message: data.error || "Try again.", ok: false });
+        return;
+      }
+      setAttachments((a) => [...a, { filename: file.name, url: data.url as string }].slice(0, 5));
+    } finally {
+      setBusy(null);
+      if (pdfRef.current) pdfRef.current.value = "";
+    }
+  };
+
   const validate = (): string | null => {
     if (!subject.trim()) return "Add a subject line.";
     if (mode === "write" && !plainText(bodyHtml)) return "Write a message.";
@@ -284,7 +328,7 @@ export function ComposeStudio({
       const create = await fetch("/api/admin/newsletters", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject: subject.trim(), html }),
+        body: JSON.stringify({ subject: subject.trim(), html, attachments }),
       });
       // Edge firewall challenge: bail with a clear message before trying to
       // read JSON that isn't there.
@@ -607,6 +651,61 @@ export function ComposeStudio({
             </div>
           </div>
 
+          {/* PDF attachments */}
+          <div className="flex flex-col gap-2 rounded-xl border border-bg/12 bg-bg/4 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-bg/45">
+                Attachments (PDF)
+              </span>
+              <button
+                type="button"
+                onClick={() => pdfRef.current?.click()}
+                disabled={busy === "pdf" || !configured || attachments.length >= 5}
+                className="inline-flex items-center gap-1.5 rounded-full border border-bg/15 px-2.5 py-1 text-[11px] text-bg/75 hover:border-gold/50 hover:text-bg disabled:opacity-40"
+              >
+                <FileText size={12} />
+                {busy === "pdf" ? "Uploading..." : "Attach PDF"}
+              </button>
+            </div>
+            <input
+              ref={pdfRef}
+              type="file"
+              accept="application/pdf,.pdf"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) attachPdf(f);
+              }}
+            />
+            {attachments.length === 0 ? (
+              <span className="text-[12px] text-bg/45">
+                Attach a PDF to send with the email (max 5, 15&nbsp;MB each).
+              </span>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {attachments.map((a, i) => (
+                  <div
+                    key={a.url}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-bg/10 bg-bg/[0.03] px-3 py-2"
+                  >
+                    <span className="flex items-center gap-2 truncate text-[13px] text-bg/85">
+                      <FileText size={13} className="shrink-0 text-gold" />
+                      <span className="truncate">{a.filename}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
+                      aria-label={`Remove ${a.filename}`}
+                      className="shrink-0 text-bg/50 hover:text-red-300"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -711,16 +810,29 @@ function HtmlEditor(props: {
 }) {
   const textRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [videoOpen, setVideoOpen] = useState(false);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoLabel, setVideoLabel] = useState("▶ Watch the video");
+
+  const insertAtCursor = (tag: string) => {
+    const el = textRef.current;
+    const start = el?.selectionStart ?? props.rawHtml.length;
+    props.setRawHtml(props.rawHtml.slice(0, start) + tag + props.rawHtml.slice(start));
+  };
+
+  const insertVideo = () => {
+    const url = videoUrl.trim();
+    if (!/^https?:\/\//i.test(url)) return;
+    insertAtCursor(mediaButtonHtml(url, videoLabel.trim() || "Watch the video"));
+    setVideoOpen(false);
+    setVideoUrl("");
+  };
 
   const handleFile = async (file: File) => {
     const url = await props.uploadImage(file);
     if (url) {
       const tag = `\n<img src="${url}" alt="" style="display:block;max-width:100%;height:auto;border-radius:12px;margin:16px auto;" />\n`;
-      const el = textRef.current;
-      const start = el?.selectionStart ?? props.rawHtml.length;
-      props.setRawHtml(
-        props.rawHtml.slice(0, start) + tag + props.rawHtml.slice(start)
-      );
+      insertAtCursor(tag);
     }
     if (fileRef.current) fileRef.current.value = "";
   };
@@ -752,20 +864,66 @@ function HtmlEditor(props: {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-bg/45">
             HTML content
           </span>
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={props.uploading || !props.configured}
-            className="inline-flex items-center gap-1.5 rounded-full border border-bg/15 px-2.5 py-1 text-[11px] text-bg/75 hover:border-gold/50 hover:text-bg disabled:opacity-40"
-          >
-            <ImageIcon size={12} />
-            {props.uploading ? "Uploading..." : "Insert image"}
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={props.uploading || !props.configured}
+              className="inline-flex items-center gap-1.5 rounded-full border border-bg/15 px-2.5 py-1 text-[11px] text-bg/75 hover:border-gold/50 hover:text-bg disabled:opacity-40"
+            >
+              <ImageIcon size={12} />
+              {props.uploading ? "Uploading..." : "Insert image"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setVideoOpen((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-bg/15 px-2.5 py-1 text-[11px] text-bg/75 hover:border-gold/50 hover:text-bg"
+            >
+              <Video size={12} />
+              Insert video
+            </button>
+          </div>
         </div>
+        {videoOpen && (
+          <div className="flex flex-col gap-2 rounded-xl border border-gold/25 bg-gold/[0.05] p-3">
+            <span className="text-[12px] text-bg/70">
+              Video link — inserts a button that opens the video.
+            </span>
+            <input
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="https://youtu.be/… or any video URL"
+              className="w-full rounded-lg border border-bg/15 bg-bg/4 px-3 py-2 text-[13px] text-bg placeholder:text-bg/40 focus:border-gold/60 focus:outline-none"
+            />
+            <input
+              value={videoLabel}
+              onChange={(e) => setVideoLabel(e.target.value)}
+              placeholder="Button label"
+              className="w-full rounded-lg border border-bg/15 bg-bg/4 px-3 py-2 text-[13px] text-bg placeholder:text-bg/40 focus:border-gold/60 focus:outline-none"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={insertVideo}
+                disabled={!/^https?:\/\//i.test(videoUrl.trim())}
+                className="rounded-lg bg-gold px-3 py-1.5 text-[12px] font-semibold text-ink disabled:opacity-40"
+              >
+                Insert button
+              </button>
+              <button
+                type="button"
+                onClick={() => setVideoOpen(false)}
+                className="rounded-lg border border-bg/15 px-3 py-1.5 text-[12px] text-bg/70 hover:text-bg"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
         <input
           ref={fileRef}
           type="file"

@@ -16,6 +16,19 @@ export type AppProfile = {
   created_at: string | null;
   /** Number of distinct days the user has been active in the app. */
   activeDays: number;
+  /** Spending-type journey: how their type + rank changed over time. */
+  typeHistory: TypeHistoryEntry[];
+};
+
+// One stop on the spending-type journey (from profiles.type_history).
+export type TypeHistoryEntry = { date: string; type: string; rank: string };
+
+// A bank the user linked in the app.
+export type LinkedBank = {
+  bankName: string;
+  maskedAccount: string;
+  isPrimary: boolean;
+  balance: number;
 };
 
 // What the applicant has actually done in the app — counts of the financial
@@ -41,10 +54,11 @@ export function emptyActivity(): ActivityCounts {
 }
 
 const SELECT =
-  "id, email, klario_id, kairo_score, streak, plan, personality, account_type, kyc_status, created_at, active_days";
+  "id, email, klario_id, kairo_score, streak, plan, personality, account_type, kyc_status, created_at, active_days, type_history";
 
 function toProfile(row: Record<string, unknown>): AppProfile {
   const days = row.active_days;
+  const th = row.type_history;
   return {
     id: String(row.id ?? ""),
     email: String(row.email ?? ""),
@@ -57,6 +71,15 @@ function toProfile(row: Record<string, unknown>): AppProfile {
     kyc_status: (row.kyc_status as string) ?? null,
     created_at: (row.created_at as string) ?? null,
     activeDays: Array.isArray(days) ? days.length : 0,
+    typeHistory: Array.isArray(th)
+      ? th
+          .filter((e): e is Record<string, unknown> => !!e && typeof e === "object" && !!e.d && !!e.type)
+          .map((e) => ({
+            date: String(e.d),
+            type: String(e.type),
+            rank: e.rank ? String(e.rank) : "",
+          }))
+      : [],
   };
 }
 
@@ -141,6 +164,45 @@ export async function getDeletedAccountsByEmails(
         });
       }
     }
+  }
+  return map;
+}
+
+/**
+ * The banks each app user has linked, keyed by app user id. Primary bank first,
+ * then most recent. Read-only.
+ */
+export async function getLinkedBanksByUserIds(
+  userIds: string[]
+): Promise<Map<string, LinkedBank[]>> {
+  const map = new Map<string, LinkedBank[]>();
+  const db = appSupabaseAdmin();
+  const ids = [...new Set(userIds.filter(Boolean))];
+  if (!db || ids.length === 0) return map;
+
+  const { data, error } = await db
+    .from("linked_banks")
+    .select("user_id, bank_name, masked_account, is_primary, balance, created_at")
+    .in("user_id", ids)
+    .order("is_primary", { ascending: false })
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.error("[appdb] getLinkedBanksByUserIds failed:", error.message);
+    return map;
+  }
+  for (const row of data ?? []) {
+    const r = row as Record<string, unknown>;
+    const uid = String(r.user_id ?? "");
+    if (!uid) continue;
+    const bank: LinkedBank = {
+      bankName: String(r.bank_name ?? "Bank"),
+      maskedAccount: String(r.masked_account ?? ""),
+      isPrimary: r.is_primary === true,
+      balance: Number(r.balance ?? 0),
+    };
+    const list = map.get(uid);
+    if (list) list.push(bank);
+    else map.set(uid, [bank]);
   }
   return map;
 }

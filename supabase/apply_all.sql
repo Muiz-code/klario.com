@@ -80,6 +80,7 @@ create table if not exists public.newsletters (
   created_at       timestamptz not null default now()
 );
 create index if not exists newsletters_created_idx on public.newsletters (created_at desc);
+alter table public.newsletters add column if not exists attachments jsonb not null default '[]'::jsonb;
 
 -- --- settings: single config row -------------------------------------------
 create table if not exists public.settings (

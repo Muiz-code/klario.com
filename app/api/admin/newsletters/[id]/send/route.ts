@@ -125,6 +125,11 @@ export async function POST(
     return NextResponse.json({ error: "No recipients in that audience." }, { status: 400 });
   }
 
+  // PDF (or other) attachments live on the newsletter; Resend takes them by URL.
+  const attachments = (newsletter.attachments ?? [])
+    .filter((a) => a.url)
+    .map((a) => ({ filename: a.filename || "attachment.pdf", path: a.url }));
+
   const messages: BatchMessage[] = recipients.map((s) => {
     const link = unsubscribeUrl(s.email);
     // Use the recipient's first name; when we don't have one, fall back to
@@ -143,6 +148,7 @@ export async function POST(
         "List-Unsubscribe": `<${link}>`,
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
+      attachments: attachments.length ? attachments : undefined,
     };
   });
 

@@ -5,9 +5,11 @@ import {
   getAppProfilesByEmails,
   getAppActivityByUserIds,
   getDeletedAccountsByEmails,
+  getLinkedBanksByUserIds,
   type AppProfile,
   type ActivityCounts,
   type DeletedAccount,
+  type LinkedBank,
 } from "@/lib/db/appProfiles";
 import { normalizeEmail } from "@/lib/duplicates";
 import { AnchorResponsesView, type AnchorSummary } from "./AnchorResponsesView";
@@ -45,6 +47,16 @@ export default async function AnchorClubPage() {
   for (const [responseId, userId] of Object.entries(appUserIdByResponse)) {
     const a = activityByUserId.get(userId);
     if (a) appActivity[responseId] = a;
+  }
+
+  // The banks each matched user linked, keyed back to the anchor response id.
+  const banksByUserId = appConfigured
+    ? await getLinkedBanksByUserIds(Object.values(appUserIdByResponse))
+    : new Map<string, LinkedBank[]>();
+  const appBanks: Record<string, LinkedBank[]> = {};
+  for (const [responseId, userId] of Object.entries(appUserIdByResponse)) {
+    const b = banksByUserId.get(userId);
+    if (b && b.length) appBanks[responseId] = b;
   }
 
   // Account-deletion tombstones (survive a hard delete), keyed by response id.
@@ -121,6 +133,7 @@ export default async function AnchorClubPage() {
             appProfiles={appProfiles}
             appActivity={appActivity}
             appDeleted={appDeleted}
+            appBanks={appBanks}
           />
         </>
       )}

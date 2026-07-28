@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { createNewsletter } from "@/lib/db/newsletters";
+import {
+  createNewsletter,
+  type NewsletterAttachment,
+} from "@/lib/db/newsletters";
 import { renderNewsletter } from "@/lib/email/newsletter";
 
 export const runtime = "nodejs";
@@ -48,7 +51,18 @@ export async function POST(req: Request) {
     });
   }
 
-  const created = await createNewsletter({ subject, html });
+  const attachments: NewsletterAttachment[] = Array.isArray(body.attachments)
+    ? body.attachments
+        .filter((a): a is Record<string, unknown> => !!a && typeof a === "object")
+        .map((a) => ({
+          filename: str(a.filename, 200) || "attachment.pdf",
+          url: str(a.url, 1000),
+        }))
+        .filter((a) => /^https?:\/\//i.test(a.url))
+        .slice(0, 5)
+    : [];
+
+  const created = await createNewsletter({ subject, html, attachments });
   if (!created) {
     return NextResponse.json({ error: "Could not save newsletter." }, { status: 502 });
   }

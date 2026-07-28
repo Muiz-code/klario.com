@@ -11,12 +11,14 @@ import {
   TrendingUp,
   Sparkles,
   Mail,
+  Landmark,
 } from "lucide-react";
 import type { AnchorResponse } from "@/lib/db/anchorClub";
 import type {
   AppProfile,
   ActivityCounts,
   DeletedAccount,
+  LinkedBank,
 } from "@/lib/db/appProfiles";
 import { SendEmailPanel } from "./SendEmailPanel";
 
@@ -107,12 +109,14 @@ export function AnchorResponsesView({
   appProfiles,
   appActivity,
   appDeleted,
+  appBanks,
 }: {
   responses: AnchorResponse[];
   summary: AnchorSummary;
   appProfiles: Record<string, AppProfile>;
   appActivity: Record<string, ActivityCounts>;
   appDeleted: Record<string, DeletedAccount>;
+  appBanks: Record<string, LinkedBank[]>;
 }) {
   const [tab, setTab] = useState<Tab>("registrations");
   const [q, setQ] = useState("");
@@ -411,6 +415,7 @@ export function AnchorResponsesView({
                     const app = appProfiles[r.id];
                     const act = appActivity[r.id];
                     const del = appDeleted[r.id];
+                    const banks = appBanks[r.id];
                     return (
                       <Fragment key={r.id}>
                         <tr
@@ -554,6 +559,65 @@ export function AnchorResponsesView({
                                       <Mini label="Banks linked" value={String(act?.linkedBanks ?? 0)} />
                                       <Mini label="Transactions" value={String(act?.transactions ?? 0)} />
                                       <Mini label="Scheduled" value={String(act?.scheduledTransfers ?? 0)} />
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Linked banks */}
+                                {app && banks && banks.length > 0 && (
+                                  <div className="md:col-span-2">
+                                    <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-gold/70">
+                                      <Landmark size={12} /> Linked banks ({banks.length})
+                                    </p>
+                                    <div className="flex flex-col gap-2">
+                                      {banks.map((b, i) => (
+                                        <div
+                                          key={i}
+                                          className="flex items-center justify-between gap-3 rounded-lg border border-bg/10 bg-bg/[0.03] px-3.5 py-2.5"
+                                        >
+                                          <div className="flex items-center gap-2.5">
+                                            <span className="text-[13.5px] font-medium text-bg">
+                                              {b.bankName}
+                                            </span>
+                                            <span className="font-mono text-[12px] text-bg/50">
+                                              {b.maskedAccount}
+                                            </span>
+                                            {b.isPrimary && (
+                                              <span className="rounded-full border border-gold/30 bg-gold/[0.08] px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] text-gold">
+                                                Primary
+                                              </span>
+                                            )}
+                                          </div>
+                                          <span className="font-mono text-[12.5px] text-bg/70">
+                                            ₦{Math.round(b.balance).toLocaleString("en-NG")}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Spending-type journey */}
+                                {app && app.typeHistory.length > 0 && (
+                                  <div className="md:col-span-2">
+                                    <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-gold/70">
+                                      <TrendingUp size={12} /> Type journey
+                                    </p>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      {app.typeHistory.map((t, i) => (
+                                        <Fragment key={i}>
+                                          {i > 0 && <span className="text-bg/30">→</span>}
+                                          <span className="rounded-lg border border-bg/12 bg-bg/[0.03] px-3 py-1.5">
+                                            <span className="text-[13px] font-medium text-bg">{t.type}</span>
+                                            {t.rank && (
+                                              <span className="text-[12px] text-gold"> · {t.rank}</span>
+                                            )}
+                                            <span className="ml-1.5 font-mono text-[11px] text-bg/45">
+                                              {t.date}
+                                            </span>
+                                          </span>
+                                        </Fragment>
+                                      ))}
                                     </div>
                                   </div>
                                 )}

@@ -1,5 +1,8 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
+/** A file attached to a newsletter (e.g. a PDF), stored by public URL. */
+export type NewsletterAttachment = { filename: string; url: string };
+
 export type Newsletter = {
   id: string;
   subject: string;
@@ -9,7 +12,20 @@ export type Newsletter = {
   sent_count: number;
   sent_at: string | null;
   created_at: string;
+  attachments: NewsletterAttachment[];
 };
+
+function cleanAttachments(value: unknown): NewsletterAttachment[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((a): a is Record<string, unknown> => !!a && typeof a === "object")
+    .map((a) => ({
+      filename: typeof a.filename === "string" ? a.filename.slice(0, 200) : "attachment.pdf",
+      url: typeof a.url === "string" ? a.url : "",
+    }))
+    .filter((a) => /^https?:\/\//i.test(a.url))
+    .slice(0, 5);
+}
 
 export async function listNewsletters(): Promise<Newsletter[]> {
   const db = supabaseAdmin();
@@ -42,11 +58,16 @@ export async function getNewsletter(id: string): Promise<Newsletter | null> {
 export async function createNewsletter(opts: {
   subject: string;
   html: string;
+  attachments?: NewsletterAttachment[];
 }): Promise<Newsletter | null> {
   const db = supabaseAdmin();
   const { data, error } = await db
     .from("newsletters")
-    .insert({ subject: opts.subject, html: opts.html })
+    .insert({
+      subject: opts.subject,
+      html: opts.html,
+      attachments: cleanAttachments(opts.attachments),
+    })
     .select("*")
     .single();
   if (error) {
