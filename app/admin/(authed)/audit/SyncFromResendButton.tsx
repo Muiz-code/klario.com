@@ -31,11 +31,17 @@ export function SyncFromResendButton() {
         });
         return;
       }
+      const parts: string[] = [];
+      if (d.updated > 0)
+        parts.push(`updated ${d.updated} (${d.delivered} delivered, ${d.opened} opened, ${d.bounced} bounced)`);
+      if (d.inserted > 0) parts.push(`backfilled ${d.inserted} missing`);
+      if (d.audits > 0) parts.push(`${d.audits} campaign${d.audits === 1 ? "" : "s"} refreshed`);
       setInfo({
-        title: "Synced from Resend",
-        message:
-          d.updated > 0
-            ? `Updated ${d.updated} email${d.updated === 1 ? "" : "s"} · ${d.delivered} newly delivered, ${d.opened} opened, ${d.bounced} bounced. ${d.audits} campaign${d.audits === 1 ? "" : "s"} refreshed.`
+        title: d.skipped ? "Sync already running" : "Synced from Resend",
+        message: d.skipped
+          ? "Another sync is in progress — try again in a moment."
+          : parts.length
+            ? `Done: ${parts.join(" · ")}.`
             : `Everything was already up to date (${d.matched} checked against Resend).`,
         ok: true,
       });

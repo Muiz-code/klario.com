@@ -1,13 +1,23 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { recomputeAuditRollups } from "@/lib/db/audit";
-import { sweepResendEmails } from "@/lib/email/resend-list";
+import { sweepResendEmails, isTestAddress } from "@/lib/email/resend-list";
+import { resendTimeToMs } from "@/lib/email/resend-time";
+import { withLock } from "@/lib/redis";
+import { listNewsletters } from "@/lib/db/newsletters";
 
 /**
- * Reconcile delivery status directly from Resend (the source of truth), instead
- * of depending only on webhooks. Every send we make stores its Resend id, so we
- * sweep `emails.list` (newest-first), read each email's `last_event`, and update
- * our email_log rows + audit rollups to match. Run on demand ("Sync from Resend")
- * or on a schedule — it's idempotent and only ever upgrades a row's status.
+ * Reconcile from Resend, the source of truth. Two jobs, one sweep:
+ *  1. UPDATE — upgrade delivery status/timestamps on email_log rows we already
+ *     have (covers webhook gaps), and roll the totals up onto audit events.
+ *  2. BACKFILL — INSERT email_log rows for real sends Resend has that we never
+ *     logged (transactional mail, sends made off the tracked path). This makes
+ *     email_log a complete mirror of Resend, so every email_log-based analytic
+ *     (dashboard KPIs, "sent today", funnels) becomes accurate without querying
+ *     Resend live on each page load.
+ *
+ * Test (resend.dev) traffic is ignored. Guarded by a global lock so only one
+ * instance backfills at a time (no duplicate inserts); the lock no-ops without
+ * Redis, where the low run-frequency keeps duplicates rare.
  */
 
 type LastEvent =
@@ -25,42 +35,52 @@ type LastEvent =
   | "suppressed";
 
 export type ReconcileResult = {
-  scanned: number; // Resend emails read
-  matched: number; // email_log rows found for those ids
-  updated: number; // rows whose status/timestamps changed
+  scanned: number;
+  matched: number;
+  updated: number;
+  inserted: number; // backfilled rows Resend had but we didn't
   delivered: number;
   opened: number;
   bounced: number;
-  audits: number; // audit events recomputed
+  audits: number;
+  skipped?: boolean; // another instance was already reconciling
   error?: string;
 };
 
-const MAX_PAGES = 200; // up to 20,000 emails
+const MAX_PAGES = 200;
 
-/** Fetch a Resend id → last_event map for everything sent since `sinceMs`. */
-async function fetchResendEvents(
-  sinceMs: number
-): Promise<Map<string, LastEvent>> {
-  const map = new Map<string, LastEvent>();
+type ResendInfo = { ev: LastEvent; to: string; subject: string; created: string };
+
+/** Sweep Resend → id map of everything real (non-test) since `sinceMs`. */
+async function fetchResendData(sinceMs: number): Promise<Map<string, ResendInfo>> {
+  const map = new Map<string, ResendInfo>();
   await sweepResendEmails(
     sinceMs,
-    (row) => map.set(row.id, row.last_event as LastEvent),
+    (row) => {
+      const to = row.to?.[0] ?? "";
+      if (isTestAddress(to)) return;
+      map.set(row.id, {
+        ev: row.last_event as LastEvent,
+        to,
+        subject: row.subject ?? "",
+        created: row.created_at,
+      });
+    },
     MAX_PAGES
   );
   return map;
 }
 
 type LogRow = {
-  id: string;
   resend_id: string | null;
   status: string;
   delivered_at: string | null;
   opened_at: string | null;
   clicked_at: string | null;
   audit_id: string | null;
+  id: string;
 };
 
-/** Our email_log rows since `sinceIso` that carry a Resend id. */
 async function fetchLogRows(sinceIso: string): Promise<LogRow[]> {
   const db = supabaseAdmin();
   const rows: LogRow[] = [];
@@ -78,11 +98,36 @@ async function fetchLogRows(sinceIso: string): Promise<LogRow[]> {
   return rows;
 }
 
-export async function reconcileFromResend(days = 15): Promise<ReconcileResult> {
+const NEVER_SENT = new Set<LastEvent>(["canceled", "suppressed", "queued", "scheduled"]);
+
+/** Map a Resend last_event to email_log fields for a NEW (backfilled) row. */
+function rowFromEvent(info: ResendInfo) {
+  const at = new Date(resendTimeToMs(info.created)).toISOString();
+  const ev = info.ev;
+  const delivered = ev === "delivered" || ev === "opened" || ev === "clicked";
+  const opened = ev === "opened" || ev === "clicked";
+  const clicked = ev === "clicked";
+  let status = "sent";
+  if (delivered) status = "delivered";
+  else if (ev === "bounced") status = "bounced";
+  else if (ev === "complained") status = "complained";
+  else if (ev === "failed") status = "failed";
+  return {
+    email: info.to,
+    status,
+    sent_at: at,
+    delivered_at: delivered ? at : null,
+    opened_at: opened ? at : null,
+    clicked_at: clicked ? at : null,
+  };
+}
+
+async function reconcile(days: number): Promise<ReconcileResult> {
   const result: ReconcileResult = {
     scanned: 0,
     matched: 0,
     updated: 0,
+    inserted: 0,
     delivered: 0,
     opened: 0,
     bounced: 0,
@@ -91,9 +136,9 @@ export async function reconcileFromResend(days = 15): Promise<ReconcileResult> {
   const sinceMs = Date.now() - days * 86_400_000;
   const sinceIso = new Date(sinceMs).toISOString();
 
-  let events: Map<string, LastEvent>;
+  let events: Map<string, ResendInfo>;
   try {
-    events = await fetchResendEvents(sinceMs);
+    events = await fetchResendData(sinceMs);
   } catch (e) {
     result.error = e instanceof Error ? e.message : "Resend request failed";
     return result;
@@ -104,25 +149,26 @@ export async function reconcileFromResend(days = 15): Promise<ReconcileResult> {
   const db = supabaseAdmin();
   const now = new Date().toISOString();
   const affectedAudits = new Set<string>();
+  const known = new Set<string>();
 
+  // 1) UPDATE existing rows.
   for (const row of rows) {
-    const ev = row.resend_id ? events.get(row.resend_id) : undefined;
-    if (!ev) continue;
+    if (!row.resend_id) continue;
+    known.add(row.resend_id);
+    const info = events.get(row.resend_id);
+    if (!info) continue;
     result.matched++;
+    const ev = info.ev;
 
     const patch: Record<string, string> = {};
     const delivered = ev === "delivered" || ev === "opened" || ev === "clicked";
     const opened = ev === "opened" || ev === "clicked";
     const clicked = ev === "clicked";
-
-    // Only ever upgrade — never walk a status backwards.
     if (delivered && row.status === "sent") patch.status = "delivered";
-    if ((ev === "bounced" || ev === "complained") && row.status === "sent")
-      patch.status = ev;
+    if ((ev === "bounced" || ev === "complained") && row.status === "sent") patch.status = ev;
     if (delivered && !row.delivered_at) patch.delivered_at = now;
     if (opened && !row.opened_at) patch.opened_at = now;
     if (clicked && !row.clicked_at) patch.clicked_at = now;
-
     if (Object.keys(patch).length === 0) continue;
 
     const { error } = await db.from("email_log").update(patch).eq("id", row.id);
@@ -130,9 +176,34 @@ export async function reconcileFromResend(days = 15): Promise<ReconcileResult> {
     result.updated++;
     if (patch.status === "delivered") result.delivered++;
     if (patch.opened_at) result.opened++;
-    if (patch.status === "bounced" || patch.status === "complained")
-      result.bounced++;
+    if (patch.status === "bounced" || patch.status === "complained") result.bounced++;
     if (row.audit_id) affectedAudits.add(row.audit_id);
+  }
+
+  // 2) BACKFILL — insert real sends Resend has that we never logged.
+  const newsletterSubjects = new Set(
+    (await listNewsletters()).map((n) => n.subject)
+  );
+  const inserts: Record<string, unknown>[] = [];
+  for (const [id, info] of events) {
+    if (known.has(id)) continue;
+    if (NEVER_SENT.has(info.ev)) continue;
+    const base = rowFromEvent(info);
+    inserts.push({
+      ...base,
+      type: newsletterSubjects.has(info.subject) ? "newsletter" : "transactional",
+      resend_id: id,
+      audit_id: null,
+    });
+  }
+  for (let i = 0; i < inserts.length; i += 500) {
+    const slice = inserts.slice(i, i + 500);
+    const { error } = await db.from("email_log").insert(slice);
+    if (error) {
+      console.error("[reconcile] backfill insert failed:", error.message);
+      continue;
+    }
+    result.inserted += slice.length;
   }
 
   for (const auditId of affectedAudits) {
@@ -141,4 +212,22 @@ export async function reconcileFromResend(days = 15): Promise<ReconcileResult> {
   }
 
   return result;
+}
+
+export async function reconcileFromResend(days = 15): Promise<ReconcileResult> {
+  const ran = await withLock("resend-reconcile", 180, () => reconcile(days));
+  if (ran === null) {
+    return {
+      scanned: 0,
+      matched: 0,
+      updated: 0,
+      inserted: 0,
+      delivered: 0,
+      opened: 0,
+      bounced: 0,
+      audits: 0,
+      skipped: true,
+    };
+  }
+  return ran;
 }

@@ -61,7 +61,7 @@ export default async function NewslettersPage() {
                     <StatusPill status={n.status} />
                   </td>
                   <td className="px-4 py-3 text-[12px] text-bg/55">
-                    {n.status === "sent"
+                    {n.status === "sent" || n.status === "sending"
                       ? `${n.sent_count} / ${n.recipient_count}`
                       : "-"}
                   </td>
@@ -72,6 +72,7 @@ export default async function NewslettersPage() {
                     <NewsletterRowActions
                       id={n.id}
                       status={n.status}
+                      recipientCount={n.recipient_count}
                       failedCount={Math.max(
                         0,
                         n.recipient_count - n.sent_count

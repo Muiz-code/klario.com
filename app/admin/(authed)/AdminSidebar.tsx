@@ -20,6 +20,7 @@ import {
   ClipboardList,
   Anchor,
   Crown,
+  FlaskConical,
   LogOut,
   Menu,
   X,
@@ -68,6 +69,7 @@ const NAV_GROUPS = [
     title: "System",
     items: [
       { href: "/marketing/audit", label: "Audit log", icon: ScrollText },
+      { href: "/marketing/test-lab", label: "Test lab", icon: FlaskConical },
       { href: "/marketing/settings", label: "Settings", icon: Settings },
     ],
   },

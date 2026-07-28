@@ -2,23 +2,27 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Send, Trash2, RotateCcw } from "lucide-react";
+import { Send, Trash2, RotateCcw, Eye } from "lucide-react";
 import { ConfirmModal, InfoModal, type ConfirmState } from "../_components/Modal";
+import { SendProgressModal } from "./new/SendProgressModal";
 
 export function NewsletterRowActions({
   id,
   status,
   failedCount = 0,
+  recipientCount = 0,
 }: {
   id: string;
   status: string;
   failedCount?: number;
+  recipientCount?: number;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState<"send" | "delete" | "resend" | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState>(null);
   const [info, setInfo] = useState<{ title: string; message: string; ok?: boolean } | null>(null);
+  const [watching, setWatching] = useState(false);
 
   const resendFailed = async () => {
     setBusy("resend");
@@ -85,6 +89,17 @@ export function NewsletterRowActions({
   return (
     <>
       <div className="flex items-center justify-end gap-1">
+        {status === "sending" && (
+          <button
+            type="button"
+            onClick={() => setWatching(true)}
+            aria-label="Watch progress"
+            title="Watch sending progress"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-[12px] text-gold hover:bg-gold/10"
+          >
+            <Eye size={14} /> Watch
+          </button>
+        )}
         {canResendFailed && (
           <button
             type="button"
@@ -145,6 +160,17 @@ export function NewsletterRowActions({
 
       <ConfirmModal state={confirm} onClose={() => setConfirm(null)} loading={busy !== null} />
       <InfoModal state={info} onClose={() => setInfo(null)} />
+      {watching && (
+        <SendProgressModal
+          newsletterId={id}
+          total={recipientCount}
+          batchSize={100}
+          onClose={() => {
+            setWatching(false);
+            startTransition(() => router.refresh());
+          }}
+        />
+      )}
     </>
   );
 }

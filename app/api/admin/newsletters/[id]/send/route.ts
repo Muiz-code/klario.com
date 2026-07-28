@@ -121,6 +121,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     recipients = all
       .filter((s) => {
         if (s.status === "unsubscribed") return false;
+        if (s.source === "test") return false; // never blast load-test users
         if (!filterSet) return true; // "all"
         const inSet = filterSet.has(normalizeEmail(s.email));
         return mode === "keep" ? inSet : !inSet;

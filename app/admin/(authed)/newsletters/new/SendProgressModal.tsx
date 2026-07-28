@@ -14,9 +14,9 @@ type Progress = {
 };
 
 /**
- * Drives a newsletter send one batch at a time and shows live progress. Keeping
- * it open is what advances the send; closing early hands the rest to the
- * background worker (via /resume).
+ * Drives a newsletter send one batch at a time and shows plain-language progress.
+ * Keeping it open is what advances the send; closing early hands the rest to the
+ * background worker (via /resume) — it keeps sending either way.
  */
 export function SendProgressModal({
   newsletterId,
@@ -27,9 +27,7 @@ export function SendProgressModal({
 }: {
   newsletterId: string;
   total: number;
-  /** How many to send per batch (first N, then the next N…). */
   batchSize?: number;
-  /** Pause between batches so the send is visibly paced (and gentler). */
   pauseMs?: number;
   onClose: () => void;
 }) {
@@ -42,16 +40,15 @@ export function SendProgressModal({
     done: total === 0,
     pendingSample: [],
   });
-  const [batchNo, setBatchNo] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [askClose, setAskClose] = useState(false);
   const cancelled = useRef(false);
-  const totalBatches = batchSize > 0 ? Math.ceil(total / batchSize) : 1;
 
   useEffect(() => {
     cancelled.current = false;
     (async () => {
-      // Send batch by batch until the queue is drained: first `batchSize`, then
-      // the next, and so on — the queue drains in insertion order.
+      // Send the next batch until the queue is drained (in order: first N, then
+      // the next N, and so on).
       // eslint-disable-next-line no-constant-condition
       while (true) {
         if (cancelled.current) return;
@@ -63,14 +60,12 @@ export function SendProgressModal({
           });
           const data = await res.json().catch(() => ({}));
           if (!res.ok) {
-            setError(data.error || "Sending hit a snag. It will keep retrying.");
+            setError(data.error || "Sending hit a snag — retrying…");
             await new Promise((r) => setTimeout(r, 2000));
             continue;
           }
+          setError(null);
           if (cancelled.current) return;
-          if ((data.batchSent ?? 0) + (data.batchFailed ?? 0) > 0) {
-            setBatchNo((n) => n + 1);
-          }
           setP({
             total: data.total ?? total,
             sent: data.sent ?? 0,
@@ -81,9 +76,9 @@ export function SendProgressModal({
             pendingSample: data.pendingSample ?? [],
           });
           if (data.done) return;
-          await new Promise((r) => setTimeout(r, pauseMs)); // pace the batches
+          await new Promise((r) => setTimeout(r, pauseMs));
         } catch {
-          setError("Network hiccup — retrying…");
+          setError("Connection hiccup — retrying…");
           await new Promise((r) => setTimeout(r, 2500));
         }
       }
@@ -93,26 +88,26 @@ export function SendProgressModal({
     };
   }, [newsletterId, total, batchSize, pauseMs]);
 
-  const pct = p.total > 0 ? Math.round(((p.sent + p.failed) / p.total) * 100) : 100;
+  const done = p.sent + p.failed;
+  const pct = p.total > 0 ? Math.round((done / p.total) * 100) : 100;
 
-  const close = async () => {
-    cancelled.current = true;
-    // Not finished? Let the background worker take it the rest of the way.
-    if (!p.done && p.pending > 0) {
-      const ok = window.confirm(
-        `${p.pending} still not sent. Close anyway? The rest will keep sending in the background.`
-      );
-      if (!ok) return;
-      fetch(`/api/admin/newsletters/${newsletterId}/resume`, { method: "POST" }).catch(
-        () => {}
-      );
+  // Closing mid-send: confirm with a themed dialog (not a browser alert).
+  const requestClose = () => {
+    if (p.done || p.pending === 0) {
+      onClose();
+      return;
     }
+    setAskClose(true);
+  };
+  const confirmClose = () => {
+    cancelled.current = true;
+    fetch(`/api/admin/newsletters/${newsletterId}/resume`, { method: "POST" }).catch(() => {});
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/75 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl border border-bg/12 bg-[#0d0e12] shadow-2xl">
+      <div className="relative w-full max-w-lg rounded-2xl border border-bg/12 bg-[#0d0e12] shadow-2xl">
         <div className="flex items-center justify-between border-b border-bg/10 px-6 py-4">
           <div className="flex items-center gap-2.5">
             {p.done ? (
@@ -121,12 +116,12 @@ export function SendProgressModal({
               <Loader2 size={18} className="animate-spin text-gold" />
             )}
             <p className="text-sm font-semibold text-bg">
-              {p.done ? "All sent" : "Sending…"}
+              {p.done ? "All done" : "Sending your emails…"}
             </p>
           </div>
           <button
             type="button"
-            onClick={close}
+            onClick={requestClose}
             className="rounded-md p-1.5 text-bg/50 hover:bg-bg/5 hover:text-bg"
             aria-label="Close"
           >
@@ -135,27 +130,31 @@ export function SendProgressModal({
         </div>
 
         <div className="flex flex-col gap-4 px-6 py-5">
-          {!p.done && (
-            <div className="flex items-start gap-2 rounded-lg border border-amber-400/25 bg-amber-400/[0.06] px-3 py-2.5 text-[12.5px] text-amber-200/90">
-              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-              <span>
-                Keep this open until it finishes. If you close, the rest still
-                send in the background — this just lets you watch it.
-              </span>
-            </div>
-          )}
+          {/* Big plain-language headline */}
+          <div className="text-center">
+            <p className="font-display text-3xl text-bg">
+              {p.sent.toLocaleString()}
+              <span className="text-bg/40"> / {p.total.toLocaleString()}</span>
+            </p>
+            <p className="mt-0.5 text-[13px] text-bg/55">
+              {p.done
+                ? `All ${p.total.toLocaleString()} emails have been sent.`
+                : `emails sent so far — ${p.pending.toLocaleString()} still to go`}
+            </p>
+          </div>
 
           {/* Progress bar */}
           <div>
-            <div className="mb-1.5 flex items-center justify-between text-[13px]">
-              <span className="font-medium text-bg">
-                {p.sent + p.failed} / {p.total}
-              </span>
-              <span className="text-bg/55">{pct}%</span>
+            <div className="mb-1.5 flex items-center justify-between text-[12px] text-bg/55">
+              <span>{pct}% complete</span>
+              {!p.done && <span>sending {batchSize} at a time</span>}
             </div>
             <div className="h-2.5 overflow-hidden rounded-full bg-bg/10">
               <div
-                className="h-full rounded-full bg-gold transition-[width] duration-300"
+                className={
+                  "h-full rounded-full transition-[width] duration-300 " +
+                  (p.done ? "bg-emerald-400" : "bg-gold")
+                }
                 style={{ width: `${pct}%` }}
               />
             </div>
@@ -163,37 +162,22 @@ export function SendProgressModal({
 
           {/* Stat tiles */}
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-lg border border-bg/10 bg-bg/[0.03] py-2.5">
-              <p className="font-display text-xl text-emerald-400">{p.sent}</p>
-              <p className="text-[11px] text-bg/50">Delivered</p>
-            </div>
-            <div className="rounded-lg border border-bg/10 bg-bg/[0.03] py-2.5">
-              <p className="font-display text-xl text-bg/80">{p.pending}</p>
-              <p className="text-[11px] text-bg/50">Not sent yet</p>
-            </div>
-            <div className="rounded-lg border border-bg/10 bg-bg/[0.03] py-2.5">
-              <p className={"font-display text-xl " + (p.failed ? "text-red-300" : "text-bg/50")}>
-                {p.failed}
-              </p>
-              <p className="text-[11px] text-bg/50">Failed</p>
-            </div>
+            <Tile value={p.sent} label="Sent" tone="good" />
+            <Tile value={p.pending} label="Still to send" />
+            <Tile value={p.failed} label="Failed" tone={p.failed ? "bad" : undefined} />
           </div>
 
           {!p.done && (
-            <p className="text-center text-[12px] text-bg/45">
-              {batchNo > 0
-                ? `Batch ${batchNo}${
-                    totalBatches > 1 ? ` of ~${totalBatches}` : ""
-                  } · ${p.batchSent} sent · sending the next ${batchSize}…`
-                : `Sending in batches of ${batchSize}…`}
+            <p className="rounded-lg border border-amber-400/25 bg-amber-400/[0.06] px-3 py-2.5 text-center text-[12.5px] text-amber-200/90">
+              You can keep this open to watch, or close it — either way, every email
+              still gets sent.
             </p>
           )}
 
-          {/* People not sent to */}
           {p.pending > 0 && p.pendingSample.length > 0 && (
             <div>
               <p className="mb-1.5 text-[11px] uppercase tracking-[0.12em] text-bg/45">
-                Still to send ({p.pending})
+                Up next
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {p.pendingSample.map((e) => (
@@ -206,16 +190,14 @@ export function SendProgressModal({
                 ))}
                 {p.pending > p.pendingSample.length && (
                   <span className="px-2 py-1 text-[12px] text-bg/40">
-                    +{p.pending - p.pendingSample.length} more
+                    +{(p.pending - p.pendingSample.length).toLocaleString()} more
                   </span>
                 )}
               </div>
             </div>
           )}
 
-          {error && (
-            <p className="text-[12px] text-amber-300/80">{error}</p>
-          )}
+          {error && <p className="text-center text-[12px] text-amber-300/80">{error}</p>}
         </div>
 
         <div className="flex items-center justify-end gap-2 border-t border-bg/10 px-6 py-4">
@@ -230,14 +212,64 @@ export function SendProgressModal({
           ) : (
             <button
               type="button"
-              onClick={close}
+              onClick={requestClose}
               className="rounded-lg border border-bg/15 px-4 py-2 text-sm text-bg/70 hover:text-bg"
             >
-              Close (finish in background)
+              Close
             </button>
           )}
         </div>
+
+        {/* Themed close confirmation (replaces the browser alert) */}
+        {askClose && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-ink/70 p-6 backdrop-blur-sm">
+            <div className="w-full max-w-sm rounded-xl border border-bg/12 bg-[#14161b] p-5 shadow-2xl">
+              <p className="text-sm font-semibold text-bg">Close and keep sending?</p>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-bg/60">
+                {p.pending.toLocaleString()} emails are still to send. Closing won&apos;t
+                stop them — they keep sending in the background. You can check the{" "}
+                <span className="text-bg/80">Newsletters</span> page, which shows{" "}
+                <span className="text-emerald-300">Sent</span> once it finishes.
+              </p>
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAskClose(false)}
+                  className="rounded-lg border border-bg/15 px-3.5 py-2 text-[13px] text-bg/70 hover:text-bg"
+                >
+                  Keep watching
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmClose}
+                  className="rounded-lg bg-gold px-3.5 py-2 text-[13px] font-medium text-ink"
+                >
+                  Close &amp; continue
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function Tile({
+  value,
+  label,
+  tone,
+}: {
+  value: number;
+  label: string;
+  tone?: "good" | "bad";
+}) {
+  const color =
+    tone === "good" ? "text-emerald-400" : tone === "bad" ? "text-red-300" : "text-bg/80";
+  return (
+    <div className="rounded-lg border border-bg/10 bg-bg/[0.03] py-2.5">
+      <p className={"font-display text-xl " + color}>{value.toLocaleString()}</p>
+      <p className="text-[11px] text-bg/50">{label}</p>
     </div>
   );
 }

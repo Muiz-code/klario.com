@@ -1,5 +1,5 @@
 import { resendTimeToMs } from "@/lib/email/resend-time";
-import { sweepResendEmails } from "@/lib/email/resend-list";
+import { sweepResendEmails, isTestAddress } from "@/lib/email/resend-list";
 
 /**
  * Per-recipient delivery record read straight from Resend (the complete source
@@ -76,6 +76,7 @@ async function compute(
     if (NOT_SENT.has(ev)) return;
     if (subject && row.subject !== subject) return; // one campaign only
     if (resendTimeToMs(row.created_at) >= untilMs) return; // newer than range
+    if (isTestAddress(row.to?.[0])) return; // exclude load-test traffic
     const email = (row.to?.[0] ?? "").toLowerCase().trim();
     if (!email) return;
 

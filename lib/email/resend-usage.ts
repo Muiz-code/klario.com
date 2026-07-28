@@ -1,5 +1,5 @@
 import { resendTimeToMs } from "@/lib/email/resend-time";
-import { sweepResendEmails } from "@/lib/email/resend-list";
+import { sweepResendEmails, isTestAddress } from "@/lib/email/resend-list";
 
 /**
  * Resend send usage, read live from Resend itself (the `emails.list` API), for a
@@ -86,6 +86,7 @@ async function computeUsage(): Promise<ResendUsage> {
     monthStartMs,
     (row) => {
       if (NOT_SENT.has(row.last_event)) return;
+      if (isTestAddress(row.to?.[0])) return; // exclude load-test traffic
       const createdMs = toMs(row.created_at);
       const isToday = createdMs >= dayStartMs;
       const delivered = DELIVERED_EVENTS.has(row.last_event);

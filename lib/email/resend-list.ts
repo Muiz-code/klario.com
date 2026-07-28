@@ -1,5 +1,6 @@
 import { resend } from "@/lib/email/client";
 import { resendTimeToMs } from "@/lib/email/resend-time";
+import { rateLimitWait } from "@/lib/redis";
 
 /**
  * Shared, rate-limited pager for Resend's `emails.list`. Resend allows only
@@ -16,6 +17,15 @@ export type ResendListRow = {
   subject: string;
   to?: string[] | null;
 };
+
+/**
+ * Load-test recipients use resend.dev addresses. They're real Resend sends (so
+ * Resend keeps them in its history forever — we can't delete them there), but
+ * they're noise in real analytics, so every aggregate view filters them out.
+ */
+export function isTestAddress(email: string | null | undefined): boolean {
+  return /@resend\.dev$/i.test((email ?? "").trim());
+}
 
 const MIN_GAP_MS = 150; // ~6.6 req/s — comfortably under Resend's 10/s
 const MAX_RETRIES = 5;
@@ -34,6 +44,8 @@ function isRateLimit(msg: string): boolean {
 async function listOnce(after?: string) {
   const gap = MIN_GAP_MS - (Date.now() - lastCallAt);
   if (gap > 0) await sleep(gap);
+  // Global cap across all instances (no-op without Redis). Under Resend's 10/s.
+  await rateLimitWait("resend:list", 8, 1000);
 
   for (let attempt = 0; ; attempt++) {
     lastCallAt = Date.now();

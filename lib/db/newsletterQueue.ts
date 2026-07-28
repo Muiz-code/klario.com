@@ -133,10 +133,11 @@ export async function markQueueRows(
   const sentIds = results.filter((r) => r.ok).map((r) => r.id);
   const failed = results.filter((r) => !r.ok);
   if (sentIds.length) {
-    await db
+    const { error } = await db
       .from("newsletter_send_queue")
       .update({ status: "sent", sent_at: new Date().toISOString(), error: null })
       .in("id", sentIds);
+    if (error) console.error("[queue] markQueueRows(sent) failed:", error.message);
   }
   // Update failures individually so each keeps its own error message.
   for (const f of failed) {

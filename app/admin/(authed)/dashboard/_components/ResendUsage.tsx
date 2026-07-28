@@ -81,6 +81,7 @@ export function ResendUsage({ fallbackDay }: { fallbackDay: number }) {
   const [u, setU] = useState<Usage | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errored, setErrored] = useState(false);
 
   const load = async (opts?: { force?: boolean }) => {
     if (opts?.force) setRefreshing(true);
@@ -90,9 +91,14 @@ export function ResendUsage({ fallbackDay }: { fallbackDay: number }) {
         { cache: "no-store" }
       );
       const data = (await res.json()) as Usage;
-      if (res.ok) setU(data);
+      if (res.ok && !data.error) {
+        setU(data);
+        setErrored(false);
+      } else {
+        setErrored(true);
+      }
     } catch {
-      /* keep last good value */
+      setErrored(true);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -107,12 +113,30 @@ export function ResendUsage({ fallbackDay }: { fallbackDay: number }) {
   }, []);
 
   if (!u) {
-    // Before the first Resend response, show our own logged "sent today".
+    // No Resend data yet. Be honest about what the number is: while loading we
+    // show our logged count clearly labelled "logged"; on error we say so
+    // rather than passing a stale number off as the live Resend figure.
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-xl border border-bg/12 bg-bg/4 px-3 py-2 text-[13px] text-bg/70">
-        <Send size={13} className={"text-gold " + (loading ? "animate-pulse" : "")} />
-        <span className="font-medium text-bg">{fallbackDay}</span> sent today
-      </span>
+      <button
+        type="button"
+        onClick={() => load({ force: true })}
+        title={errored ? "Couldn't reach Resend — click to retry" : "Loading from Resend…"}
+        className="inline-flex items-center gap-1.5 rounded-xl border border-bg/12 bg-bg/4 px-3 py-2 text-[13px] text-bg/70 hover:border-gold/40"
+      >
+        {errored ? (
+          <AlertTriangle size={13} className="text-amber-400" />
+        ) : (
+          <Send size={13} className={"text-gold " + (loading ? "animate-pulse" : "")} />
+        )}
+        {errored ? (
+          <span>Resend unavailable</span>
+        ) : (
+          <>
+            <span className="font-medium text-bg">{fallbackDay}</span>
+            <span className="text-bg/45"> logged today</span>
+          </>
+        )}
+      </button>
     );
   }
 

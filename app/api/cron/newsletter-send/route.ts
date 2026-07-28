@@ -32,9 +32,10 @@ export async function GET(req: Request) {
 
   // Do the actual sending after the response is sent, so the caller's request
   // (and this one) return fast and the chain never blocks.
+  const origin = new URL(req.url).origin;
   after(async () => {
     const stillPending = await drainForBudget(BUDGET_MS, CHUNK);
-    if (stillPending) await pingSendWorker();
+    if (stillPending) await pingSendWorker(origin);
   });
 
   return NextResponse.json({ ok: true, accepted: true }, { status: 202 });

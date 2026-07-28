@@ -158,19 +158,21 @@ export async function drainForBudget(
   return (await newslettersWithPending(1)).length > 0;
 }
 
-function workerUrl(): string {
-  const base = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : SITE.url;
+function workerUrl(baseOrigin?: string): string {
+  // Prefer the caller's own origin so self-ping hits THIS deployment (works on
+  // localhost too); fall back to VERCEL_URL, then the production site.
+  const base =
+    baseOrigin ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : SITE.url);
   return `${base}/api/cron/newsletter-send`;
 }
 
 /** Kick the worker and wait only for its instant 202 (it does the work after). */
-export async function pingSendWorker(): Promise<void> {
+export async function pingSendWorker(baseOrigin?: string): Promise<void> {
   const secret = process.env.CRON_SECRET;
   if (!secret) return;
   try {
-    await fetch(workerUrl(), {
+    await fetch(workerUrl(baseOrigin), {
       method: "GET",
       headers: { authorization: `Bearer ${secret}` },
     });

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ListChecks, Users } from "lucide-react";
+import { ListChecks, Users, Mail } from "lucide-react";
 import { AuditTable } from "./AuditTable";
 import { RecipientsPanel } from "./RecipientsPanel";
+import { AllMailPanel } from "./AllMailPanel";
 import type { AuditEvent } from "@/lib/db/audit";
 
 /**
@@ -13,7 +14,7 @@ import type { AuditEvent } from "@/lib/db/audit";
  * sends made across separate drafts.
  */
 export function AuditViews({ events }: { events: AuditEvent[] }) {
-  const [tab, setTab] = useState<"activity" | "recipients">("activity");
+  const [tab, setTab] = useState<"activity" | "recipients" | "allmail">("activity");
   // When you open a campaign's recipients from an Activity row, this pre-filters
   // the Recipients tab to that subject.
   const [focusSubject, setFocusSubject] = useState<string | null>(null);
@@ -38,12 +39,17 @@ export function AuditViews({ events }: { events: AuditEvent[] }) {
         <button type="button" onClick={() => setTab("recipients")} className={tabBtn(tab === "recipients")}>
           <Users size={15} /> Recipients
         </button>
+        <button type="button" onClick={() => setTab("allmail")} className={tabBtn(tab === "allmail")}>
+          <Mail size={15} /> All mail
+        </button>
       </div>
 
       {tab === "activity" ? (
         <AuditTable events={events} onOpenRecipients={openRecipients} />
-      ) : (
+      ) : tab === "recipients" ? (
         <RecipientsPanel focusSubject={focusSubject} />
+      ) : (
+        <AllMailPanel />
       )}
     </div>
   );
