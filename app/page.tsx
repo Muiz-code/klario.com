@@ -8,7 +8,7 @@ import { Security } from "@/components/sections/Security";
 import { Pricing } from "@/components/sections/Pricing";
 import { Faq } from "@/components/sections/Faq";
 import { Download } from "@/components/sections/Download";
-import { Ambassadors } from "@/components/sections/Ambassadors";
+import { AnchorClubCTA } from "@/components/sections/AnchorClubCTA";
 import { Contact } from "@/components/sections/Contact";
 import { Footer } from "@/components/layout/Footer";
 
@@ -20,13 +20,13 @@ export default function Home() {
         <Hero />
         <Problem />
         <Solution />
+        <AnchorClubCTA />
         <HowItWorks />
         <Security />
         <Pricing />
         <Faq />
         <Download />
         <Contact />
-        <Ambassadors />
       </main>
       <Footer />
     </AppShell>

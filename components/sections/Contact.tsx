@@ -85,9 +85,9 @@ export function Contact() {
             </a>
           </div>
           <p className="text-sm leading-relaxed text-body/65">
-            For ambassador applications, use the{" "}
-            <a href="#ambassadors" className="text-gold hover:underline">
-              ambassador form
+            Want to build with us? Join the{" "}
+            <a href="/anchor-club" className="text-gold hover:underline">
+              Anchor Club
             </a>
             . For everything else, this is the place.
           </p>

@@ -62,7 +62,7 @@ export function ambassadorConfirmation(opts: {
       eyebrow: "Ambassador application received",
       heading: `Thanks, ${name}. We've got your application.`,
       intro: `We're excited to read about your community${where}. The team reviews ambassador applications weekly, and we'll be in touch within 7 days either way.`,
-      cta: { label: "See ambassador perks", href: `${SITE.url}#ambassadors` },
+      cta: { label: "Join the Anchor Club", href: `${SITE.url}/anchor-club` },
       steps: [
         {
           title: "We review applications weekly",

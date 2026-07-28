@@ -5,7 +5,7 @@ export const SITE = {
   subTagline: "One app. Every account. Full clarity.",
   url: "https://www.klario.finance",
   downloadHref: "#download",
-  ambassadorsHref: "#ambassadors",
+  ambassadorsHref: "/anchor-club",
   emails: {
     hello: "hello@klario.finance",
     contact: "contact@klario.finance",
@@ -111,7 +111,7 @@ export const FOOTER = {
       links: [
         { label: "About", href: "#problem" },
         { label: "Investors", href: "/investors" },
-        { label: "Ambassadors", href: "#ambassadors" },
+        { label: "Anchor Club", href: "/anchor-club" },
         { label: "Contact", href: "#contact" },
         { label: "Beta program", action: "beta" as const },
       ],
