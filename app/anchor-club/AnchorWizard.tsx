@@ -148,6 +148,8 @@ export function AnchorWizard() {
   const [alreadyFilled, setAlreadyFilled] = useState(false);
   const [played, setPlayed] = useState(false);
   const [booted, setBooted] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [toastId, setToastId] = useState(0);
   const reducedRef = useRef(false);
   const liveRef = useRef<HTMLParagraphElement>(null);
 
@@ -187,6 +189,21 @@ export function AnchorWizard() {
   const announce = (msg: string) => {
     if (liveRef.current) liveRef.current.textContent = msg;
   };
+
+  // Raise an error: inline message + screen-reader announce + a top-center toast.
+  const flash = useCallback((msg: string) => {
+    setErr(msg);
+    if (liveRef.current) liveRef.current.textContent = msg;
+    setToast(msg);
+    setToastId((n) => n + 1);
+  }, []);
+
+  // Auto-dismiss the toast; re-armed each time a new error is flashed (toastId).
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4500);
+    return () => clearTimeout(t);
+  }, [toast, toastId]);
 
   const validate = useCallback(
     (n: number): string => {
@@ -237,6 +254,7 @@ export function AnchorWizard() {
   // option is inherently valid) and by validated navigation once checks pass.
   const advanceTo = useCallback((next: number) => {
     setErr("");
+    setToast(null);
     const target = Math.max(0, Math.min(next, 8));
     setStep(target);
     window.scrollTo({
@@ -251,21 +269,19 @@ export function AnchorWizard() {
       if (next > step && step >= 1 && step <= TOTAL) {
         const e = validate(step);
         if (e) {
-          setErr(e);
-          announce(e);
+          flash(e);
           return;
         }
       }
       advanceTo(next);
     },
-    [step, validate, advanceTo]
+    [step, validate, advanceTo, flash]
   );
 
   const submit = useCallback(async () => {
     const e = validate(7);
     if (e) {
-      setErr(e);
-      announce(e);
+      flash(e);
       return;
     }
     if (submitting) return;
@@ -296,7 +312,7 @@ export function AnchorWizard() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErr(data.error || "Something went wrong. Please try again.");
+        flash(data.error || "Something went wrong. Please try again.");
         return;
       }
       if (data.alreadyFilled) setAlreadyFilled(true);
@@ -322,11 +338,11 @@ export function AnchorWizard() {
       window.scrollTo({ top: 0, behavior: "auto" });
       announce("Your Anchor Club card is ready.");
     } catch {
-      setErr("Network error. Please try again.");
+      flash("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
-  }, [s, submitting, validate]);
+  }, [s, submitting, validate, flash]);
 
   // Advance from a step. On the contact step we first check the email isn't
   // already registered, so a repeat applicant is stopped up front (not after
@@ -337,8 +353,7 @@ export function AnchorWizard() {
 
     const e = validate(2);
     if (e) {
-      setErr(e);
-      announce(e);
+      flash(e);
       return;
     }
     if (checking) return;
@@ -349,10 +364,9 @@ export function AnchorWizard() {
       );
       const data = await res.json().catch(() => ({}));
       if (data.exists) {
-        const msg =
-          "This email has already been used to register — each person can join the Anchor Club once.";
-        setErr(msg);
-        announce(msg);
+        flash(
+          "This email has already been used to register — each person can join the Anchor Club once."
+        );
         return;
       }
     } catch {
@@ -361,7 +375,7 @@ export function AnchorWizard() {
       setChecking(false);
     }
     advanceTo(3);
-  }, [step, checking, s.email, validate, submit, go, advanceTo]);
+  }, [step, checking, s.email, validate, submit, go, advanceTo, flash]);
 
   // Keyboard: Enter to advance, Shift+Enter to go back (textarea keeps newline).
   useEffect(() => {
@@ -459,6 +473,20 @@ export function AnchorWizard() {
         aria-valuenow={Math.min(step, TOTAL)}
       />
       <PageTexture />
+      {toast && (
+        <div className={styles.toast} role="alert" key={toastId}>
+          <span className={styles.toastDot} aria-hidden="true" />
+          <span>{toast}</span>
+          <button
+            type="button"
+            className={styles.toastClose}
+            onClick={() => setToast(null)}
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
       <div className={styles.wrap}>
         <div aria-live="polite">
           {step === 0 && <Hero onStart={() => go(1)} />}
