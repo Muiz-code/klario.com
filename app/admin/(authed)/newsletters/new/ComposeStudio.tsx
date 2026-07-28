@@ -44,18 +44,35 @@ function plainText(html: string): string {
 }
 
 type Mode = "write" | "html";
-type Segment = "all" | "new" | "existing" | "failed" | "choose";
-type Counts = { all: number; new: number; existing: number; failed: number };
+type Segment =
+  | "all"
+  | "new"
+  | "existing"
+  | "failed"
+  | "sent_today"
+  | "not_today"
+  | "choose";
+type Counts = {
+  all: number;
+  new: number;
+  existing: number;
+  failed: number;
+  sent_today: number;
+  not_today: number;
+};
 type Person = {
   email: string;
   name: string;
   status: string;
   mailed: boolean;
+  mailedToday: boolean;
   failed: boolean;
 };
 
 const SEGMENTS: { id: Segment; label: string; hint: string }[] = [
   { id: "all", label: "All subscribers", hint: "Everyone except unsubscribed" },
+  { id: "not_today", label: "Not sent today", hint: "Haven't been emailed today" },
+  { id: "sent_today", label: "Sent today", hint: "Already emailed today" },
   { id: "new", label: "New subscribers", hint: "Signed up, not yet emailed" },
   { id: "existing", label: "Existing subscribers", hint: "Already invited or active" },
   { id: "failed", label: "Failed / bounced", hint: "Last delivery failed or bounced" },
@@ -210,6 +227,8 @@ export function ComposeStudio({
     if (segment === "new") return people.filter((p) => !p.mailed);
     if (segment === "existing") return people.filter((p) => p.mailed);
     if (segment === "failed") return people.filter((p) => p.failed);
+    if (segment === "sent_today") return people.filter((p) => p.mailedToday);
+    if (segment === "not_today") return people.filter((p) => !p.mailedToday);
     return people; // all / choose
   }, [people, segment]);
 

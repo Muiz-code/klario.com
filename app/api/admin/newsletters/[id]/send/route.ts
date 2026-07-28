@@ -1,48 +1,59 @@
 import { NextResponse } from "next/server";
-import { getNewsletter, markNewsletterSent } from "@/lib/db/newsletters";
-import { listSignups, markInvited } from "@/lib/db/signups";
+import { getNewsletter, markNewsletterSending } from "@/lib/db/newsletters";
+import { listSignups } from "@/lib/db/signups";
 import {
-  logEmails,
   getMailedEmails,
+  getEmailsMailedSince,
   getDeliveryProblems,
 } from "@/lib/db/email-log";
 import { normalizeEmail } from "@/lib/duplicates";
 import { createAuditEvent } from "@/lib/db/audit";
 import { getAdminEmail } from "@/lib/supabase/server";
-import { unsubscribeUrl } from "@/lib/email/links";
-import { sendBatch, type BatchMessage } from "@/lib/email/batch";
-import { cleanupOrphanImages } from "@/lib/storage/cleanup";
+import { enqueueRecipients, getQueueCounts } from "@/lib/db/newsletterQueue";
+import { processSendChunk, triggerSendWorker } from "@/lib/email/newsletterSender";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-type Segment = "all" | "new" | "existing" | "failed";
+// "all" = everyone not unsubscribed. "new"/"existing" = never/already mailed
+// (ever). "sent_today"/"not_today" = mailed / not mailed since midnight.
+// "failed" = last delivery failed/bounced.
+type Segment = "all" | "new" | "existing" | "failed" | "sent_today" | "not_today";
+const SEGMENTS = new Set<Segment>([
+  "all",
+  "new",
+  "existing",
+  "failed",
+  "sent_today",
+  "not_today",
+]);
+
+function startOfTodayIso(): string {
+  // Server-day midnight (UTC). Good enough for a "today" convenience filter.
+  return new Date().toISOString().slice(0, 10) + "T00:00:00.000Z";
+}
 
 /**
- * Batch-send a saved newsletter. body:
- *   { segment?: "all" | "new" | "existing" | "failed" }  -> send to that audience, or
- *   { emails?: string[] }                                -> send to these people
+ * Queue a newsletter for background sending. Resolves the audience, enqueues
+ * recipients, marks the newsletter "sending", sends the first chunk immediately
+ * for instant feedback, and kicks the cron worker to drain the rest. The send
+ * therefore resumes after any interruption and scales to very large audiences.
  *
- * Segments: all = everyone not unsubscribed; new = never mailed; existing =
- * already mailed; failed = last delivery failed or bounced. An explicit
- * emails[] takes priority and may include addresses not on the list.
+ * body: { segment?: Segment } or { emails?: string[] } (explicit list wins).
  */
-export async function POST(
-  req: Request,
-  ctx: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  if (!(await getAdminEmail())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await ctx.params;
 
   let segment: Segment = "all";
   let emails: string[] | null = null;
   try {
     const body = (await req.json()) as { segment?: unknown; emails?: unknown };
-    if (
-      body.segment === "new" ||
-      body.segment === "existing" ||
-      body.segment === "failed"
-    ) {
-      segment = body.segment;
+    if (typeof body.segment === "string" && SEGMENTS.has(body.segment as Segment)) {
+      segment = body.segment as Segment;
     }
     if (Array.isArray(body.emails)) {
       emails = body.emails
@@ -51,73 +62,67 @@ export async function POST(
         .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
     }
   } catch {
-    // no body / invalid JSON -> default to "all"
+    // no body -> default "all"
   }
 
   const newsletter = await getNewsletter(id);
   if (!newsletter) {
     return NextResponse.json({ error: "Newsletter not found." }, { status: 404 });
   }
-  if (newsletter.status === "sent") {
-    return NextResponse.json(
-      { error: "This newsletter was already sent." },
-      { status: 409 }
-    );
-  }
 
-  const [all, mailedEmails] = await Promise.all([
-    listSignups({ limit: 50000 }),
-    getMailedEmails(),
-  ]);
-  // "New" = never sent any mail (not in the email log); "existing" = already
-  // mailed. Keeps this consistent with the audience page and the compose counts.
-  const mailedSet = new Set(mailedEmails.map(normalizeEmail));
-  const emailSet = emails ? new Set(emails) : null;
+  const all = await listSignups({ limit: 50000 });
 
-  type Recip = {
-    email: string;
-    first_name: string | null;
-    id?: string;
-    status?: string;
-  };
+  type Recip = { email: string; first_name: string | null; signup_id: string | null };
   let recipients: Recip[];
 
-  if (emailSet) {
-    // Explicit list: send to each, using a subscriber's name when we have one,
-    // and sending to typed-in addresses that aren't on the list at all.
+  if (emails) {
+    const emailSet = new Set(emails);
     const bySignup = new Map(all.map((s) => [s.email.toLowerCase(), s]));
     recipients = [...emailSet]
       .map((email): Recip | null => {
         const s = bySignup.get(email);
         if (s) {
           if (s.status === "unsubscribed") return null;
-          return { email: s.email, first_name: s.first_name, id: s.id, status: s.status };
+          return {
+            email: s.email,
+            first_name: s.first_name,
+            signup_id: s.status === "pending" ? s.id : null,
+          };
         }
-        return { email, first_name: null };
+        return { email, first_name: null, signup_id: null };
       })
       .filter((r): r is Recip => r !== null);
   } else {
-    let problemSet: Set<string> | null = null;
-    if (segment === "failed") {
-      const problems = await getDeliveryProblems();
-      problemSet = new Set(
-        [...problems.failed, ...problems.bounced].map(normalizeEmail)
+    // Resolve the segment against the delivery log.
+    let filterSet: Set<string> | null = null; // emails to keep or exclude
+    let mode: "keep" | "exclude" = "keep";
+    if (segment === "new" || segment === "existing") {
+      const mailed = new Set((await getMailedEmails()).map(normalizeEmail));
+      filterSet = mailed;
+      mode = segment === "existing" ? "keep" : "exclude";
+    } else if (segment === "sent_today" || segment === "not_today") {
+      const today = new Set(
+        (await getEmailsMailedSince(startOfTodayIso())).map(normalizeEmail)
       );
+      filterSet = today;
+      mode = segment === "sent_today" ? "keep" : "exclude";
+    } else if (segment === "failed") {
+      const problems = await getDeliveryProblems();
+      filterSet = new Set([...problems.failed, ...problems.bounced].map(normalizeEmail));
+      mode = "keep";
     }
+
     recipients = all
       .filter((s) => {
         if (s.status === "unsubscribed") return false;
-        const mailed = mailedSet.has(normalizeEmail(s.email));
-        if (segment === "new") return !mailed;
-        if (segment === "existing") return mailed;
-        if (segment === "failed") return problemSet!.has(normalizeEmail(s.email));
-        return true;
+        if (!filterSet) return true; // "all"
+        const inSet = filterSet.has(normalizeEmail(s.email));
+        return mode === "keep" ? inSet : !inSet;
       })
       .map((s) => ({
         email: s.email,
         first_name: s.first_name,
-        id: s.id,
-        status: s.status,
+        signup_id: s.status === "pending" ? s.id : null,
       }));
   }
 
@@ -125,96 +130,33 @@ export async function POST(
     return NextResponse.json({ error: "No recipients in that audience." }, { status: 400 });
   }
 
-  // PDF (or other) attachments live on the newsletter; Resend takes them by URL.
-  const attachments = (newsletter.attachments ?? [])
-    .filter((a) => a.url)
-    .map((a) => ({ filename: a.filename || "attachment.pdf", path: a.url }));
-
-  const messages: BatchMessage[] = recipients.map((s) => {
-    const link = unsubscribeUrl(s.email);
-    // Use the recipient's first name; when we don't have one, fall back to
-    // "from Klario" so a greeting like "Hello {{first_name}}," reads
-    // "Hello from Klario,".
-    const firstName = s.first_name?.trim() || "from Klario";
-    const html = newsletter.html
-      .replace(/\{\{\s*unsubscribe_url\s*\}\}/g, link)
-      .replace(/\{\{\s*first_name\s*\}\}/g, escapeHtml(firstName));
-    return {
-      to: s.email,
-      subject: newsletter.subject,
-      html,
-      text: `${newsletter.subject}\n\nView this email in a browser if it does not render. Unsubscribe: ${link}`,
-      headers: {
-        "List-Unsubscribe": `<${link}>`,
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-      },
-      attachments: attachments.length ? attachments : undefined,
-    };
-  });
-
-  const results = await sendBatch(messages);
-  const sent = results.filter((r) => r.ok).length;
-  const failed = results.length - sent;
-
-  // Anyone still "pending" who was successfully emailed has now been contacted -
-  // advance them to "invited" so they stop showing as a new/uncontacted lead.
-  const okEmails = new Set(results.filter((r) => r.ok).map((r) => r.to));
-  const nowContacted = recipients
-    .filter((s) => s.status === "pending" && s.id && okEmails.has(s.email))
-    .map((s) => s.id as string);
-  if (nowContacted.length > 0) await markInvited(nowContacted);
+  // Enqueue (idempotent per email), then flag the newsletter as sending.
+  await enqueueRecipients(id, recipients);
+  const counts = await getQueueCounts(id);
 
   const auditId = await createAuditEvent({
     action: "newsletter",
     actor: await getAdminEmail(),
     subject: newsletter.subject,
     template: "Newsletter",
-    segment: emailSet ? "choose" : segment,
-    recipientCount: recipients.length,
-    sentCount: sent,
-    failedCount: failed,
-    meta: {
-      newsletter_id: id,
-      failures: results.filter((r) => !r.ok).map((r) => ({ email: r.to, error: r.error })),
-    },
+    segment: emails ? "choose" : segment,
+    recipientCount: counts.total,
+    sentCount: 0,
+    failedCount: 0,
+    meta: { newsletter_id: id },
   });
+  await markNewsletterSending(id, { auditId, recipientCount: counts.total });
 
-  await Promise.all([
-    logEmails(
-      results.map((r) => ({
-        email: r.to,
-        type: "newsletter",
-        resend_id: r.id ?? null,
-        status: r.ok ? ("sent" as const) : ("failed" as const),
-        error: r.error ?? null,
-      })),
-      auditId
-    ),
-    markNewsletterSent(id, {
-      recipientCount: recipients.length,
-      sentCount: sent,
-      status: sent > 0 ? "sent" : "failed",
-    }),
-  ]);
-
-  // Free space: remove orphaned images (abandoned composes / test uploads).
-  // Images used by this newsletter are protected because its html is saved.
-  cleanupOrphanImages().catch((e) =>
-    console.error("[storage] post-send cleanup failed:", e)
-  );
+  // Send the first chunk now for instant feedback, then hand off to the worker.
+  const first = await processSendChunk(id, 400);
+  triggerSendWorker();
 
   return NextResponse.json({
     ok: true,
-    attempted: results.length,
-    sent,
-    failed: results.length - sent,
+    queued: counts.pending + first.sent + first.failed,
+    sent: first.sent,
+    failed: first.failed,
+    remaining: first.remaining,
+    background: !first.done,
   });
-}
-
-function escapeHtml(s: string) {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }

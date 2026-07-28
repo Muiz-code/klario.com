@@ -13,6 +13,7 @@ export type Newsletter = {
   sent_at: string | null;
   created_at: string;
   attachments: NewsletterAttachment[];
+  send_audit_id: string | null;
 };
 
 function cleanAttachments(value: unknown): NewsletterAttachment[] {
@@ -75,6 +76,23 @@ export async function createNewsletter(opts: {
     return null;
   }
   return data as Newsletter;
+}
+
+/** Mark a newsletter as queued/in-progress for a background (chunked) send. */
+export async function markNewsletterSending(
+  id: string,
+  opts: { auditId: string | null; recipientCount: number }
+): Promise<void> {
+  const db = supabaseAdmin();
+  const { error } = await db
+    .from("newsletters")
+    .update({
+      status: "sending",
+      send_audit_id: opts.auditId,
+      recipient_count: opts.recipientCount,
+    })
+    .eq("id", id);
+  if (error) console.error("[db] markNewsletterSending failed:", error.message);
 }
 
 export async function markNewsletterSent(

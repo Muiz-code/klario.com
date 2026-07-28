@@ -82,6 +82,27 @@ create table if not exists public.newsletters (
 create index if not exists newsletters_created_idx on public.newsletters (created_at desc);
 alter table public.newsletters add column if not exists attachments jsonb not null default '[]'::jsonb;
 
+-- --- newsletter_send_queue (0021): background, resumable, chunked sending -----
+create table if not exists public.newsletter_send_queue (
+  id             uuid primary key default gen_random_uuid(),
+  newsletter_id  uuid not null references public.newsletters(id) on delete cascade,
+  email          text not null,
+  first_name     text,
+  signup_id      uuid,
+  status         text not null default 'pending'
+                 check (status in ('pending', 'sent', 'failed')),
+  error          text,
+  created_at     timestamptz not null default now(),
+  sent_at        timestamptz,
+  unique (newsletter_id, email)
+);
+create index if not exists nsq_pending_idx
+  on public.newsletter_send_queue (newsletter_id, status) where status = 'pending';
+create index if not exists nsq_newsletter_idx
+  on public.newsletter_send_queue (newsletter_id);
+alter table public.newsletter_send_queue enable row level security;
+alter table public.newsletters add column if not exists send_audit_id uuid;
+
 -- --- settings: single config row -------------------------------------------
 create table if not exists public.settings (
   id                       text primary key default 'default',

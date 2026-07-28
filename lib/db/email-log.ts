@@ -52,6 +52,30 @@ export async function getMailedEmails(): Promise<string[]> {
   return [...set];
 }
 
+/**
+ * Distinct emails we successfully sent to on/after `sinceIso` — used by the
+ * "sent today" / "not sent today" audience filters.
+ */
+export async function getEmailsMailedSince(sinceIso: string): Promise<string[]> {
+  const db = supabaseAdmin();
+  const { data, error } = await db
+    .from("email_log")
+    .select("email")
+    .neq("status", "failed")
+    .gte("sent_at", sinceIso)
+    .limit(200000);
+  if (error) {
+    console.error("[db] getEmailsMailedSince failed:", error.message);
+    return [];
+  }
+  const set = new Set<string>();
+  for (const r of data ?? []) {
+    const e = normalizeEmail(r.email as string | null);
+    if (e) set.add(e);
+  }
+  return [...set];
+}
+
 function distinctEmails(rows: { email: string | null }[] | null): string[] {
   const set = new Set<string>();
   for (const r of rows ?? []) {
