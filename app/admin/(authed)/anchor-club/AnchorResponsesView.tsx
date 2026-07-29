@@ -17,6 +17,7 @@ import {
   Landmark,
   ListChecks,
   Check,
+  Wallet,
 } from "lucide-react";
 import type { AnchorResponse } from "@/lib/db/anchorClub";
 import type {
@@ -26,6 +27,12 @@ import type {
   LinkedBank,
 } from "@/lib/db/appProfiles";
 import { TASK_GROUPS, type UserTasks } from "@/lib/db/appTasks";
+import {
+  presenceOf,
+  type AppFinance,
+  type Presence,
+  type ProgressItem,
+} from "@/lib/db/appFinance";
 import { ConfirmModal, InfoModal, type ConfirmState } from "../_components/Modal";
 
 export type AnchorSummary = {
@@ -110,6 +117,53 @@ function taskPct(t?: UserTasks): number {
   return Math.round((t.doneCount / t.total) * 100);
 }
 
+// ── Money ──
+/** ₦12,340 — whole naira; kobo is noise at this altitude. */
+function naira(n: number): string {
+  return `₦${Math.round(n).toLocaleString("en-NG")}`;
+}
+function pct(current: number, target: number): number {
+  if (target <= 0) return 0;
+  return Math.min(100, Math.max(0, Math.round((current / target) * 100)));
+}
+
+const PRESENCE_STYLE: Record<Presence["state"], string> = {
+  online: "border-emerald-400/35 bg-emerald-400/10 text-emerald-200",
+  today: "border-emerald-400/25 bg-emerald-400/[0.06] text-emerald-200/85",
+  recent: "border-bg/15 bg-bg/[0.03] text-bg/65",
+  dormant: "border-amber-400/25 bg-amber-400/[0.06] text-amber-200/85",
+  never: "border-bg/12 bg-bg/[0.02] text-bg/40",
+};
+
+function PresencePill({ presence }: { presence: Presence }) {
+  return (
+    <span
+      // The label is relative to "now", so server and client can disagree by a
+      // tick on the boundary between states.
+      suppressHydrationWarning
+      title={presence.at ? `Last seen ${new Date(presence.at).toLocaleString()}` : undefined}
+      className={
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] " +
+        PRESENCE_STYLE[presence.state]
+      }
+    >
+      <span
+        className={
+          "h-1.5 w-1.5 rounded-full " +
+          (presence.state === "online"
+            ? "bg-emerald-300"
+            : presence.state === "today"
+              ? "bg-emerald-400/70"
+              : presence.state === "dormant"
+                ? "bg-amber-300/80"
+                : "bg-bg/30")
+        }
+      />
+      {presence.label}
+    </span>
+  );
+}
+
 function csvCell(v: string): string {
   const s = (v ?? "").replace(/"/g, '""');
   return /[",\n]/.test(s) ? `"${s}"` : s;
@@ -123,6 +177,7 @@ export function AnchorResponsesView({
   appProfiles,
   appActivity,
   appTasks,
+  appFinance,
   appDeleted,
   appBanks,
 }: {
@@ -131,6 +186,7 @@ export function AnchorResponsesView({
   appProfiles: Record<string, AppProfile>;
   appActivity: Record<string, ActivityCounts>;
   appTasks: Record<string, UserTasks>;
+  appFinance: Record<string, AppFinance>;
   appDeleted: Record<string, DeletedAccount>;
   appBanks: Record<string, LinkedBank[]>;
 }) {
@@ -323,14 +379,17 @@ export function AnchorResponsesView({
     const head = [
       "Date", "Ref", "Name", "Email", "Phone", "Institution", "Level",
       "Area", "Challenge", "Excites", "Why", "Pledged", "Guidelines",
-      "Klario ID", "Kairo score", "Streak", "Active days", "Klario tasks",
-      "Task XP", "Tasks not done", "Actions in app", "Features used", "Plan",
-      "Verification",
+      "Klario ID", "Kairo score", "Streak", "Active days", "Last active",
+      "Klario tasks", "Task XP", "Tasks not done", "Transactions", "Spent",
+      "Received", "Budgets", "Budget spent", "Budget limit", "Savings goals",
+      "Saved", "Savings target", "Wallet balance", "Debts", "Debt outstanding",
+      "Debt repaid", "Actions in app", "Features used", "Plan", "Verification",
     ];
     const lines = responses.map((r) => {
       const app = appProfiles[r.id];
       const act = appActivity[r.id];
       const tk = appTasks[r.id];
+      const fin = appFinance[r.id];
       return [
         fmtDate(r.created_at),
         r.ref ?? "",
@@ -349,6 +408,7 @@ export function AnchorResponsesView({
         app?.kairo_score != null ? String(app.kairo_score) : "",
         app?.streak != null ? String(app.streak) : "",
         app ? String(app.activeDays) : "",
+        fin ? presenceOf(fin).label : "",
         tk ? `${tk.doneCount}/${tk.total}` : "",
         tk ? `${tk.xpEarned}/${tk.xpTotal}` : "",
         tk
@@ -357,6 +417,19 @@ export function AnchorResponsesView({
               .map((t) => t.label)
               .join("; ")
           : "",
+        fin ? String(fin.transactions.count) : "",
+        fin ? String(Math.round(fin.transactions.spent)) : "",
+        fin ? String(Math.round(fin.transactions.received)) : "",
+        fin ? String(fin.budgets.count) : "",
+        fin ? String(Math.round(fin.budgets.spent)) : "",
+        fin ? String(Math.round(fin.budgets.limit)) : "",
+        fin ? String(fin.savings.goals) : "",
+        fin ? String(Math.round(fin.savings.saved)) : "",
+        fin ? String(Math.round(fin.savings.target)) : "",
+        fin ? String(Math.round(fin.savings.wallet)) : "",
+        fin ? String(fin.debts.count) : "",
+        fin ? String(Math.round(fin.debts.total)) : "",
+        fin ? String(Math.round(fin.debts.paid)) : "",
         app ? String(activityTotal(act)) : "",
         app ? `${featuresUsed(act)}/6` : "",
         app ? planLabel(app.plan) : "",
@@ -505,7 +578,7 @@ export function AnchorResponsesView({
             </div>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-bg/10">
-              <table className="w-full min-w-[820px] text-left text-sm">
+              <table className="w-full min-w-[980px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-bg/10 bg-bg/[0.03] text-[11px] uppercase tracking-[0.12em] text-bg/50">
                     <th className="px-4 py-3">
@@ -523,6 +596,7 @@ export function AnchorResponsesView({
                     <th className="px-4 py-3 font-medium">Area</th>
                     <th className="px-4 py-3 font-medium">Reference</th>
                     <th className="px-4 py-3 font-medium">Klario ID</th>
+                    <th className="px-4 py-3 font-medium">Last active</th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
@@ -578,6 +652,13 @@ export function AnchorResponsesView({
                             <span className="text-[12px] text-bg/30">—</span>
                           )}
                         </td>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          {app && appFinance[r.id] ? (
+                            <PresencePill presence={presenceOf(appFinance[r.id])} />
+                          ) : (
+                            <span className="text-[12px] text-bg/30">—</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-right text-bg/40">
                           <ChevronRight size={16} className="inline" />
                         </td>
@@ -597,6 +678,7 @@ export function AnchorResponsesView({
           app={appProfiles[openRow.id]}
           act={appActivity[openRow.id]}
           tasks={appTasks[openRow.id]}
+          finance={appFinance[openRow.id]}
           del={appDeleted[openRow.id]}
           banks={appBanks[openRow.id]}
           appLinked={summary.appLinked}
@@ -808,6 +890,7 @@ function AnchorDetailModal({
   app,
   act,
   tasks,
+  finance,
   del,
   banks,
   appLinked,
@@ -818,6 +901,7 @@ function AnchorDetailModal({
   app?: AppProfile;
   act?: ActivityCounts;
   tasks?: UserTasks;
+  finance?: AppFinance;
   del?: DeletedAccount;
   banks?: LinkedBank[];
   appLinked: boolean;
@@ -858,6 +942,11 @@ function AnchorDetailModal({
                 </span>
               )}
             </p>
+            {app && finance && (
+              <div className="mt-2">
+                <PresencePill presence={presenceOf(finance)} />
+              </div>
+            )}
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button
@@ -945,6 +1034,16 @@ function AnchorDetailModal({
               </p>
             )}
           </div>
+
+          {/* Money: volume, budgets, savings, debts — with progress */}
+          {app && finance && (
+            <div className="md:col-span-2">
+              <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-gold/70">
+                <Wallet size={12} /> Money in the app
+              </p>
+              <MoneyPanel f={finance} />
+            </div>
+          )}
 
           {/* Klario tasks — the app's Klario ID checklist */}
           {app && tasks && (
@@ -1043,6 +1142,117 @@ function AnchorDetailModal({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * What the member is doing with money in the app: how much they move, and the
+ * budgets, savings and debts they run — each with progress against its target.
+ */
+function MoneyPanel({ f }: { f: AppFinance }) {
+  const { transactions: tx, budgets, savings, debts } = f;
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Headline numbers */}
+      <div className="grid gap-4 rounded-lg border border-bg/10 bg-bg/[0.03] p-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Mini
+          label={`Transactions (${tx.count})`}
+          value={tx.count ? `${naira(tx.spent)} out` : "—"}
+        />
+        <Mini
+          label={`Budgets (${budgets.count})`}
+          value={budgets.count ? `${naira(budgets.spent)} / ${naira(budgets.limit)}` : "—"}
+        />
+        <Mini
+          label={`Savings (${savings.goals} goal${savings.goals === 1 ? "" : "s"})`}
+          value={savings.goals ? `${naira(savings.saved)} / ${naira(savings.target)}` : "—"}
+        />
+        <Mini
+          label={`Loans & debts (${debts.count})`}
+          value={debts.count ? `${naira(debts.paid)} / ${naira(debts.total)}` : "—"}
+        />
+      </div>
+
+      {/* The qualifiers behind those numbers */}
+      <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-[12px] text-bg/50">
+        {tx.count > 0 && (
+          <span>
+            {tx.debits} out · {tx.credits} in · {naira(tx.received)} received
+          </span>
+        )}
+        {budgets.count > 0 && (
+          <span>
+            {budgets.funded} funded
+            {budgets.over > 0 && (
+              <span className="text-amber-300/80"> · {budgets.over} over limit</span>
+            )}
+          </span>
+        )}
+        {savings.wallet > 0 && <span>Wallet balance {naira(savings.wallet)}</span>}
+        {savings.completed > 0 && <span>{savings.completed} goal(s) completed</span>}
+        {debts.monthly > 0 && <span>{naira(debts.monthly)} / month repayments</span>}
+      </div>
+
+      {/* Per-item progress */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <ProgressList title="Budgets" items={budgets.items} unit="spent" />
+        <ProgressList title="Savings goals" items={savings.items} unit="saved" />
+        <ProgressList title="Loans & debts" items={debts.items} unit="repaid" />
+      </div>
+    </div>
+  );
+}
+
+/** A short list of things with a bar each — budgets, goals or debts. */
+function ProgressList({
+  title,
+  items,
+  unit,
+}: {
+  title: string;
+  items: ProgressItem[];
+  unit: string;
+}) {
+  return (
+    <div className="rounded-lg border border-bg/10 bg-bg/[0.02] p-3.5">
+      <p className="text-[10px] uppercase tracking-[0.12em] text-bg/40">
+        {title} <span className="text-bg/25">{items.length || ""}</span>
+      </p>
+      {items.length === 0 ? (
+        <p className="mt-2 text-[12.5px] text-bg/35">None yet</p>
+      ) : (
+        <div className="mt-2.5 flex flex-col gap-2.5">
+          {items.map((it, i) => {
+            const p = pct(it.current, it.target);
+            const over = it.target > 0 && it.current > it.target;
+            return (
+              <div key={`${it.label}-${i}`}>
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="truncate text-[12.5px] text-bg/80" title={it.label}>
+                    {it.label}
+                    {it.tag && <span className="ml-1 text-[11px] text-bg/35">{it.tag}</span>}
+                  </span>
+                  <span
+                    className={"shrink-0 text-[11.5px] " + (over ? "text-amber-300" : "text-bg/45")}
+                  >
+                    {p}%
+                  </span>
+                </div>
+                <div className="mt-1 h-1 overflow-hidden rounded-full bg-bg/10">
+                  <div
+                    className={"h-full rounded-full " + (over ? "bg-amber-400/70" : "bg-gold/70")}
+                    style={{ width: `${p}%` }}
+                  />
+                </div>
+                <p className="mt-0.5 font-mono text-[11px] text-bg/35">
+                  {naira(it.current)} {unit} of {naira(it.target)}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

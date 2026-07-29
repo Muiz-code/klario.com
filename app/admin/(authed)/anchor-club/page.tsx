@@ -12,6 +12,7 @@ import {
   type LinkedBank,
 } from "@/lib/db/appProfiles";
 import { getAppTasksByUserIds, type UserTasks } from "@/lib/db/appTasks";
+import { getAppFinanceByUserIds, type AppFinance } from "@/lib/db/appFinance";
 import { normalizeEmail } from "@/lib/duplicates";
 import { AnchorResponsesView, type AnchorSummary } from "./AnchorResponsesView";
 
@@ -59,6 +60,17 @@ export default async function AnchorClubPage() {
   for (const [responseId, userId] of Object.entries(appUserIdByResponse)) {
     const t = tasksByUserId.get(userId);
     if (t) appTasks[responseId] = t;
+  }
+
+  // Money + presence: transactions, budgets, savings, debts and when they were
+  // last active, keyed back to the anchor response id.
+  const financeByUserId = appConfigured
+    ? await getAppFinanceByUserIds(Object.values(appUserIdByResponse))
+    : new Map<string, AppFinance>();
+  const appFinance: Record<string, AppFinance> = {};
+  for (const [responseId, userId] of Object.entries(appUserIdByResponse)) {
+    const f = financeByUserId.get(userId);
+    if (f) appFinance[responseId] = f;
   }
 
   // The banks each matched user linked, keyed back to the anchor response id.
@@ -145,6 +157,7 @@ export default async function AnchorClubPage() {
             appProfiles={appProfiles}
             appActivity={appActivity}
             appTasks={appTasks}
+            appFinance={appFinance}
             appDeleted={appDeleted}
             appBanks={appBanks}
           />
