@@ -14,7 +14,7 @@ export function renderTeamInvite(opts: {
   roleName: string;
   invitedBy?: string | null;
 }): { subject: string; html: string; text: string } {
-  const loginUrl = `${SITE.url}/marketing`;
+  const loginUrl = `${SITE.url}/marketing?email=${encodeURIComponent(opts.email)}`;
 
   // Credential block: temp password for new accounts, "use your existing
   // password" for people who already have a Klario account.

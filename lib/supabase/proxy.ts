@@ -8,6 +8,7 @@ import { isAdminEmail } from "./allowlist";
  * before this, so it only runs for non-owner sessions.
  */
 export type MemberStatus = {
+  found: boolean; // a member row exists (even if disabled)
   active: boolean;
   mustChange: boolean;
   isSuperadmin: boolean;
@@ -18,7 +19,7 @@ async function memberStatus(
   baseUrl: string,
   email: string | null | undefined
 ): Promise<MemberStatus> {
-  const none: MemberStatus = { active: false, mustChange: false, isSuperadmin: false, capabilities: [] };
+  const none: MemberStatus = { found: false, active: false, mustChange: false, isSuperadmin: false, capabilities: [] };
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key || !email) return none;
   try {
@@ -35,12 +36,14 @@ async function memberStatus(
       role?: { is_superadmin?: boolean; capabilities?: string[] } | null;
     }[];
     const row = Array.isArray(rows) ? rows[0] : undefined;
-    const active = row?.status === "active";
+    if (!row) return none;
+    const active = row.status === "active";
     return {
+      found: true,
       active,
-      mustChange: active && !!row?.must_change_password,
-      isSuperadmin: !!row?.role?.is_superadmin,
-      capabilities: row?.role?.capabilities ?? [],
+      mustChange: active && !!row.must_change_password,
+      isSuperadmin: !!row.role?.is_superadmin,
+      capabilities: row.role?.capabilities ?? [],
     };
   } catch {
     return none;
@@ -55,6 +58,7 @@ async function memberStatus(
 export async function updateSession(req: NextRequest): Promise<{
   res: NextResponse;
   isAdmin: boolean;
+  memberFound: boolean;
   mustChangePassword: boolean;
   isSuperadmin: boolean;
   capabilities: string[];
@@ -67,7 +71,7 @@ export async function updateSession(req: NextRequest): Promise<{
   // If Supabase is not configured yet, do not block: treat as not-admin so the
   // login page still renders and API routes return their own 401s.
   if (!url || !anon)
-    return { res, isAdmin: false, mustChangePassword: false, isSuperadmin: false, capabilities: [] };
+    return { res, isAdmin: false, memberFound: false, mustChangePassword: false, isSuperadmin: false, capabilities: [] };
 
   const supabase = createServerClient(url, anon, {
     cookies: {
@@ -89,12 +93,13 @@ export async function updateSession(req: NextRequest): Promise<{
   } = await supabase.auth.getUser();
 
   if (isAdminEmail(user?.email)) {
-    return { res, isAdmin: true, mustChangePassword: false, isSuperadmin: true, capabilities: [] };
+    return { res, isAdmin: true, memberFound: false, mustChangePassword: false, isSuperadmin: true, capabilities: [] };
   }
   const s = await memberStatus(url, user?.email);
   return {
     res,
     isAdmin: s.active,
+    memberFound: s.found,
     mustChangePassword: s.mustChange,
     isSuperadmin: s.isSuperadmin,
     capabilities: s.capabilities,

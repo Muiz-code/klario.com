@@ -11,6 +11,7 @@ import {
   type DeletedAccount,
   type LinkedBank,
 } from "@/lib/db/appProfiles";
+import { getAppTasksByUserIds, type UserTasks } from "@/lib/db/appTasks";
 import { normalizeEmail } from "@/lib/duplicates";
 import { AnchorResponsesView, type AnchorSummary } from "./AnchorResponsesView";
 
@@ -47,6 +48,17 @@ export default async function AnchorClubPage() {
   for (const [responseId, userId] of Object.entries(appUserIdByResponse)) {
     const a = activityByUserId.get(userId);
     if (a) appActivity[responseId] = a;
+  }
+
+  // The Klario task checklist (the same one the app shows on the Klario ID),
+  // re-derived here from the app DB and keyed back to the anchor response id.
+  const tasksByUserId = appConfigured
+    ? await getAppTasksByUserIds(Object.values(appUserIdByResponse))
+    : new Map<string, UserTasks>();
+  const appTasks: Record<string, UserTasks> = {};
+  for (const [responseId, userId] of Object.entries(appUserIdByResponse)) {
+    const t = tasksByUserId.get(userId);
+    if (t) appTasks[responseId] = t;
   }
 
   // The banks each matched user linked, keyed back to the anchor response id.
@@ -132,6 +144,7 @@ export default async function AnchorClubPage() {
             summary={summary}
             appProfiles={appProfiles}
             appActivity={appActivity}
+            appTasks={appTasks}
             appDeleted={appDeleted}
             appBanks={appBanks}
           />

@@ -1,31 +1,18 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
-import { requireSuperadmin } from "@/lib/auth/access";
+import { requireTeamAccess } from "@/lib/auth/access";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getMemberById, updateMember } from "@/lib/db/rbac";
+import { findAuthUserId } from "@/lib/auth/authUsers";
 import { renderTeamInvite } from "@/lib/email/teamInvite";
 import { resend, RESEND_FROM, RESEND_REPLY_TO } from "@/lib/email/client";
 import { logMemberAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
-/** Find a Supabase auth user id by email (paginated; fine for a small team). */
-async function findAuthUserId(email: string): Promise<string | null> {
-  const db = supabaseAdmin();
-  const target = email.toLowerCase();
-  for (let page = 1; page <= 10; page++) {
-    const { data, error } = await db.auth.admin.listUsers({ page, perPage: 200 });
-    if (error) return null;
-    const hit = data.users.find((u) => u.email?.toLowerCase() === target);
-    if (hit) return hit.id;
-    if (data.users.length < 200) break;
-  }
-  return null;
-}
-
 /** Resend an invite: reset the member's temp password and re-send the email. */
 export async function POST(_req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const access = await requireSuperadmin();
+  const access = await requireTeamAccess();
   if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await ctx.params;
 

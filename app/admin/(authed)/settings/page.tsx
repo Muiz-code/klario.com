@@ -11,14 +11,15 @@ export const dynamic = "force-dynamic";
 export default async function SettingsPage() {
   const access = await getAccess();
 
-  // Team & roles management is superadmin-only.
-  if (!access?.isSuperadmin) {
+  // Team & roles management: superadmins or members granted `settings`.
+  const canManageTeam = !!access && (access.isSuperadmin || access.capabilities.has("settings"));
+  if (!canManageTeam) {
     return (
       <ComingSoon
         title="Settings"
         description="Manage sender identity, deliverability, and workspace options."
         icon={Settings}
-        bullets={["Sender & reply-to", "Deliverability", "Team access (superadmins only)"]}
+        bullets={["Sender & reply-to", "Deliverability", "Team access"]}
       />
     );
   }

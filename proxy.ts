@@ -11,10 +11,11 @@ import {
 const LOGIN_PATHS = new Set(["/marketing", "/marketing/"]);
 
 const CHANGE_PASSWORD_PATH = "/marketing/change-password";
+const DISABLED_PATH = "/marketing/disabled";
 
 export async function proxy(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl;
-  const { res, isAdmin, mustChangePassword, isSuperadmin, capabilities } =
+  const { res, isAdmin, memberFound, mustChangePassword, isSuperadmin, capabilities } =
     await updateSession(req);
 
   // Public login page: always allow (so admins can sign in).
@@ -22,6 +23,19 @@ export async function proxy(req: NextRequest): Promise<NextResponse> {
 
   const isAdminApi = pathname.startsWith("/api/admin");
   const isAdminUi = pathname.startsWith("/marketing");
+
+  // Disabled member (row exists but not active): show a "disabled" screen and
+  // block everything else — this takes effect immediately, even mid-session.
+  if (memberFound && !isAdmin) {
+    if (isAdminApi) return NextResponse.json({ error: "Account disabled" }, { status: 403 });
+    if (pathname !== DISABLED_PATH) {
+      const url = req.nextUrl.clone();
+      url.pathname = DISABLED_PATH;
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+    return res;
+  }
 
   if ((isAdminApi || isAdminUi) && !isAdmin) {
     if (isAdminApi) {

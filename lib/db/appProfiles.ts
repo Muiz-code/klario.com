@@ -1,4 +1,5 @@
 import { appSupabaseAdmin } from "@/lib/supabase/appAdmin";
+import { selectAllRows } from "@/lib/db/appQuery";
 import { normalizeEmail } from "@/lib/duplicates";
 
 // A slice of the app's `profiles` row — the Klario ID and the performance we
@@ -235,13 +236,11 @@ export async function getAppActivityByUserIds(
 
   await Promise.all(
     ACTIVITY_TABLES.map(async ({ table, field }) => {
-      const { data, error } = await db.from(table).select("user_id").in("user_id", ids);
-      if (error) {
-        console.error(`[appdb] activity ${table} failed:`, error.message);
-        return;
-      }
-      for (const row of data ?? []) {
-        const uid = String((row as Record<string, unknown>).user_id ?? "");
+      // Paged: a plain select stops at 1000 rows, which would under-count a
+      // heavy user's transactions.
+      const rows = await selectAllRows(db, table, "user_id", (q) => q.in("user_id", ids));
+      for (const row of rows) {
+        const uid = String(row.user_id ?? "");
         const counts = map.get(uid);
         if (counts) counts[field] += 1;
       }

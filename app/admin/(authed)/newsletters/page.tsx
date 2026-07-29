@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { listNewsletters } from "@/lib/db/newsletters";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
-import { NewsletterRowActions } from "./BroadcastRowActions";
+import { MailTable, type MailRow } from "./MailTable";
 
 export const dynamic = "force-dynamic";
 
@@ -9,13 +9,24 @@ export default async function NewslettersPage() {
   const configured = isSupabaseConfigured();
   const newsletters = configured ? await listNewsletters() : [];
 
+  // Only the list columns go to the client; the body is fetched when a row is
+  // opened, so the page payload stays small however many mails there are.
+  const rows: MailRow[] = newsletters.map((n) => ({
+    id: n.id,
+    subject: n.subject,
+    status: n.status,
+    recipient_count: n.recipient_count,
+    sent_count: n.sent_count,
+    sent_at: n.sent_at,
+  }));
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl text-bg">Mail</h1>
           <p className="mt-1 text-sm text-bg/55">
-            Emails you have composed and sent from the admin.
+            Emails you have composed and sent from the admin. Click one to read it.
           </p>
         </div>
         <Link
@@ -32,74 +43,7 @@ export default async function NewslettersPage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-2xl border border-bg/10">
-        <table className="w-full min-w-[680px] text-sm">
-          <thead className="border-b border-bg/10 bg-bg/4 text-left text-[11px] uppercase tracking-[0.14em] text-bg/45">
-            <tr>
-              <th className="px-4 py-3 font-medium">Subject</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Recipients</th>
-              <th className="px-4 py-3 font-medium">Sent</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {newsletters.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-bg/45">
-                  Nothing yet. Click &quot;Compose mail&quot; to write one.
-                </td>
-              </tr>
-            ) : (
-              newsletters.map((n) => (
-                <tr
-                  key={n.id}
-                  className="border-b border-bg/8 last:border-0 hover:bg-bg/3"
-                >
-                  <td className="px-4 py-3 text-bg/85">{n.subject}</td>
-                  <td className="px-4 py-3">
-                    <StatusPill status={n.status} />
-                  </td>
-                  <td className="px-4 py-3 text-[12px] text-bg/55">
-                    {n.status === "sent" || n.status === "sending"
-                      ? `${n.sent_count} / ${n.recipient_count}`
-                      : "-"}
-                  </td>
-                  <td className="px-4 py-3 text-[12px] text-bg/55">
-                    {n.sent_at ? new Date(n.sent_at).toLocaleString() : "-"}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <NewsletterRowActions
-                      id={n.id}
-                      status={n.status}
-                      recipientCount={n.recipient_count}
-                      failedCount={Math.max(
-                        0,
-                        n.recipient_count - n.sent_count
-                      )}
-                    />
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <MailTable rows={rows} />
     </div>
-  );
-}
-
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    sent: "bg-emerald-400/15 text-emerald-200",
-    sending: "bg-blue-400/15 text-blue-200",
-    draft: "bg-bg/10 text-bg/70",
-    failed: "bg-red-400/15 text-red-200",
-  };
-  const cls = map[status] || "bg-bg/10 text-bg/70";
-  return (
-    <span className={`rounded-full px-2 py-0.5 text-[11px] capitalize ${cls}`}>
-      {status}
-    </span>
   );
 }

@@ -152,6 +152,31 @@ export async function markAnchorConfirmationSent(id: string, sent: boolean) {
   }
 }
 
+/**
+ * Delete registrations by id. The row IS the "already registered" guard on the
+ * public form, so deleting one frees that email to register again from scratch
+ * (they get a brand-new KAC- reference). Returns the rows that were removed, so
+ * the caller can log who was deleted.
+ */
+export async function deleteAnchorResponses(
+  ids: string[]
+): Promise<{ id: string; email: string; ref: string | null }[]> {
+  const wanted = [...new Set(ids.map((i) => i.trim()).filter(Boolean))];
+  if (wanted.length === 0) return [];
+
+  const db = supabaseAdmin();
+  const { data, error } = await db
+    .from("anchor_club")
+    .delete()
+    .in("id", wanted)
+    .select("id, email, ref");
+  if (error) {
+    console.error("[db] deleteAnchorResponses failed:", error.message);
+    return [];
+  }
+  return (data ?? []) as { id: string; email: string; ref: string | null }[];
+}
+
 /** All registrations, newest first (admin view). */
 export async function listAnchorResponses(): Promise<AnchorResponse[]> {
   const db = supabaseAdmin();

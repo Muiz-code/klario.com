@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireSuperadmin } from "@/lib/auth/access";
+import { requireTeamAccess } from "@/lib/auth/access";
 import { listRoles, createRole } from "@/lib/db/rbac";
 import { isCapability, type Capability } from "@/lib/auth/capabilities";
 import { logMemberAction } from "@/lib/db/adminActivity";
@@ -12,14 +12,14 @@ function sanitizeCaps(input: unknown): Capability[] {
 }
 
 export async function GET() {
-  if (!(await requireSuperadmin())) {
+  if (!(await requireTeamAccess())) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   return NextResponse.json({ roles: await listRoles() });
 }
 
 export async function POST(req: Request) {
-  const access = await requireSuperadmin();
+  const access = await requireTeamAccess();
   if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   let body: { name?: unknown; capabilities?: unknown; is_superadmin?: unknown };
   try {

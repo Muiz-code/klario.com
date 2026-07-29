@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
-import { requireSuperadmin } from "@/lib/auth/access";
+import { requireTeamAccess } from "@/lib/auth/access";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { listMembers, createMember, listRoles } from "@/lib/db/rbac";
 import { renderTeamInvite } from "@/lib/email/teamInvite";
@@ -10,7 +10,7 @@ import { logMemberAction } from "@/lib/db/adminActivity";
 export const runtime = "nodejs";
 
 export async function GET() {
-  if (!(await requireSuperadmin())) {
+  if (!(await requireTeamAccess())) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const [members, roles] = await Promise.all([listMembers(), listRoles()]);
@@ -19,7 +19,7 @@ export async function GET() {
 
 /** Invite a member: create their auth user with a temp password + email it. */
 export async function POST(req: Request) {
-  const access = await requireSuperadmin();
+  const access = await requireTeamAccess();
   if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   let body: { email?: unknown; roleId?: unknown };

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import brandLogo from "@/public/Klario-primary-and-secondary-Logo.png";
 import {
   LayoutDashboard,
   Megaphone,
@@ -202,18 +204,11 @@ export function AdminSidebar({
       >
         {/* Brand */}
         <div className="flex items-center justify-between px-5 py-5">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold text-ink">
-              <Crown size={16} strokeWidth={2.2} />
+          <div className="flex flex-col gap-1">
+            <Image src={brandLogo} alt="Klario" priority sizes="120px" className="h-6 w-auto" />
+            <span className="text-[9px] uppercase tracking-[0.2em] text-gold">
+              Marketing
             </span>
-            <div className="leading-tight">
-              <span className="block font-display text-base font-bold tracking-tight text-bg">
-                Klario
-              </span>
-              <span className="block text-[9px] uppercase tracking-[0.2em] text-gold">
-                Marketing
-              </span>
-            </div>
           </div>
           <button
             type="button"

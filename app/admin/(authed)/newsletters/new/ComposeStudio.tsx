@@ -11,6 +11,7 @@ import {
   X,
   Video,
   FileText,
+  ChevronDown,
 } from "lucide-react";
 import { SendProgressModal } from "./SendProgressModal";
 
@@ -87,15 +88,19 @@ const SEGMENTS: { id: Segment; label: string; hint: string }[] = [
   { id: "choose", label: "Choose people", hint: "Pick specific recipients" },
 ];
 
+type Audiences = { anchor: string[]; beta: string[]; newsletter: string[] };
+
 export function ComposeStudio({
   templates,
   counts,
   people,
+  audiences,
   configured,
 }: {
   templates: GalleryTemplate[];
   counts: Counts;
   people: Person[];
+  audiences?: Audiences;
   configured: boolean;
 }) {
   const router = useRouter();
@@ -108,6 +113,7 @@ export function ComposeStudio({
   const [selectCount, setSelectCount] = useState(100);
   const [batchSize, setBatchSize] = useState(50);
   const [allowResend, setAllowResend] = useState(false);
+  const [sendToOpen, setSendToOpen] = useState(true);
   const [manual, setManual] = useState("");
 
   // Write-mode fields
@@ -287,6 +293,22 @@ export function ComposeStudio({
     setSegment(s);
     setChosen(new Set());
     setPickerQuery("");
+    setSegmentTarget(null);
+  };
+
+  // Extra audiences (Anchor Club / Beta / Newsletter) send to an explicit email
+  // list via the "choose" path.
+  const audienceOptions = [
+    { id: "anchor", label: "Anchor Club", hint: "Anchor Club registrants", emails: audiences?.anchor ?? [] },
+    { id: "beta", label: "Beta testers", hint: "Beta responders", emails: audiences?.beta ?? [] },
+    { id: "newsletter", label: "Newsletter", hint: "Newsletter sign-ups", emails: audiences?.newsletter ?? [] },
+  ].filter((a) => a.emails.length > 0);
+
+  const selectAudience = (opt: { label: string; emails: string[] }) => {
+    setSegment("choose");
+    setChosen(new Set(opt.emails));
+    setPickerQuery("");
+    setSegmentTarget(opt.label);
   };
 
   const pickTemplate = (t: GalleryTemplate) => {
@@ -694,9 +716,26 @@ export function ComposeStudio({
 
           {/* Audience */}
           <div className="flex flex-col gap-2">
-            <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-bg/45">
-              Send to
-            </span>
+            <button
+              type="button"
+              onClick={() => setSendToOpen((v) => !v)}
+              className="flex items-center justify-between gap-2 text-left"
+            >
+              <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-bg/45">
+                Send to
+                {!sendToOpen && (
+                  <span className="ml-1.5 normal-case tracking-normal text-bg/70">
+                    · {SEGMENTS.find((s) => s.id === segment)?.label ?? "All"} ({audienceCount})
+                  </span>
+                )}
+              </span>
+              <ChevronDown
+                size={15}
+                className={"shrink-0 text-bg/40 transition-transform " + (sendToOpen ? "" : "-rotate-90")}
+              />
+            </button>
+            {sendToOpen && (
+              <>
             {segmentTarget && (
               <div className="rounded-xl border border-gold/30 bg-gold/8 px-3 py-2 text-[12px] text-gold">
                 Targeting segment{" "}
@@ -733,6 +772,37 @@ export function ComposeStudio({
                 );
               })}
             </div>
+
+            {audienceOptions.length > 0 && (
+              <div className="mt-1 flex flex-col gap-2">
+                <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-bg/35">
+                  Or a group
+                </span>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {audienceOptions.map((a) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => selectAudience(a)}
+                      className={
+                        "rounded-xl border p-3 text-left transition-colors " +
+                        (segmentTarget === a.label
+                          ? "border-gold/60 bg-gold/5"
+                          : "border-bg/10 bg-bg/4 hover:border-bg/25")
+                      }
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-bg">{a.label}</span>
+                        <span className="rounded-full bg-bg/10 px-1.5 text-[11px] text-bg/70">
+                          {a.emails.length}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-[11px] leading-snug text-bg/50">{a.hint}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <p className="text-[11px] text-bg/45">
               {chosen.size > 0
@@ -848,6 +918,8 @@ export function ComposeStudio({
                 </div>
               )}
             </div>
+              </>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -878,12 +950,12 @@ export function ComposeStudio({
           )}
         </div>
 
-        {/* Preview column */}
-        <div className="flex flex-col gap-2">
+        {/* Preview column — sticks in view while the settings on the left scroll. */}
+        <div className="flex flex-col gap-2 lg:sticky lg:top-6 lg:self-start">
           <p className="text-[11px] uppercase tracking-[0.18em] text-bg/45">
             {mode === "write" ? "Live preview" : "Preview (click to edit)"}
           </p>
-          <div className="h-[620px] overflow-hidden rounded-2xl border border-bg/10 bg-[#0A0B0D]">
+          <div className="h-[620px] overflow-hidden rounded-2xl border border-bg/10 bg-[#0A0B0D] lg:h-[calc(100vh-8rem)]">
             {mode === "write" ? (
               mounted ? (
                 <iframe

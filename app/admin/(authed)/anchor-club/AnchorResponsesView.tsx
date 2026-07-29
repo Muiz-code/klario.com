@@ -1,10 +1,13 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Search,
   Download,
-  ChevronDown,
+  ChevronRight,
+  X,
+  Trash2,
   Smartphone,
   Trophy,
   Activity,
@@ -12,6 +15,8 @@ import {
   Sparkles,
   Mail,
   Landmark,
+  ListChecks,
+  Check,
 } from "lucide-react";
 import type { AnchorResponse } from "@/lib/db/anchorClub";
 import type {
@@ -20,7 +25,8 @@ import type {
   DeletedAccount,
   LinkedBank,
 } from "@/lib/db/appProfiles";
-import { SendEmailPanel } from "./SendEmailPanel";
+import { TASK_GROUPS, type UserTasks } from "@/lib/db/appTasks";
+import { ConfirmModal, InfoModal, type ConfirmState } from "../_components/Modal";
 
 export type AnchorSummary = {
   total: number;
@@ -85,15 +91,23 @@ function featuresUsed(a?: ActivityCounts): number {
     (n) => n > 0
   ).length;
 }
-// Composite engagement: financial health + activity + breadth + consistency.
-function engagement(app: AppProfile, a?: ActivityCounts): number {
+// Composite engagement: financial health + activity + breadth + consistency +
+// how far through the Klario task checklist they are.
+function engagement(app: AppProfile, a?: ActivityCounts, t?: UserTasks): number {
   return (
     (app.kairo_score ?? 0) +
     app.activeDays +
     (app.streak ?? 0) * 2 +
     activityTotal(a) +
-    featuresUsed(a) * 3
+    featuresUsed(a) * 3 +
+    (t?.doneCount ?? 0) * 4
   );
+}
+
+// ── Klario tasks (the app's Klario ID checklist, re-derived server-side) ──
+function taskPct(t?: UserTasks): number {
+  if (!t || t.total === 0) return 0;
+  return Math.round((t.doneCount / t.total) * 100);
 }
 
 function csvCell(v: string): string {
@@ -108,6 +122,7 @@ export function AnchorResponsesView({
   summary,
   appProfiles,
   appActivity,
+  appTasks,
   appDeleted,
   appBanks,
 }: {
@@ -115,6 +130,7 @@ export function AnchorResponsesView({
   summary: AnchorSummary;
   appProfiles: Record<string, AppProfile>;
   appActivity: Record<string, ActivityCounts>;
+  appTasks: Record<string, UserTasks>;
   appDeleted: Record<string, DeletedAccount>;
   appBanks: Record<string, LinkedBank[]>;
 }) {
@@ -122,8 +138,14 @@ export function AnchorResponsesView({
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [composerOpen, setComposerOpen] = useState(false);
   const [sendResult, setSendResult] = useState<string | null>(null);
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [confirmState, setConfirmState] = useState<ConfirmState>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [info, setInfo] = useState<{ title: string; message: string; ok?: boolean } | null>(
+    null
+  );
 
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -155,6 +177,7 @@ export function AnchorResponsesView({
         const app = appProfiles[r.id];
         if (!app) return null;
         const activity = appActivity[r.id];
+        const tasks = appTasks[r.id];
         return {
           id: r.id,
           name: r.name || r.email.split("@")[0],
@@ -162,10 +185,13 @@ export function AnchorResponsesView({
           score: app.kairo_score ?? 0,
           streak: app.streak ?? 0,
           activeDays: app.activeDays,
-          tasks: activityTotal(activity),
+          tasksDone: tasks?.doneCount ?? 0,
+          tasksTotal: tasks?.total ?? 0,
+          xp: tasks?.xpEarned ?? 0,
+          actions: activityTotal(activity),
           features: featuresUsed(activity),
           plan: planLabel(app.plan),
-          engagement: engagement(app, activity),
+          engagement: engagement(app, activity, tasks),
         };
       })
       .filter(Boolean) as {
@@ -175,7 +201,10 @@ export function AnchorResponsesView({
       score: number;
       streak: number;
       activeDays: number;
-      tasks: number;
+      tasksDone: number;
+      tasksTotal: number;
+      xp: number;
+      actions: number;
       features: number;
       plan: string;
       engagement: number;
@@ -191,9 +220,9 @@ export function AnchorResponsesView({
       ranked,
       mostActive: topBy("activeDays"),
       growing: topBy("score"),
-      usingRight: topBy("features"),
+      usingRight: topBy("tasksDone"),
     };
-  }, [responses, appProfiles, appActivity]);
+  }, [responses, appProfiles, appActivity, appTasks]);
 
   const toggleSel = (id: string) =>
     setSelected((prev) => {
@@ -202,6 +231,61 @@ export function AnchorResponsesView({
       else next.add(id);
       return next;
     });
+  // The registration whose detail modal is open (null = closed).
+  const openRow = open ? responses.find((r) => r.id === open) ?? null : null;
+
+  // Deleting a registration frees that email to register again on /anchor-club
+  // (the row itself is the "already registered" guard), so the confirm says so.
+  const runDelete = async (ids: string[]) => {
+    setDeleting(true);
+    const res = await fetch("/api/admin/anchor/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    setDeleting(false);
+    setConfirmState(null);
+    if (!res.ok) {
+      setInfo({
+        title: "Delete failed",
+        message: "Could not delete the registration. Please try again.",
+        ok: false,
+      });
+      return;
+    }
+    setSelected((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => next.delete(id));
+      return next;
+    });
+    if (open && ids.includes(open)) setOpen(null);
+    setSendResult(
+      `Deleted ${ids.length} registration${ids.length === 1 ? "" : "s"}. Those emails can register again.`
+    );
+    startTransition(() => router.refresh());
+  };
+
+  const confirmDelete = (ids: string[]) => {
+    const one = ids.length === 1;
+    const who = one
+      ? responses.find((r) => r.id === ids[0])?.email ?? "this registration"
+      : `${ids.length} registrations`;
+    setConfirmState({
+      title: one ? "Delete this registration?" : `Delete ${ids.length} registrations?`,
+      message: (
+        <>
+          Removing {one ? <span className="text-bg">{who}</span> : who} deletes their Anchor
+          Club answers and reference for good. They can register again from scratch at
+          /anchor-club and will get a new KAC- reference. Their app account and audience
+          subscription are not touched.
+        </>
+      ),
+      confirmLabel: "Delete",
+      tone: "danger",
+      onConfirm: () => runDelete(ids),
+    });
+  };
+
   const allVisibleSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
   const toggleAll = () =>
     setSelected((prev) => {
@@ -219,16 +303,34 @@ export function AnchorResponsesView({
       ref: r.ref || "",
     }));
 
+  // Hand the selected applicants off to the unified compose studio (same flow as
+  // the Segments page), instead of a separate modal composer.
+  const emailSelected = () => {
+    const emails = recipients.map((r) => r.email);
+    if (emails.length === 0) return;
+    try {
+      sessionStorage.setItem(
+        "klario_segment_target",
+        JSON.stringify({ label: `Anchor Club · ${emails.length} selected`, emails })
+      );
+    } catch {
+      /* ignore */
+    }
+    router.push("/marketing/newsletters/new");
+  };
+
   const exportCsv = () => {
     const head = [
       "Date", "Ref", "Name", "Email", "Phone", "Institution", "Level",
       "Area", "Challenge", "Excites", "Why", "Pledged", "Guidelines",
-      "Klario ID", "Kairo score", "Streak", "Active days", "Tasks done",
-      "Features used", "Plan", "Verification",
+      "Klario ID", "Kairo score", "Streak", "Active days", "Klario tasks",
+      "Task XP", "Tasks not done", "Actions in app", "Features used", "Plan",
+      "Verification",
     ];
     const lines = responses.map((r) => {
       const app = appProfiles[r.id];
       const act = appActivity[r.id];
+      const tk = appTasks[r.id];
       return [
         fmtDate(r.created_at),
         r.ref ?? "",
@@ -247,6 +349,14 @@ export function AnchorResponsesView({
         app?.kairo_score != null ? String(app.kairo_score) : "",
         app?.streak != null ? String(app.streak) : "",
         app ? String(app.activeDays) : "",
+        tk ? `${tk.doneCount}/${tk.total}` : "",
+        tk ? `${tk.xpEarned}/${tk.xpTotal}` : "",
+        tk
+          ? tk.tasks
+              .filter((t) => !t.done)
+              .map((t) => t.label)
+              .join("; ")
+          : "",
         app ? String(activityTotal(act)) : "",
         app ? `${featuresUsed(act)}/6` : "",
         app ? planLabel(app.plan) : "",
@@ -359,7 +469,14 @@ export function AnchorResponsesView({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setComposerOpen(true)}
+                  onClick={() => confirmDelete([...selected])}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-400/30 px-3 py-1.5 text-[13px] text-red-300 transition-colors hover:border-red-400/60 hover:text-red-200"
+                >
+                  <Trash2 size={14} /> Delete
+                </button>
+                <button
+                  type="button"
+                  onClick={emailSelected}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-gold px-3 py-1.5 text-[13px] font-semibold text-ink transition-transform hover:scale-[1.01]"
                 >
                   <Mail size={14} /> Email selected
@@ -411,239 +528,60 @@ export function AnchorResponsesView({
                 </thead>
                 <tbody>
                   {rows.map((r) => {
-                    const expanded = open === r.id;
                     const app = appProfiles[r.id];
-                    const act = appActivity[r.id];
                     const del = appDeleted[r.id];
-                    const banks = appBanks[r.id];
                     return (
-                      <Fragment key={r.id}>
-                        <tr
-                          onClick={() => setOpen(expanded ? null : r.id)}
-                          className="cursor-pointer border-b border-bg/[0.06] last:border-b-0 hover:bg-bg/[0.02]"
-                        >
-                          <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                            <input
-                              type="checkbox"
-                              aria-label={`Select ${r.name || r.email}`}
-                              checked={selected.has(r.id)}
-                              onChange={() => toggleSel(r.id)}
-                              className="h-4 w-4 accent-gold"
-                            />
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-bg/55">{fmtDate(r.created_at)}</td>
-                          <td className="px-4 py-3">
-                            <div className="font-medium text-bg">{r.name || "—"}</div>
-                            <div className="text-[12px] text-bg/45">{r.email}</div>
-                          </td>
-                          <td className="px-4 py-3 text-bg/70">{r.institution || "—"}</td>
-                          <td className="px-4 py-3 text-bg/70">{r.area || r.notes?.area || "—"}</td>
-                          <td className="whitespace-nowrap px-4 py-3 font-mono text-[12px] text-bg/70">
-                            {r.ref || "—"}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3">
-                            {app?.klario_id ? (
-                              <span className="inline-flex flex-col">
-                                <span className="inline-flex items-center gap-1.5 font-mono text-[12px] text-gold">
-                                  <Smartphone size={12} /> {app.klario_id}
+                      <tr
+                        key={r.id}
+                        onClick={() => setOpen(r.id)}
+                        className="cursor-pointer border-b border-bg/[0.06] last:border-b-0 hover:bg-bg/[0.02]"
+                      >
+                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${r.name || r.email}`}
+                            checked={selected.has(r.id)}
+                            onChange={() => toggleSel(r.id)}
+                            className="h-4 w-4 accent-gold"
+                          />
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-bg/55">{fmtDate(r.created_at)}</td>
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-bg">{r.name || "—"}</div>
+                          <div className="text-[12px] text-bg/45">{r.email}</div>
+                        </td>
+                        <td className="px-4 py-3 text-bg/70">{r.institution || "—"}</td>
+                        <td className="px-4 py-3 text-bg/70">{r.area || r.notes?.area || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3 font-mono text-[12px] text-bg/70">
+                          {r.ref || "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          {app?.klario_id ? (
+                            <span className="inline-flex flex-col">
+                              <span className="inline-flex items-center gap-1.5 font-mono text-[12px] text-gold">
+                                <Smartphone size={12} /> {app.klario_id}
+                              </span>
+                              {del && (
+                                <span className="mt-0.5 text-[11px] text-amber-300/80">
+                                  Rejoined · deleted before
                                 </span>
-                                {del && (
-                                  <span className="mt-0.5 text-[11px] text-amber-300/80">
-                                    Rejoined · deleted before
-                                  </span>
-                                )}
-                              </span>
-                            ) : del ? (
-                              <span className="text-[12px] text-amber-300/90">
-                                Deleted account
-                                {del.deletion_count > 1 ? ` ×${del.deletion_count}` : ""}
-                              </span>
-                            ) : summary.appLinked ? (
-                              <span className="text-[12px] text-bg/35">Not on app</span>
-                            ) : (
-                              <span className="text-[12px] text-bg/30">—</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-right text-bg/40">
-                            <ChevronDown
-                              size={16}
-                              className={"inline transition-transform " + (expanded ? "rotate-180" : "")}
-                            />
-                          </td>
-                        </tr>
-                        {expanded && (
-                          <tr className="border-b border-bg/[0.06] bg-bg/[0.02]">
-                            <td colSpan={8} className="px-4 py-5">
-                              <div className="grid gap-5 md:grid-cols-2">
-                                <Detail label="Phone (WhatsApp)" value={r.phone || "—"} />
-                                <Detail label="Level" value={r.level || r.notes?.level || "—"} />
-                                <Detail label="Anchor reference" value={r.ref || "—"} mono />
-                                <Detail
-                                  label="Challenge"
-                                  value={r.challenge || r.notes?.challenge || "—"}
-                                />
-                                <Detail label="Why they want to join" value={r.why || "—"} full />
-                                <div className="md:col-span-2">
-                                  <p className="text-[11px] uppercase tracking-[0.12em] text-bg/40">
-                                    What excites them
-                                  </p>
-                                  <div className="mt-2 flex flex-wrap gap-1.5">
-                                    {r.excites.length ? (
-                                      r.excites.map((e) => (
-                                        <span
-                                          key={e}
-                                          className="rounded-full border border-gold/25 bg-gold/[0.07] px-2.5 py-1 text-[12px] text-gold"
-                                        >
-                                          {e}
-                                        </span>
-                                      ))
-                                    ) : (
-                                      <span className="text-[13px] text-bg/50">—</span>
-                                    )}
-                                  </div>
-                                </div>
-                                <Detail
-                                  label="Commitment"
-                                  value={`Pledged: ${r.pledge ? "yes" : "no"} · Guidelines: ${r.guidelines ? "yes" : "no"}`}
-                                />
-
-                                {/* App performance (joined by email) */}
-                                <div className="md:col-span-2">
-                                  <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-gold/70">
-                                    <Smartphone size={12} /> App performance
-                                  </p>
-                                  {app ? (
-                                    <div className="grid gap-4 rounded-lg border border-gold/15 bg-gold/[0.04] p-4 sm:grid-cols-2 lg:grid-cols-3">
-                                      <Mini label="Klario ID" value={app.klario_id || "—"} mono />
-                                      <Mini
-                                        label="Kairo score"
-                                        value={app.kairo_score != null ? `${app.kairo_score} / 100` : "—"}
-                                      />
-                                      <Mini
-                                        label="Streak"
-                                        value={
-                                          app.streak != null
-                                            ? `${app.streak} day${app.streak === 1 ? "" : "s"}`
-                                            : "—"
-                                        }
-                                      />
-                                      <Mini label="Plan" value={planLabel(app.plan)} />
-                                      <Mini label="Spending type" value={titleCase(app.personality)} />
-                                      <Mini label="Verification" value={verifyLabel(app.kyc_status)} />
-                                      <Mini label="Account type" value={titleCase(app.account_type)} />
-                                      <Mini label="Active days" value={String(app.activeDays)} />
-                                      <Mini
-                                        label="On app since"
-                                        value={app.created_at ? fmtDate(app.created_at) : "—"}
-                                      />
-                                    </div>
-                                  ) : (
-                                    <p className="text-[13px] text-bg/50">
-                                      {summary.appLinked
-                                        ? "No app account found for this email yet."
-                                        : "App link not configured (set APP_SUPABASE_URL / APP_SUPABASE_SERVICE_ROLE_KEY)."}
-                                    </p>
-                                  )}
-                                </div>
-
-                                {/* Tasks done in the app */}
-                                {app && (
-                                  <div className="md:col-span-2">
-                                    <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-gold/70">
-                                      <Activity size={12} /> Tasks done in the app
-                                    </p>
-                                    <div className="grid gap-4 rounded-lg border border-bg/10 bg-bg/[0.03] p-4 sm:grid-cols-3 lg:grid-cols-6">
-                                      <Mini label="Savings goals" value={String(act?.savingsGoals ?? 0)} />
-                                      <Mini label="Debts tracked" value={String(act?.debts ?? 0)} />
-                                      <Mini label="Bills paid" value={String(act?.billsPaid ?? 0)} />
-                                      <Mini label="Banks linked" value={String(act?.linkedBanks ?? 0)} />
-                                      <Mini label="Transactions" value={String(act?.transactions ?? 0)} />
-                                      <Mini label="Scheduled" value={String(act?.scheduledTransfers ?? 0)} />
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Linked banks */}
-                                {app && banks && banks.length > 0 && (
-                                  <div className="md:col-span-2">
-                                    <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-gold/70">
-                                      <Landmark size={12} /> Linked banks ({banks.length})
-                                    </p>
-                                    <div className="flex flex-col gap-2">
-                                      {banks.map((b, i) => (
-                                        <div
-                                          key={i}
-                                          className="flex items-center justify-between gap-3 rounded-lg border border-bg/10 bg-bg/[0.03] px-3.5 py-2.5"
-                                        >
-                                          <div className="flex items-center gap-2.5">
-                                            <span className="text-[13.5px] font-medium text-bg">
-                                              {b.bankName}
-                                            </span>
-                                            <span className="font-mono text-[12px] text-bg/50">
-                                              {b.maskedAccount}
-                                            </span>
-                                            {b.isPrimary && (
-                                              <span className="rounded-full border border-gold/30 bg-gold/[0.08] px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] text-gold">
-                                                Primary
-                                              </span>
-                                            )}
-                                          </div>
-                                          <span className="font-mono text-[12.5px] text-bg/70">
-                                            ₦{Math.round(b.balance).toLocaleString("en-NG")}
-                                          </span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Spending-type journey */}
-                                {app && app.typeHistory.length > 0 && (
-                                  <div className="md:col-span-2">
-                                    <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-gold/70">
-                                      <TrendingUp size={12} /> Type journey
-                                    </p>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      {app.typeHistory.map((t, i) => (
-                                        <Fragment key={i}>
-                                          {i > 0 && <span className="text-bg/30">→</span>}
-                                          <span className="rounded-lg border border-bg/12 bg-bg/[0.03] px-3 py-1.5">
-                                            <span className="text-[13px] font-medium text-bg">{t.type}</span>
-                                            {t.rank && (
-                                              <span className="text-[12px] text-gold"> · {t.rank}</span>
-                                            )}
-                                            <span className="ml-1.5 font-mono text-[11px] text-bg/45">
-                                              {t.date}
-                                            </span>
-                                          </span>
-                                        </Fragment>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Account deletion tombstone */}
-                                {del && (
-                                  <div className="md:col-span-2 rounded-lg border border-amber-400/25 bg-amber-400/[0.06] p-4">
-                                    <p className="text-[11px] uppercase tracking-[0.12em] text-amber-300/80">
-                                      Account deletion
-                                    </p>
-                                    <p className="mt-1.5 text-[13px] leading-relaxed text-bg/80">
-                                      Deleted their Klario app account
-                                      {del.deletion_count > 1 ? ` ${del.deletion_count} times` : ""}
-                                      {del.last_deleted_at ? `, last on ${fmtDate(del.last_deleted_at)}` : ""}.{" "}
-                                      {app
-                                        ? "They've since signed up again — the account above is a fresh start."
-                                        : "No active app account right now."}
-                                      {del.klario_id ? ` Prior Klario ID: ${del.klario_id}.` : ""}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
+                              )}
+                            </span>
+                          ) : del ? (
+                            <span className="text-[12px] text-amber-300/90">
+                              Deleted account
+                              {del.deletion_count > 1 ? ` ×${del.deletion_count}` : ""}
+                            </span>
+                          ) : summary.appLinked ? (
+                            <span className="text-[12px] text-bg/35">Not on app</span>
+                          ) : (
+                            <span className="text-[12px] text-bg/30">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right text-bg/40">
+                          <ChevronRight size={16} className="inline" />
+                        </td>
+                      </tr>
                     );
                   })}
                 </tbody>
@@ -653,19 +591,26 @@ export function AnchorResponsesView({
         </>
       )}
 
-      {composerOpen && (
-        <SendEmailPanel
-          recipients={recipients}
-          onClose={() => setComposerOpen(false)}
-          onSent={(sent, failed) => {
-            setComposerOpen(false);
-            setSelected(new Set());
-            setSendResult(
-              `Sent to ${sent}${failed ? ` · ${failed} failed` : ""}.`
-            );
-          }}
+      {openRow && (
+        <AnchorDetailModal
+          r={openRow}
+          app={appProfiles[openRow.id]}
+          act={appActivity[openRow.id]}
+          tasks={appTasks[openRow.id]}
+          del={appDeleted[openRow.id]}
+          banks={appBanks[openRow.id]}
+          appLinked={summary.appLinked}
+          onClose={() => setOpen(null)}
+          onDelete={() => confirmDelete([openRow.id])}
         />
       )}
+
+      <ConfirmModal
+        state={confirmState}
+        loading={deleting}
+        onClose={() => setConfirmState(null)}
+      />
+      <InfoModal state={info} onClose={() => setInfo(null)} />
     </div>
   );
 }
@@ -678,7 +623,12 @@ type BoardEntry = {
   score: number;
   streak: number;
   activeDays: number;
-  tasks: number;
+  /** Klario tasks ticked off, out of the tasks their account type sees. */
+  tasksDone: number;
+  tasksTotal: number;
+  xp: number;
+  /** Raw things done in the app (goals, debts, bills, banks, txns, schedules). */
+  actions: number;
   features: number;
   plan: string;
   engagement: number;
@@ -739,13 +689,13 @@ function Leaderboard({
           icon={<Sparkles size={15} />}
           title="Using the app right"
           entry={board.usingRight}
-          metric={(e) => `${e.features}/6 features used`}
+          metric={(e) => `${e.tasksDone}/${e.tasksTotal || "—"} Klario tasks · ${e.xp} XP`}
         />
       </div>
 
       {/* Full ranking */}
       <div className="overflow-x-auto rounded-xl border border-bg/10">
-        <table className="w-full min-w-[720px] text-left text-sm">
+        <table className="w-full min-w-[880px] text-left text-sm">
           <thead>
             <tr className="border-b border-bg/10 bg-bg/[0.03] text-[11px] uppercase tracking-[0.12em] text-bg/50">
               <th className="px-4 py-3 font-medium">#</th>
@@ -753,7 +703,9 @@ function Leaderboard({
               <th className="px-4 py-3 font-medium">Score</th>
               <th className="px-4 py-3 font-medium">Streak</th>
               <th className="px-4 py-3 font-medium">Active days</th>
-              <th className="px-4 py-3 font-medium">Tasks</th>
+              <th className="px-4 py-3 font-medium">Klario tasks</th>
+              <th className="px-4 py-3 font-medium">XP</th>
+              <th className="px-4 py-3 font-medium">Actions</th>
               <th className="px-4 py-3 font-medium">Features</th>
               <th className="px-4 py-3 font-medium">Plan</th>
             </tr>
@@ -780,7 +732,11 @@ function Leaderboard({
                 <td className="px-4 py-3 text-bg/80">{e.score}</td>
                 <td className="px-4 py-3 text-bg/70">{e.streak}</td>
                 <td className="px-4 py-3 text-bg/70">{e.activeDays}</td>
-                <td className="px-4 py-3 text-bg/70">{e.tasks}</td>
+                <td className="px-4 py-3 text-bg/70">
+                  {e.tasksTotal ? `${e.tasksDone}/${e.tasksTotal}` : "—"}
+                </td>
+                <td className="px-4 py-3 text-bg/70">{e.xp}</td>
+                <td className="px-4 py-3 text-bg/70">{e.actions}</td>
                 <td className="px-4 py-3 text-bg/70">{e.features}/6</td>
                 <td className="px-4 py-3 text-bg/70">{e.plan}</td>
               </tr>
@@ -839,6 +795,320 @@ function Detail({
       <p className={"mt-1.5 text-[13.5px] leading-relaxed text-bg/80" + (mono ? " font-mono" : "")}>
         {value}
       </p>
+    </div>
+  );
+}
+
+/**
+ * Everything known about one anchor — their answers, plus their app account,
+ * Klario tasks, banks and journey — in a modal over the table.
+ */
+function AnchorDetailModal({
+  r,
+  app,
+  act,
+  tasks,
+  del,
+  banks,
+  appLinked,
+  onClose,
+  onDelete,
+}: {
+  r: AnchorResponse;
+  app?: AppProfile;
+  act?: ActivityCounts;
+  tasks?: UserTasks;
+  del?: DeletedAccount;
+  banks?: LinkedBank[];
+  appLinked: boolean;
+  onClose: () => void;
+  onDelete: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${r.name || r.email} — anchor details`}
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/70 p-4 backdrop-blur-sm"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="my-8 w-full max-w-4xl rounded-2xl border border-bg/12 bg-[#0d0e12] shadow-2xl"
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 border-b border-bg/10 px-6 py-4">
+          <div className="min-w-0">
+            <p className="truncate text-[17px] font-medium text-bg">{r.name || "—"}</p>
+            <p className="truncate text-[13px] text-bg/50">{r.email}</p>
+            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-bg/45">
+              <span className="font-mono">{r.ref || "—"}</span>
+              <span>Registered {fmtDate(r.created_at)}</span>
+              {app?.klario_id && (
+                <span className="inline-flex items-center gap-1 font-mono text-gold">
+                  <Smartphone size={11} /> {app.klario_id}
+                </span>
+              )}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={onDelete}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-400/30 px-2.5 py-1.5 text-[12.5px] text-red-300 transition-colors hover:border-red-400/60 hover:text-red-200"
+            >
+              <Trash2 size={13} /> Delete
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="rounded-lg border border-bg/12 p-1.5 text-bg/50 hover:border-gold/40 hover:text-gold"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="grid gap-5 px-6 py-5 md:grid-cols-2">
+          <Detail label="Phone (WhatsApp)" value={r.phone || "—"} />
+          <Detail label="Level" value={r.level || r.notes?.level || "—"} />
+          <Detail label="Anchor reference" value={r.ref || "—"} mono />
+          <Detail label="Challenge" value={r.challenge || r.notes?.challenge || "—"} />
+          <Detail label="Why they want to join" value={r.why || "—"} full />
+          <div className="md:col-span-2">
+            <p className="text-[11px] uppercase tracking-[0.12em] text-bg/40">
+              What excites them
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {r.excites.length ? (
+                r.excites.map((e) => (
+                  <span
+                    key={e}
+                    className="rounded-full border border-gold/25 bg-gold/[0.07] px-2.5 py-1 text-[12px] text-gold"
+                  >
+                    {e}
+                  </span>
+                ))
+              ) : (
+                <span className="text-[13px] text-bg/50">—</span>
+              )}
+            </div>
+          </div>
+          <Detail
+            label="Commitment"
+            value={`Pledged: ${r.pledge ? "yes" : "no"} · Guidelines: ${r.guidelines ? "yes" : "no"}`}
+          />
+
+          {/* App performance (joined by email) */}
+          <div className="md:col-span-2">
+            <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-gold/70">
+              <Smartphone size={12} /> App performance
+            </p>
+            {app ? (
+              <div className="grid gap-4 rounded-lg border border-gold/15 bg-gold/[0.04] p-4 sm:grid-cols-2 lg:grid-cols-3">
+                <Mini label="Klario ID" value={app.klario_id || "—"} mono />
+                <Mini
+                  label="Kairo score"
+                  value={app.kairo_score != null ? `${app.kairo_score} / 100` : "—"}
+                />
+                <Mini
+                  label="Streak"
+                  value={
+                    app.streak != null ? `${app.streak} day${app.streak === 1 ? "" : "s"}` : "—"
+                  }
+                />
+                <Mini label="Plan" value={planLabel(app.plan)} />
+                <Mini label="Spending type" value={titleCase(app.personality)} />
+                <Mini label="Verification" value={verifyLabel(app.kyc_status)} />
+                <Mini label="Account type" value={titleCase(app.account_type)} />
+                <Mini label="Active days" value={String(app.activeDays)} />
+                <Mini
+                  label="On app since"
+                  value={app.created_at ? fmtDate(app.created_at) : "—"}
+                />
+              </div>
+            ) : (
+              <p className="text-[13px] text-bg/50">
+                {appLinked
+                  ? "No app account found for this email yet."
+                  : "App link not configured (set APP_SUPABASE_URL / APP_SUPABASE_SERVICE_ROLE_KEY)."}
+              </p>
+            )}
+          </div>
+
+          {/* Klario tasks — the app's Klario ID checklist */}
+          {app && tasks && (
+            <div className="md:col-span-2">
+              <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-gold/70">
+                <ListChecks size={12} /> Klario tasks
+              </p>
+              <TaskChecklist tasks={tasks} />
+            </div>
+          )}
+
+          {/* Raw activity counts behind the tasks */}
+          {app && (
+            <div className="md:col-span-2">
+              <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-gold/70">
+                <Activity size={12} /> Activity in the app
+              </p>
+              <div className="grid gap-4 rounded-lg border border-bg/10 bg-bg/[0.03] p-4 sm:grid-cols-3 lg:grid-cols-6">
+                <Mini label="Savings goals" value={String(act?.savingsGoals ?? 0)} />
+                <Mini label="Debts tracked" value={String(act?.debts ?? 0)} />
+                <Mini label="Bills paid" value={String(act?.billsPaid ?? 0)} />
+                <Mini label="Banks linked" value={String(act?.linkedBanks ?? 0)} />
+                <Mini label="Transactions" value={String(act?.transactions ?? 0)} />
+                <Mini label="Scheduled" value={String(act?.scheduledTransfers ?? 0)} />
+              </div>
+            </div>
+          )}
+
+          {/* Linked banks */}
+          {app && banks && banks.length > 0 && (
+            <div className="md:col-span-2">
+              <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-gold/70">
+                <Landmark size={12} /> Linked banks ({banks.length})
+              </p>
+              <div className="flex flex-col gap-2">
+                {banks.map((b, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-bg/10 bg-bg/[0.03] px-3.5 py-2.5"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[13.5px] font-medium text-bg">{b.bankName}</span>
+                      <span className="font-mono text-[12px] text-bg/50">{b.maskedAccount}</span>
+                      {b.isPrimary && (
+                        <span className="rounded-full border border-gold/30 bg-gold/[0.08] px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] text-gold">
+                          Primary
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-mono text-[12.5px] text-bg/70">
+                      ₦{Math.round(b.balance).toLocaleString("en-NG")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Spending-type journey */}
+          {app && app.typeHistory.length > 0 && (
+            <div className="md:col-span-2">
+              <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-gold/70">
+                <TrendingUp size={12} /> Type journey
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                {app.typeHistory.map((t, i) => (
+                  <Fragment key={i}>
+                    {i > 0 && <span className="text-bg/30">→</span>}
+                    <span className="rounded-lg border border-bg/12 bg-bg/[0.03] px-3 py-1.5">
+                      <span className="text-[13px] font-medium text-bg">{t.type}</span>
+                      {t.rank && <span className="text-[12px] text-gold"> · {t.rank}</span>}
+                      <span className="ml-1.5 font-mono text-[11px] text-bg/45">{t.date}</span>
+                    </span>
+                  </Fragment>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Account deletion tombstone */}
+          {del && (
+            <div className="rounded-lg border border-amber-400/25 bg-amber-400/[0.06] p-4 md:col-span-2">
+              <p className="text-[11px] uppercase tracking-[0.12em] text-amber-300/80">
+                Account deletion
+              </p>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-bg/80">
+                Deleted their Klario app account
+                {del.deletion_count > 1 ? ` ${del.deletion_count} times` : ""}
+                {del.last_deleted_at ? `, last on ${fmtDate(del.last_deleted_at)}` : ""}.{" "}
+                {app
+                  ? "They've since signed up again — the account above is a fresh start."
+                  : "No active app account right now."}
+                {del.klario_id ? ` Prior Klario ID: ${del.klario_id}.` : ""}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The member's Klario ID checklist, grouped exactly as the app groups it. Ticked
+ * tasks read gold; the rest stay muted so the gaps are what stands out.
+ */
+function TaskChecklist({ tasks }: { tasks: UserTasks }) {
+  const groups = TASK_GROUPS.map((g) => ({
+    group: g,
+    items: tasks.tasks.filter((t) => t.group === g),
+  })).filter((g) => g.items.length > 0);
+
+  return (
+    <div className="rounded-lg border border-bg/10 bg-bg/[0.03] p-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="text-[15px] font-medium text-bg">
+          {tasks.doneCount}
+          <span className="text-bg/45"> / {tasks.total} done</span>
+        </span>
+        <span className="text-[13px] text-gold">
+          {tasks.xpEarned} <span className="text-gold/60">/ {tasks.xpTotal} XP</span>
+        </span>
+        <div className="h-1.5 min-w-[120px] flex-1 overflow-hidden rounded-full bg-bg/10">
+          <div
+            className="h-full rounded-full bg-gold/70"
+            style={{ width: `${taskPct(tasks)}%` }}
+          />
+        </div>
+        <span className="text-[12px] text-bg/45">{taskPct(tasks)}%</span>
+      </div>
+
+      <div className="mt-4 flex flex-col gap-3">
+        {groups.map(({ group, items }) => (
+          <div key={group}>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-bg/40">
+              {group}{" "}
+              <span className="text-bg/25">
+                {items.filter((t) => t.done).length}/{items.length}
+              </span>
+            </p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {items.map((t) => (
+                <span
+                  key={t.key}
+                  title={`${t.hint} · ${t.xp} XP`}
+                  className={
+                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] " +
+                    (t.done
+                      ? "border-gold/30 bg-gold/[0.08] text-gold"
+                      : "border-bg/10 bg-bg/[0.02] text-bg/40")
+                  }
+                >
+                  {t.done ? (
+                    <Check size={11} />
+                  ) : (
+                    <span className="h-[9px] w-[9px] rounded-full border border-bg/25" />
+                  )}
+                  {t.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Children, useEffect, useRef, useState, type ReactNode } from "react";
+import { Children, useRef, type ReactNode } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +10,6 @@ function StackItem({
   progress,
   heightClass,
   dimClassName,
-  isDesktop,
   children,
 }: {
   index: number;
@@ -18,11 +17,8 @@ function StackItem({
   progress: MotionValue<number>;
   heightClass: string;
   dimClassName: string;
-  isDesktop: boolean;
   children: ReactNode;
 }) {
-  // Hooks must run unconditionally, so compute the transforms every render and
-  // only apply them on desktop.
   // Cards behind shrink a touch for depth...
   const targetScale = 1 - (total - 1 - index) * 0.045;
   const scale = useTransform(progress, [index / total, 1], [1, targetScale]);
@@ -33,24 +29,6 @@ function StackItem({
     [(index + 1) / total, (index + 1.4) / total],
     [0, 0.6]
   );
-
-  // Mobile: the scroll-pin stack needs a tall runway per card, which reads as
-  // large gaps on a small screen. Instead of a dead static list, give each card
-  // a scroll-reveal (fade + slide up) as it enters view — a mobile-friendly
-  // scroll effect with no awkward gaps.
-  if (!isDesktop) {
-    return (
-      <motion.div
-        className={cn("w-full", index > 0 && "mt-4")}
-        initial={{ opacity: 0, y: 28 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      >
-        {children}
-      </motion.div>
-    );
-  }
 
   const isLast = index === total - 1;
 
@@ -84,14 +62,12 @@ function StackItem({
 }
 
 /**
- * Scroll-driven card stack (desktop): one card is pinned in view at a time; as
- * you scroll, the next slides up and stacks over it while the ones behind scale
- * down and darken (only once covered). On mobile it degrades to a plain vertical
- * list of the same cards, because the pinned runway leaves awkward gaps on small
- * screens. Each child is one card.
+ * Scroll-driven card stack: one card is pinned in view at a time; as you scroll,
+ * the next slides up and stacks over it while the ones behind scale down and
+ * darken (only once covered). Runs on mobile and desktop. Each child is one card.
  *
  * @param heightClass  scroll length per card as a (responsive) height utility,
- *                     e.g. "h-[72vh] md:h-[85vh]" (desktop only now).
+ *                     e.g. "h-[72vh] md:h-[85vh]".
  * @param dimClassName background utility for the recede scrim (default bg-ink).
  */
 export function StackedCards({
@@ -110,17 +86,6 @@ export function StackedCards({
   });
   const items = Children.toArray(children);
 
-  // Progressive enhancement: render the simple list first (matches SSR), then
-  // enable the pinned stack once we confirm a desktop-width viewport.
-  const [isDesktop, setIsDesktop] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    const sync = () => setIsDesktop(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
-
   return (
     <div ref={ref} className="relative">
       {items.map((child, i) => {
@@ -133,7 +98,6 @@ export function StackedCards({
             progress={scrollYProgress}
             heightClass={heightClass}
             dimClassName={dimClassName}
-            isDesktop={isDesktop}
           >
             {child}
           </StackItem>

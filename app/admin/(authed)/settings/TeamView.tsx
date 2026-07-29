@@ -383,8 +383,8 @@ export function TeamView({
         {activity.length === 0 ? (
           <p className="text-[13px] text-bg/45">Nothing yet.</p>
         ) : (
-          <div className="rounded-2xl border border-bg/10">
-            <ul className="max-h-80 overflow-y-auto">
+          <div className="rounded-2xl border border-bg/10 h-[65vh]">
+            <ul className="max-h-[65vh] overflow-y-auto">
               {activity.map((a) => (
                 <li key={a.id} className="flex items-center justify-between gap-3 border-b border-bg/6 px-4 py-2 text-[12.5px] last:border-0">
                   <span className="text-bg/80">

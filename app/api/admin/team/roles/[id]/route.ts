@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireSuperadmin } from "@/lib/auth/access";
+import { requireTeamAccess } from "@/lib/auth/access";
 import { updateRole, deleteRole } from "@/lib/db/rbac";
 import { isCapability, type Capability } from "@/lib/auth/capabilities";
 import { logMemberAction } from "@/lib/db/adminActivity";
@@ -12,7 +12,7 @@ function sanitizeCaps(input: unknown): Capability[] {
 }
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const access = await requireSuperadmin();
+  const access = await requireTeamAccess();
   if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await ctx.params;
   let body: { name?: unknown; capabilities?: unknown; is_superadmin?: unknown };
@@ -34,7 +34,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
 }
 
 export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const access = await requireSuperadmin();
+  const access = await requireTeamAccess();
   if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await ctx.params;
   const ok = await deleteRole(id);

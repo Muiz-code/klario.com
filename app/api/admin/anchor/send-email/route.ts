@@ -5,6 +5,7 @@ import { buildEmailHtml } from "@/lib/email/compose-html";
 import { buttonsText, type EmailButton } from "@/lib/email/linkButtons";
 import { logEmails } from "@/lib/db/email-log";
 import { createAuditEvent } from "@/lib/db/audit";
+import { logMemberAction } from "@/lib/db/adminActivity";
 import { SITE } from "@/lib/constants";
 
 export const runtime = "nodejs";
@@ -165,6 +166,14 @@ export async function POST(req: Request) {
     })),
     auditId
   );
+
+  if (admin) {
+    await logMemberAction(admin, "emailed Anchor Club", subject, {
+      recipients: recipients.length,
+      sent,
+      failed,
+    });
+  }
 
   return NextResponse.json({ ok: true, sent, failed });
 }

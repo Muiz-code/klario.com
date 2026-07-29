@@ -1,5 +1,6 @@
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import { listAuditEvents } from "@/lib/db/audit";
+import { listMemberActivity } from "@/lib/db/adminActivity";
 import { AuditViews } from "./AuditViews";
 import { StorageCleanupButton } from "./StorageCleanupButton";
 import { SyncFromResendButton } from "./SyncFromResendButton";
@@ -8,7 +9,9 @@ export const dynamic = "force-dynamic";
 
 export default async function AuditPage() {
   const configured = isSupabaseConfigured();
-  const events = configured ? await listAuditEvents() : [];
+  const [events, activity] = configured
+    ? await Promise.all([listAuditEvents(), listMemberActivity({ limit: 300 })])
+    : [[], []];
 
   return (
     <div className="flex flex-col gap-8">
@@ -33,7 +36,7 @@ export default async function AuditPage() {
           Supabase is not configured, so there is nothing to show yet.
         </p>
       ) : (
-        <AuditViews events={events} />
+        <AuditViews events={events} activity={activity} />
       )}
     </div>
   );

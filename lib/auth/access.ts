@@ -62,8 +62,20 @@ export async function requireApiCapability(
   return a && a.capabilities.has(cap) ? a : null;
 }
 
-/** API-route guard for superadmin-only endpoints (team management). */
+/** API-route guard for superadmin-only endpoints. */
 export async function requireSuperadmin(): Promise<Access | null> {
   const a = await getAccess();
   return a?.isSuperadmin ? a : null;
+}
+
+/**
+ * Guard for team & roles management: superadmins, or members granted the
+ * `settings` capability (delegated team managers). Note: superadmin *status*
+ * itself stays env-owner-only — settings managers can't create superadmin roles
+ * or invite superadmins (blocked separately).
+ */
+export async function requireTeamAccess(): Promise<Access | null> {
+  const a = await getAccess();
+  if (!a) return null;
+  return a.isSuperadmin || a.capabilities.has("settings") ? a : null;
 }

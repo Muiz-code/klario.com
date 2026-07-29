@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Loader2, Eye, EyeOff, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
 export function ChangePasswordForm() {
@@ -11,6 +11,7 @@ export function ChangePasswordForm() {
   const [confirm, setConfirm] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
@@ -22,21 +23,44 @@ export function ChangePasswordForm() {
     setBusy(true);
     try {
       const supabase = supabaseBrowser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const email = user?.email ?? "";
+
       const { error: updErr } = await supabase.auth.updateUser({ password });
       if (updErr) {
         setError(updErr.message || "Could not update password.");
         setBusy(false);
         return;
       }
-      // Clear the forced-change flag server-side, then continue.
+      // Clear the forced-change flag (while still signed in), then sign out and
+      // send them to the login screen to sign in with the new password.
       await fetch("/api/admin/team/complete-password", { method: "POST" }).catch(() => {});
-      router.push("/marketing/dashboard");
-      router.refresh();
+      await supabase.auth.signOut().catch(() => {});
+      setDone(true);
+      setTimeout(() => {
+        router.push(`/marketing?email=${encodeURIComponent(email)}&changed=1`);
+        router.refresh();
+      }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Network error.");
       setBusy(false);
     }
   };
+
+  if (done) {
+    return (
+      <div className="mt-8 flex flex-col items-center gap-3 text-center">
+        <CheckCircle2 size={40} className="text-emerald-400" />
+        <p className="font-display text-lg text-bg">Password changed</p>
+        <p className="text-sm text-bg/55">
+          Taking you to sign in with your new password…
+        </p>
+        <Loader2 size={16} className="mt-1 animate-spin text-bg/40" />
+      </div>
+    );
+  }
 
   const input =
     "w-full rounded-xl border border-bg/15 bg-bg/4 px-4 py-3.5 pr-11 text-sm text-bg placeholder:text-bg/40 focus:border-gold/60 focus:outline-none disabled:opacity-60";

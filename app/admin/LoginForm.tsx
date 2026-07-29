@@ -15,10 +15,21 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState<Toast>(null);
 
+  // Prefill the email from an invite link (?email=) or after a password change,
+  // and confirm the change so they know to sign in with the new password.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const e = params.get("email");
+    if (e) setEmail(e);
+    if (params.get("changed") === "1") {
+      setToast({ kind: "success", message: "Password changed — sign in with your new password." });
+    }
+  }, []);
+
   // Auto-dismiss the toast after a few seconds.
   useEffect(() => {
     if (!toast) return;
-    const t = setTimeout(() => setToast(null), 4000);
+    const t = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(t);
   }, [toast]);
 

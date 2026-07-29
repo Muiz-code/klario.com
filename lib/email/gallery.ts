@@ -77,6 +77,19 @@ export function galleryTemplates(): GalleryTemplate[] {
   });
 
   const F = "Helvetica,Arial,sans-serif";
+
+  // Anchor Club update — branded letter aimed at Anchor Club members.
+  const anchor = wrapDocument({
+    preheader: "An update for the Klario Anchor Club.",
+    title: "Anchor Club update",
+    inner: `<tr><td class="px" style="padding:26px 28px;font-family:${F};">
+      <p style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${COLORS.gold};">The Anchor Club</p>
+      <h1 class="h1" style="margin:0 0 16px;font-size:28px;line-height:1.18;font-weight:800;letter-spacing:-0.5px;color:${COLORS.white};">Hi {{first_name}}, an update from the club</h1>
+      <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:${COLORS.text};">Write your update to the Anchor Club here — cohort news, a call to action, or the next steps you want members to take.</p>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:${COLORS.text};">Build with us, not for us.<br/>The Klario team</p>
+    </td></tr>`,
+  });
+
   const blank = wrapDocument({
     preheader: "A note from Klario.",
     title: "A note from Klario",
@@ -95,6 +108,13 @@ export function galleryTemplates(): GalleryTemplate[] {
         "Minimal, text-first email that's far more likely to land in Primary, not Promotions.",
       subject: "A quick note",
       html: plain,
+    },
+    {
+      id: "anchor",
+      name: "Anchor Club update",
+      description: "A branded letter for Anchor Club members.",
+      subject: "An update from the Anchor Club",
+      html: anchor,
     },
     {
       id: "poster",

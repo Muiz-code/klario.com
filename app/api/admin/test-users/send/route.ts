@@ -4,6 +4,7 @@ import { listTestUsers } from "@/lib/db/testUsers";
 import { createNewsletter, markNewsletterSending } from "@/lib/db/newsletters";
 import { enqueueRecipients, getQueueCounts } from "@/lib/db/newsletterQueue";
 import { createAuditEvent } from "@/lib/db/audit";
+import { logMemberAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -55,9 +56,10 @@ export async function POST() {
     );
   }
 
+  const actor = await getAdminEmail();
   const auditId = await createAuditEvent({
     action: "newsletter",
-    actor: await getAdminEmail(),
+    actor,
     subject: newsletter.subject,
     template: "Load test",
     segment: "test",
@@ -65,6 +67,7 @@ export async function POST() {
     meta: { newsletter_id: newsletter.id, load_test: true },
   });
   await markNewsletterSending(newsletter.id, { auditId, recipientCount: counts.total });
+  if (actor) await logMemberAction(actor, "ran a load test", newsletter.subject, { recipients: counts.total });
 
   // The progress modal drives the batches (one at a time, no race); if it's
   // closed early, /resume hands the rest to the background worker.

@@ -11,6 +11,7 @@ import { createAuditEvent } from "@/lib/db/audit";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { enqueueRecipients, getQueueCounts } from "@/lib/db/newsletterQueue";
 import { getResendRecipients } from "@/lib/email/resend-recipients";
+import { logMemberAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -204,9 +205,10 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     });
   }
 
+  const actor = await getAdminEmail();
   const auditId = await createAuditEvent({
     action: "newsletter",
-    actor: await getAdminEmail(),
+    actor,
     subject: newsletter.subject,
     template: "Newsletter",
     segment: emails ? "choose" : segment,
@@ -216,6 +218,12 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     meta: { newsletter_id: id },
   });
   await markNewsletterSending(id, { auditId, recipientCount: counts.total });
+  if (actor) {
+    await logMemberAction(actor, "sent mail", newsletter.subject, {
+      recipients: counts.total,
+      segment: emails ? "choose" : segment,
+    });
+  }
 
   // Recipients are queued. The progress modal drives the batches from here (one
   // at a time, so no double-sending); if it's closed early, /resume hands the

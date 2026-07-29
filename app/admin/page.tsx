@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
+import brandLogo from "@/public/Klario-primary-and-secondary-Logo.png";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +24,8 @@ export default async function AdminEntry() {
       />
 
       <div className="relative z-10 w-full max-w-lg rounded-3xl border border-bg/10 bg-[#0d0e12]/70 px-10 py-14 shadow-2xl backdrop-blur-md sm:px-14">
-        <div className="flex items-baseline gap-1.5">
-          <span className="font-display text-3xl font-bold tracking-tight text-bg">
-            Klario
-          </span>
+        <div className="flex items-center gap-2.5">
+          <Image src={brandLogo} alt="Klario" priority sizes="170px" className="h-8 w-auto" />
           <span className="text-[11px] uppercase tracking-[0.18em] text-gold">
             admin
           </span>
