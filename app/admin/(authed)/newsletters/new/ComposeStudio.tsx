@@ -44,6 +44,13 @@ function plainText(html: string): string {
     .trim();
 }
 
+/** True if the body has text OR embedded media — an image, link, button,
+ *  video, or divider all count as content, not just typed words. */
+function hasBodyContent(html: string): boolean {
+  if (plainText(html)) return true;
+  return /<(img|a|video|iframe|table|hr)\b/i.test(html);
+}
+
 type Mode = "write" | "html";
 type Segment =
   | "all"
@@ -357,7 +364,7 @@ export function ComposeStudio({
 
   const validate = (): string | null => {
     if (!subject.trim()) return "Add a subject line.";
-    if (mode === "write" && !plainText(bodyHtml)) return "Write a message.";
+    if (mode === "write" && !hasBodyContent(bodyHtml)) return "Add a message or an image.";
     if (mode === "html" && !rawHtml.trim()) return "Add some HTML content.";
     return null;
   };
@@ -963,6 +970,9 @@ function HtmlEditor(props: {
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [videoLabel, setVideoLabel] = useState("▶ Watch the video");
+  const [imgLinkOpen, setImgLinkOpen] = useState(false);
+  const [pendingImgUrl, setPendingImgUrl] = useState("");
+  const [imgHref, setImgHref] = useState("");
 
   const insertAtCursor = (tag: string) => {
     const el = textRef.current;
@@ -985,13 +995,25 @@ function HtmlEditor(props: {
     if (videoFileRef.current) videoFileRef.current.value = "";
   };
 
+  // Upload, then let the user optionally make the image a clickable link.
   const handleFile = async (file: File) => {
     const url = await props.uploadImage(file);
     if (url) {
-      const tag = `\n<img src="${url}" alt="" style="display:block;max-width:100%;height:auto;border-radius:12px;margin:16px auto;" />\n`;
-      insertAtCursor(tag);
+      setPendingImgUrl(url);
+      setImgHref("");
+      setImgLinkOpen(true);
     }
     if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const insertImage = () => {
+    const img = `<img src="${pendingImgUrl}" alt="" style="display:block;max-width:100%;height:auto;border-radius:12px;margin:16px auto;" />`;
+    const href = imgHref.trim();
+    const link = href && (/^(https?:|mailto:|\{\{)/i.test(href) ? href : `https://${href}`);
+    insertAtCursor(link ? `\n<a href="${link}" target="_blank">${img}</a>\n` : `\n${img}\n`);
+    setImgLinkOpen(false);
+    setPendingImgUrl("");
+    setImgHref("");
   };
 
   return (
@@ -1097,6 +1119,48 @@ function HtmlEditor(props: {
               <button
                 type="button"
                 onClick={() => setVideoOpen(false)}
+                className="rounded-lg border border-bg/15 px-3 py-1.5 text-[12px] text-bg/70 hover:text-bg"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+        {imgLinkOpen && (
+          <div className="flex flex-col gap-2 rounded-xl border border-gold/25 bg-gold/[0.05] p-3">
+            <span className="text-[12px] text-bg/70">
+              Make this image clickable? Add a link (optional) — leave blank for a
+              plain image.
+            </span>
+            {pendingImgUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={pendingImgUrl}
+                alt=""
+                className="max-h-28 w-auto self-start rounded-lg border border-bg/10"
+              />
+            )}
+            <input
+              value={imgHref}
+              onChange={(e) => setImgHref(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && insertImage()}
+              placeholder="https://…  (where the image should link to)"
+              className="w-full rounded-lg border border-bg/15 bg-bg/4 px-3 py-2 text-[13px] text-bg placeholder:text-bg/40 focus:border-gold/60 focus:outline-none"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={insertImage}
+                className="rounded-lg bg-gold px-3 py-1.5 text-[12px] font-semibold text-ink"
+              >
+                {imgHref.trim() ? "Insert linked image" : "Insert image"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setImgLinkOpen(false);
+                  setPendingImgUrl("");
+                }}
                 className="rounded-lg border border-bg/15 px-3 py-1.5 text-[12px] text-bg/70 hover:text-bg"
               >
                 Cancel

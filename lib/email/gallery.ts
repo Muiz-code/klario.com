@@ -54,6 +54,33 @@ export function galleryTemplates(): GalleryTemplate[] {
 </div>
 </body></html>`;
 
+  // Full-bleed "poster" — one edge-to-edge image, no logo header, no greeting,
+  // no padding (like a flyer/banner). The whole image is clickable. Just replace
+  // the image src and the link, keep the small unsubscribe footer.
+  const poster = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="x-apple-disable-message-reformatting"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;">
+<div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#f4f4f5;">Your preview text here — the line inboxes show next to the subject.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f5;">
+  <tr><td align="center" style="padding:0;">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+      <!-- FULL-WIDTH IMAGE — replace the src (use the Image button) and the link href. -->
+      <tr><td style="padding:0;line-height:0;font-size:0;">
+        <a href="https://www.klario.finance" target="_blank" style="display:block;text-decoration:none;">
+          <img src="https://placehold.co/600x820/1F232B/D4A853/png?text=Drop+your+full-width+image+here" alt="" width="600" style="display:block;width:100%;max-width:100%;height:auto;border:0;" />
+        </a>
+      </td></tr>
+      <!-- Keep this small footer + unsubscribe (needed for deliverability). -->
+      <tr><td align="center" style="padding:16px 24px;background:#f4f4f5;">
+        <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:11px;line-height:1.6;color:#9aa0a6;">
+          Klario, a Raavon Limited venture &middot; <a href="{{unsubscribe_url}}" style="color:#9aa0a6;text-decoration:underline;">Unsubscribe</a>
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>`;
+
   const F = "Helvetica,Arial,sans-serif";
   const blank = wrapDocument({
     preheader: "A note from Klario.",
@@ -73,6 +100,14 @@ export function galleryTemplates(): GalleryTemplate[] {
         "Minimal, text-first email that's far more likely to land in Primary, not Promotions.",
       subject: "A quick note",
       html: plain,
+    },
+    {
+      id: "poster",
+      name: "Full-image poster (flyer)",
+      description:
+        "One edge-to-edge image — no logo, no greeting, no padding. For a designed flyer/banner. Replace the image and its link.",
+      subject: "",
+      html: poster,
     },
     {
       id: "editorial",

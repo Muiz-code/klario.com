@@ -6,7 +6,7 @@
  */
 import { COLORS, wrapDocument, escapeHtml } from "./brand";
 import { renderButtonRow, buttonsText, type EmailButton } from "./linkButtons";
-import { APP_LINKS } from "@/lib/constants";
+import { APP_LINKS, SITE } from "@/lib/constants";
 
 const F = "Helvetica,Arial,sans-serif";
 
@@ -24,6 +24,8 @@ export function renderAnchorConfirmation(opts: {
 }): RenderedEmail {
   const name = (opts.name || "").trim() || "there";
   const ref = opts.ref;
+  // A link back to their card so they can revisit and re-download anytime.
+  const cardUrl = `${SITE.url}/anchor-club/card/${encodeURIComponent(ref)}?dl=1`;
 
   const inner = `
   <tr>
@@ -62,6 +64,18 @@ export function renderAnchorConfirmation(opts: {
           </td>
         </tr>
       </table>
+    </td>
+  </tr>
+
+  <!-- View / download the card -->
+  <tr>
+    <td class="px" style="padding:14px 40px 4px 40px;">
+      <p style="margin:0 0 12px 0;font-family:${F};font-size:15px;line-height:1.6;color:${COLORS.text};">
+        Here's your Anchor Club card — you can revisit this link anytime to view or download it again.
+      </p>
+      ${renderButtonRow([
+        { label: "View & download your card", url: cardUrl, variant: "primary" },
+      ])}
     </td>
   </tr>
 
@@ -104,6 +118,8 @@ Thanks for stepping up. The Anchor Club is for people who want to actually build
 We read every application by hand. If you're a fit for the founding cohort, you'll hear from us on WhatsApp within about two weeks, and we'll bring you into the cohort group from there.
 
 Your Anchor Club reference: ${ref}
+
+View & download your Anchor Club card anytime: ${cardUrl}
 
 Get the Klario app and sign up with this same email so we can link your Anchor profile to your progress:${buttonsText(STORE_BUTTONS)}
 

@@ -109,7 +109,7 @@ export function wrapDocument(opts: {
     a { color: inherit; }
     @media only screen and (max-width: 620px) {
       .container { width: 100% !important; max-width: 100% !important; border-radius: 0 !important; }
-      .px { padding-left: 24px !important; padding-right: 24px !important; }
+      .px { padding-left: 20px !important; padding-right: 20px !important; }
       .h1 { font-size: 28px !important; line-height: 1.15 !important; }
       .h2 { font-size: 20px !important; }
     }
@@ -121,7 +121,7 @@ export function wrapDocument(opts: {
   </div>
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:${COLORS.pageBg};">
     <tr>
-      <td align="center" style="padding:40px 16px;">
+      <td align="center" style="padding:24px 12px;">
         <table role="presentation" class="container" cellspacing="0" cellpadding="0" border="0" width="600" style="width:600px;max-width:600px;background:${COLORS.card};border:1px solid ${COLORS.border};border-radius:18px;overflow:hidden;">
           ${emailHeaderRow()}
           ${opts.inner}

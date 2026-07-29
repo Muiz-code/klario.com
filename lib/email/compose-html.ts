@@ -61,7 +61,7 @@ export function buildRichEmail(opts: {
       )}</a></td></tr></table>`
     : "";
 
-  const inner = `<tr><td class="px" style="padding:42px 40px;font-family:Helvetica,Arial,sans-serif;">${body}${cta}${video}</td></tr>`;
+  const inner = `<tr><td class="px" style="padding:26px 28px;font-family:Helvetica,Arial,sans-serif;">${body}${cta}${video}</td></tr>`;
   return wrapDocument({
     preheader: opts.subject || "A note from Klario.",
     title: opts.subject || "Klario",
@@ -103,7 +103,7 @@ export function buildEmailHtml(input: ComposeInput): string {
   const imageBlock = images
     .map(
       (url) =>
-        `<tr><td style="padding:0 40px 12px;"><img src="${escapeAttr(
+        `<tr><td style="padding:0 20px 10px;"><img src="${escapeAttr(
           url
         )}" alt="" style="display:block;width:100%;height:auto;border-radius:14px;" /></td></tr>`
     )
@@ -129,7 +129,7 @@ export function buildEmailHtml(input: ComposeInput): string {
 
   const inner = `
   ${imageBlock}
-  <tr><td class="px" style="padding:42px 40px;">
+  <tr><td class="px" style="padding:26px 28px;">
     ${headingBlock}
     ${paragraphs || `<p style="margin:0;font-family:${F};font-size:16px;line-height:1.6;color:${COLORS.text};">Write your message...</p>`}
     ${ctaBlock}

@@ -74,6 +74,8 @@ export function RichEmailEditor({
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkText, setLinkText] = useState("");
+  const [imgLinkOpen, setImgLinkOpen] = useState(false);
+  const [imgLinkUrl, setImgLinkUrl] = useState("");
 
   // Seed initial content once; never re-sync from `value` to keep the caret.
   useEffect(() => {
@@ -148,6 +150,41 @@ export function RichEmailEditor({
     ref.current?.querySelectorAll("img.rte-sel").forEach((im) => im.classList.remove("rte-sel"));
     selImgRef.current = null;
     setHasSelImg(false);
+    setImgLinkOpen(false);
+  };
+
+  // Make the selected image a clickable link (wrap it in <a>), edit, or remove.
+  const openImageLink = () => {
+    const parent = selImgRef.current?.parentElement;
+    setImgLinkUrl(
+      parent && parent.tagName === "A"
+        ? (parent as HTMLAnchorElement).getAttribute("href") ?? ""
+        : ""
+    );
+    setImgLinkOpen(true);
+  };
+  const applyImageLink = () => {
+    const img = selImgRef.current;
+    if (!img) return;
+    const raw = imgLinkUrl.trim();
+    const parent = img.parentElement;
+    if (raw) {
+      const href = /^(https?:|mailto:|\{\{)/i.test(raw) ? raw : `https://${raw}`;
+      if (parent && parent.tagName === "A") {
+        parent.setAttribute("href", href);
+        parent.setAttribute("target", "_blank");
+      } else {
+        const a = document.createElement("a");
+        a.setAttribute("href", href);
+        a.setAttribute("target", "_blank");
+        img.replaceWith(a);
+        a.appendChild(img);
+      }
+    } else if (parent && parent.tagName === "A") {
+      parent.replaceWith(img); // blank = remove the link
+    }
+    setImgLinkOpen(false);
+    sync();
   };
 
   const insertButton = () => {
@@ -379,7 +416,22 @@ export function RichEmailEditor({
           <Pill onClick={() => sizeSelectedImage("25%")}>25%</Pill>
           <Pill onClick={() => sizeSelectedImage("50%")}>50%</Pill>
           <Pill onClick={() => sizeSelectedImage("100%")}>Full</Pill>
+          <Pill onClick={openImageLink}>🔗 Link</Pill>
           <Pill onClick={clearImageSelection}>Done</Pill>
+          {imgLinkOpen && (
+            <div className="mt-1 flex w-full items-center gap-2">
+              <input
+                autoFocus
+                value={imgLinkUrl}
+                onChange={(e) => setImgLinkUrl(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && applyImageLink()}
+                placeholder="https://…  (leave blank to remove the link)"
+                className="min-w-0 flex-1 rounded-md border border-bg/15 bg-[#0d0e12] px-2.5 py-1.5 text-[12px] text-bg placeholder:text-bg/35 focus:border-gold/50 focus:outline-none"
+              />
+              <Pill onClick={applyImageLink}>Apply</Pill>
+              <Pill onClick={() => setImgLinkOpen(false)}>Cancel</Pill>
+            </div>
+          )}
         </div>
       )}
 
