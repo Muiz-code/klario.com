@@ -2,20 +2,17 @@
  * Anchor Club application confirmation. Sent automatically after a successful
  * /anchor-club submission. Shares the Klario brand wrapper (logo header +
  * gold-on-charcoal body + Raavon footer) and includes the applicant's Anchor
- * reference and the app link.
+ * reference and a link back to their card. No app-store buttons — Klario is in
+ * private testing, so selected members get a separate invite email with the
+ * download links and install steps.
  */
 import { COLORS, wrapDocument, escapeHtml } from "./brand";
-import { renderButtonRow, buttonsText, type EmailButton } from "./linkButtons";
-import { APP_LINKS, SITE } from "@/lib/constants";
+import { renderButtonRow } from "./linkButtons";
+import { SITE } from "@/lib/constants";
 
 const F = "Helvetica,Arial,sans-serif";
 
 export type RenderedEmail = { subject: string; html: string; text: string };
-
-const STORE_BUTTONS: EmailButton[] = [
-  { label: "Download on iOS", url: APP_LINKS.ios, variant: "primary" },
-  { label: "Get on Android", url: APP_LINKS.android, variant: "outline" },
-];
 
 export function renderAnchorConfirmation(opts: {
   name?: string | null;
@@ -79,14 +76,14 @@ export function renderAnchorConfirmation(opts: {
     </td>
   </tr>
 
-  <!-- Get the app CTA -->
+  <!-- Early access note (private testing, invite-only) -->
   <tr>
     <td class="px" style="padding:18px 40px 6px 40px;">
-      <p style="margin:0 0 14px 0;font-family:${F};font-size:15px;line-height:1.6;color:${COLORS.text};">
-        In the meantime, get the Klario app and create your account with this same
-        email &mdash; that's how we link your Anchor profile to your progress.
+      <p style="margin:0;font-family:${F};font-size:15px;line-height:1.6;color:${COLORS.text};">
+        Klario is in private testing right now. If you're selected, we'll send you
+        an invite for early access &mdash; keep an eye on this inbox, and use this
+        same email so we can link your Anchor profile to your progress.
       </p>
-      ${renderButtonRow(STORE_BUTTONS)}
     </td>
   </tr>
 
@@ -121,7 +118,7 @@ Your Anchor Club reference: ${ref}
 
 View & download your Anchor Club card anytime: ${cardUrl}
 
-Get the Klario app and sign up with this same email so we can link your Anchor profile to your progress:${buttonsText(STORE_BUTTONS)}
+Klario is in private testing right now. If you're selected, we'll send you an invite for early access — use this same email so we can link your Anchor profile to your progress.
 
 Build with us, not for us.
 The Klario team

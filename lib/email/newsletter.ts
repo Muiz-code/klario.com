@@ -26,6 +26,6 @@ export function renderNewsletter(input: NewsletterInput): string {
         ? { label: input.ctaLabel, href: input.ctaHref }
         : undefined,
     closing: input.closing,
-    tagline: { lead: "Money clarity,", emphasis: "monthly." },
+    tagline: { lead: "connect · track ·", emphasis: "understand" },
   });
 }

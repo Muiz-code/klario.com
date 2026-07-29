@@ -90,6 +90,8 @@ export function wrapDocument(opts: {
   preheader: string;
   title?: string;
   inner: string;
+  /** Omit the white logo strip (e.g. a full-bleed poster) — keeps the footer. */
+  hideHeader?: boolean;
   footer?: { showUnsubscribe?: boolean; reason?: string; unsubscribeHref?: string };
 }): string {
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -123,7 +125,7 @@ export function wrapDocument(opts: {
     <tr>
       <td align="center" style="padding:24px 12px;">
         <table role="presentation" class="container" cellspacing="0" cellpadding="0" border="0" width="600" style="width:600px;max-width:600px;background:${COLORS.card};border:1px solid ${COLORS.border};border-radius:18px;overflow:hidden;">
-          ${emailHeaderRow()}
+          ${opts.hideHeader ? "" : emailHeaderRow()}
           ${opts.inner}
           ${emailFooterRows(opts.footer)}
         </table>

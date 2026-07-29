@@ -995,22 +995,51 @@ function HtmlEditor(props: {
     if (videoFileRef.current) videoFileRef.current.value = "";
   };
 
+  // Match the poster template's placeholder image (a placehold.co <img>),
+  // optionally wrapped in a link.
+  const PLACEHOLDER_ANCHOR = /<a\b[^>]*>\s*<img\b[^>]*placehold\.co[^>]*>\s*<\/a>/i;
+  const PLACEHOLDER_IMG = /<img\b[^>]*placehold\.co[^>]*>/i;
+
   // Upload, then let the user optionally make the image a clickable link.
   const handleFile = async (file: File) => {
     const url = await props.uploadImage(file);
     if (url) {
       setPendingImgUrl(url);
-      setImgHref("");
+      // Prefill the link from the placeholder's existing href, if any.
+      const m = props.rawHtml.match(
+        /<a\b[^>]*href=["']([^"']+)["'][^>]*>\s*<img\b[^>]*placehold/i
+      );
+      setImgHref(m ? m[1] : "");
       setImgLinkOpen(true);
     }
     if (fileRef.current) fileRef.current.value = "";
   };
 
   const insertImage = () => {
-    const img = `<img src="${pendingImgUrl}" alt="" style="display:block;max-width:100%;height:auto;border-radius:12px;margin:16px auto;" />`;
     const href = imgHref.trim();
-    const link = href && (/^(https?:|mailto:|\{\{)/i.test(href) ? href : `https://${href}`);
-    insertAtCursor(link ? `\n<a href="${link}" target="_blank">${img}</a>\n` : `\n${img}\n`);
+    const link = href
+      ? /^(https?:|mailto:|\{\{)/i.test(href)
+        ? href
+        : `https://${href}`
+      : "";
+    const raw = props.rawHtml;
+
+    // If the poster placeholder is present, REPLACE it in place (full-width,
+    // no rounding) instead of inserting a second image.
+    if (PLACEHOLDER_ANCHOR.test(raw) || PLACEHOLDER_IMG.test(raw)) {
+      const full = `<img src="${pendingImgUrl}" alt="" width="600" style="display:block;width:100%;max-width:100%;height:auto;border:0;" />`;
+      const wrapped = link
+        ? `<a href="${link}" target="_blank" style="display:block;text-decoration:none;">${full}</a>`
+        : full;
+      const next = PLACEHOLDER_ANCHOR.test(raw)
+        ? raw.replace(PLACEHOLDER_ANCHOR, wrapped)
+        : raw.replace(PLACEHOLDER_IMG, wrapped);
+      props.setRawHtml(next);
+    } else {
+      // No placeholder — insert a normal rounded image at the cursor.
+      const img = `<img src="${pendingImgUrl}" alt="" style="display:block;max-width:100%;height:auto;border-radius:12px;margin:16px auto;" />`;
+      insertAtCursor(link ? `\n<a href="${link}" target="_blank">${img}</a>\n` : `\n${img}\n`);
+    }
     setImgLinkOpen(false);
     setPendingImgUrl("");
     setImgHref("");
