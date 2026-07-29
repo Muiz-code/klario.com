@@ -80,9 +80,10 @@ export function renderAnchorConfirmation(opts: {
   <tr>
     <td class="px" style="padding:18px 40px 6px 40px;">
       <p style="margin:0;font-family:${F};font-size:15px;line-height:1.6;color:${COLORS.text};">
-        Klario is in private testing right now. If you're selected, we'll send you
-        an invite for early access &mdash; keep an eye on this inbox, and use this
-        same email so we can link your Anchor profile to your progress.
+        Klario is in private testing right now. If you're selected, we'll email you
+        the download link and how to get started on the day we open access &mdash;
+        keep an eye on this inbox, and use this same email so we can link your Anchor
+        profile to your progress.
       </p>
     </td>
   </tr>
@@ -118,7 +119,7 @@ Your Anchor Club reference: ${ref}
 
 View & download your Anchor Club card anytime: ${cardUrl}
 
-Klario is in private testing right now. If you're selected, we'll send you an invite for early access — use this same email so we can link your Anchor profile to your progress.
+Klario is in private testing right now. If you're selected, we'll email you the download link and how to get started on the day we open access — use this same email so we can link your Anchor profile to your progress.
 
 Build with us, not for us.
 The Klario team
