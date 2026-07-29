@@ -27,6 +27,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { capabilityForPath } from "@/lib/auth/capabilities";
 
 // Sidebar navigation grouped into collapsible accordion sections.
 const NAV_GROUPS = [
@@ -75,10 +76,31 @@ const NAV_GROUPS = [
   },
 ];
 
-export function AdminSidebar({ email }: { email: string }) {
+export function AdminSidebar({
+  email,
+  capabilities = [],
+  isSuperadmin = false,
+}: {
+  email: string;
+  capabilities?: string[];
+  isSuperadmin?: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  // Show only the sections this role can access (superadmin sees everything;
+  // an item with no guarding capability is always shown).
+  const caps = new Set(capabilities);
+  const allowed = (href: string) => {
+    if (isSuperadmin) return true;
+    const cap = capabilityForPath(href);
+    return cap === null || caps.has(cap);
+  };
+  const NAV = NAV_GROUPS.map((g) => ({
+    ...g,
+    items: g.items.filter((it) => allowed(it.href)),
+  })).filter((g) => g.items.length > 0);
 
   const groupMatch = (href: string) => {
     const internal = href.replace("/marketing", "/admin");
@@ -89,11 +111,11 @@ export function AdminSidebar({ email }: { email: string }) {
       pathname.startsWith(internal + "/")
     );
   };
-  const activeGroupKey = NAV_GROUPS.find((g) =>
+  const activeGroupKey = NAV.find((g) =>
     g.items.some((it) => groupMatch(it.href))
   )?.key;
   const [openGroups, setOpenGroups] = useState<Set<string>>(
-    () => new Set(activeGroupKey ? [activeGroupKey] : [NAV_GROUPS[0].key])
+    () => new Set(activeGroupKey ? [activeGroupKey] : NAV[0] ? [NAV[0].key] : [])
   );
   // Keep the group holding the current page open as you navigate.
   useEffect(() => {
@@ -203,22 +225,24 @@ export function AdminSidebar({ email }: { email: string }) {
           </button>
         </div>
 
-        {/* Quick compose */}
-        <div className="px-3 pb-2">
-          <Link
-            href="/marketing/newsletters/new"
-            onClick={() => setOpen(false)}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-3 py-2.5 text-sm font-semibold text-ink transition-transform hover:scale-[1.01]"
-          >
-            <PenSquare size={15} strokeWidth={2} />
-            Compose mail
-          </Link>
-        </div>
+        {/* Quick compose — only for roles that can send mail. */}
+        {allowed("/marketing/newsletters/new") && (
+          <div className="px-3 pb-2">
+            <Link
+              href="/marketing/newsletters/new"
+              onClick={() => setOpen(false)}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-3 py-2.5 text-sm font-semibold text-ink transition-transform hover:scale-[1.01]"
+            >
+              <PenSquare size={15} strokeWidth={2} />
+              Compose mail
+            </Link>
+          </div>
+        )}
 
         {/* Nav — accordion groups */}
         <nav className="flex-1 overflow-y-auto px-3 py-2">
           <div className="flex flex-col gap-1">
-            {NAV_GROUPS.map((g) => {
+            {NAV.map((g) => {
               const isOpen = openGroups.has(g.key);
               return (
                 <div key={g.key}>

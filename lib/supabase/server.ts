@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { isAdminEmail } from "./allowlist";
+import { getMemberWithRole } from "@/lib/db/rbac";
 
 export { isAdminEmail };
 
@@ -57,5 +58,9 @@ export async function getAdminEmail(): Promise<string | null> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user?.email) return null;
-  return isAdminEmail(user.email) ? user.email : null;
+  const email = user.email.toLowerCase();
+  // Env allowlist = break-glass owners. Otherwise an active invited member.
+  if (isAdminEmail(email)) return email;
+  const member = await getMemberWithRole(email);
+  return member && member.status === "active" ? email : null;
 }

@@ -35,9 +35,21 @@ function StackItem({
   );
 
   // Mobile: the scroll-pin stack needs a tall runway per card, which reads as
-  // large gaps on a small screen. Fall back to a plain vertical list.
+  // large gaps on a small screen. Instead of a dead static list, give each card
+  // a scroll-reveal (fade + slide up) as it enters view — a mobile-friendly
+  // scroll effect with no awkward gaps.
   if (!isDesktop) {
-    return <div className={cn("w-full", index > 0 && "mt-4")}>{children}</div>;
+    return (
+      <motion.div
+        className={cn("w-full", index > 0 && "mt-4")}
+        initial={{ opacity: 0, y: 28 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {children}
+      </motion.div>
+    );
   }
 
   const isLast = index === total - 1;
