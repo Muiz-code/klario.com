@@ -30,6 +30,7 @@ import { presenceOf, type AppFinance } from "@/lib/db/appFinance";
 import { ConfirmModal, InfoModal, type ConfirmState } from "../_components/Modal";
 import {
   Mini,
+  accountTypeLabel,
   MoneyPanel,
   PresencePill,
   TaskChecklist,
@@ -301,6 +302,7 @@ export function AnchorResponsesView({
       "Received", "Budgets", "Budget spent", "Budget limit", "Savings goals",
       "Saved", "Savings target", "Wallet balance", "Debts", "Debt outstanding",
       "Debt repaid", "Actions in app", "Features used", "Plan", "Verification",
+      "Account type",
     ];
     const lines = responses.map((r) => {
       const app = appProfiles[r.id];
@@ -351,6 +353,7 @@ export function AnchorResponsesView({
         app ? `${featuresUsed(act)}/6` : "",
         app ? planLabel(app.plan) : "",
         app ? verifyLabel(app.kyc_status) : "",
+        app ? accountTypeLabel(app.account_type) : "",
       ]
         .map(csvCell)
         .join(",");
@@ -936,7 +939,7 @@ function AnchorDetailModal({
                 <Mini label="Plan" value={planLabel(app.plan)} />
                 <Mini label="Spending type" value={titleCase(app.personality)} />
                 <Mini label="Verification" value={verifyLabel(app.kyc_status)} />
-                <Mini label="Account type" value={titleCase(app.account_type)} />
+                <Mini label="Account type" value={accountTypeLabel(app.account_type)} />
                 <Mini label="Active days" value={String(app.activeDays)} />
                 <Mini
                   label="On app since"

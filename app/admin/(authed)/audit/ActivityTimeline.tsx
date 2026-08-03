@@ -49,7 +49,10 @@ export function ActivityTimeline({ events }: { events: TimelineEvent[] }) {
   }, [events, q, actor, area, showHistory]);
 
   const select =
-    "rounded-lg border border-bg/15 bg-bg/[0.03] px-2.5 py-2 text-[13px] text-bg/80 focus:border-gold/50 focus:outline-none";
+    "rounded-lg border border-bg/15 bg-bg/[0.03] px-2.5 py-2 text-[13px] text-bg/80 scheme-dark focus:border-gold/50 focus:outline-none";
+  // The native dropdown popup is drawn by the OS on a white background, so the
+  // options need their own dark background or they're unreadable.
+  const opt = "bg-[#16181d] text-bg";
 
   return (
     <div className="flex flex-col gap-3">
@@ -65,17 +68,17 @@ export function ActivityTimeline({ events }: { events: TimelineEvent[] }) {
           />
         </div>
         <select value={actor} onChange={(e) => setActor(e.target.value)} className={select}>
-          <option value="all">Everyone</option>
+          <option value="all" className={opt}>Everyone</option>
           {actors.map((a) => (
-            <option key={a} value={a}>
+            <option key={a} value={a} className={opt}>
               {a}
             </option>
           ))}
         </select>
         <select value={area} onChange={(e) => setArea(e.target.value)} className={select}>
-          <option value="all">All areas</option>
+          <option value="all" className={opt}>All areas</option>
           {areas.map((a) => (
-            <option key={a} value={a}>
+            <option key={a} value={a} className={opt}>
               {a}
             </option>
           ))}

@@ -30,6 +30,25 @@ export function planLabel(plan: string | null | undefined): string {
   }
 }
 
+// How the user told the app they'd use it. Values are constrained by the app's
+// profiles.account_type check (personal | solo_founder | sme); the labels match
+// the app's own wording, so "SME" doesn't come out as "Sme".
+export const ACCOUNT_TYPES: { key: string; label: string }[] = [
+  { key: "personal", label: "Personal" },
+  { key: "solo_founder", label: "Solo Founder" },
+  { key: "sme", label: "SME" },
+];
+
+const ACCOUNT_TYPE_LABEL: Record<string, string> = Object.fromEntries(
+  ACCOUNT_TYPES.map((t) => [t.key, t.label])
+);
+
+/** "SME" / "Solo Founder" / "Personal"; "Not set" when they never chose. */
+export function accountTypeLabel(v: string | null | undefined): string {
+  if (!v) return "Not set";
+  return ACCOUNT_TYPE_LABEL[v] ?? titleCase(v);
+}
+
 export function verifyLabel(kyc: string | null | undefined): string {
   switch (kyc) {
     case "verified":

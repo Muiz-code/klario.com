@@ -17,6 +17,7 @@ import type { UserTasks } from "@/lib/db/appTasks";
 import { presenceOf, type AppFinance } from "@/lib/db/appFinance";
 import {
   Mini,
+  accountTypeLabel,
   MoneyPanel,
   PresencePill,
   TaskChecklist,
@@ -177,7 +178,7 @@ export function AppUserModal({ row, onClose }: { row: AppUserRow; onClose: () =>
                   <Mini label="Plan" value={planLabel(app.plan)} />
                   <Mini label="Spending type" value={titleCase(app.personality)} />
                   <Mini label="Verification" value={verifyLabel(app.kyc_status)} />
-                  <Mini label="Account type" value={titleCase(app.account_type)} />
+                  <Mini label="Account type" value={accountTypeLabel(app.account_type)} />
                   <Mini label="Active days" value={String(app.activeDays)} />
                   <Mini
                     label="On app since"

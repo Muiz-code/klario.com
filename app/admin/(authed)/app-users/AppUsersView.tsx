@@ -5,7 +5,13 @@ import { Search, Download, ChevronRight, Smartphone } from "lucide-react";
 import type { AppUserRow, ContactSource } from "@/lib/db/appUsers";
 import { CONTACT_SOURCES } from "@/lib/db/appUsers";
 import { presenceOf } from "@/lib/db/appFinance";
-import { PresencePill, planLabel, verifyLabel } from "../_components/AppUserPanels";
+import {
+  ACCOUNT_TYPES,
+  PresencePill,
+  accountTypeLabel,
+  planLabel,
+  verifyLabel,
+} from "../_components/AppUserPanels";
 import { AppUserModal } from "./AppUserModal";
 
 type OnApp = "all" | "yes" | "no";
@@ -42,6 +48,7 @@ export function AppUsersView({
   const [onAppFilter, setOnAppFilter] = useState<OnApp>("all");
   const [activity, setActivity] = useState<Activity>("all");
   const [plan, setPlan] = useState("all");
+  const [acctType, setAcctType] = useState("all");
   const [open, setOpen] = useState<AppUserRow | null>(null);
 
   const plans = useMemo(
@@ -56,6 +63,12 @@ export function AppUsersView({
       if (onAppFilter === "yes" && !r.app) return false;
       if (onAppFilter === "no" && r.app) return false;
       if (plan !== "all" && r.app?.plan !== plan) return false;
+      if (acctType !== "all") {
+        // "unset" catches app users who never picked a type in onboarding.
+        const t = r.app?.account_type ?? null;
+        if (acctType === "unset" ? !!t : t !== acctType) return false;
+        if (!r.app) return false;
+      }
 
       if (activity !== "all") {
         const d = daysSince(r.app?.lastActiveDay ?? null);
@@ -71,7 +84,7 @@ export function AppUsersView({
         .map((v) => (v ?? "").toLowerCase())
         .some((v) => v.includes(needle));
     });
-  }, [rows, q, source, onAppFilter, activity, plan]);
+  }, [rows, q, source, onAppFilter, activity, plan, acctType]);
 
   const exportCsv = () => {
     const head = [
@@ -93,7 +106,7 @@ export function AppUsersView({
         r.app?.lastActiveDay ?? "",
         r.app ? planLabel(r.app.plan) : "",
         r.app ? verifyLabel(r.app.kyc_status) : "",
-        r.app?.account_type ?? "",
+        r.app ? accountTypeLabel(r.app.account_type) : "",
       ]
         .map(csvCell)
         .join(",")
@@ -110,7 +123,10 @@ export function AppUsersView({
   };
 
   const select =
-    "rounded-lg border border-bg/15 bg-bg/[0.03] px-2.5 py-2 text-[13px] text-bg/80 focus:border-gold/50 focus:outline-none";
+    "rounded-lg border border-bg/15 bg-bg/[0.03] px-2.5 py-2 text-[13px] text-bg/80 scheme-dark focus:border-gold/50 focus:outline-none";
+  // The native dropdown popup is drawn by the OS on a white background, so the
+  // options need their own dark background or they're unreadable.
+  const opt = "bg-[#16181d] text-bg";
   const tile = "rounded-xl border border-bg/10 bg-bg/[0.03] px-5 py-4";
 
   return (
@@ -152,9 +168,9 @@ export function AppUsersView({
           onChange={(e) => setSource(e.target.value as ContactSource | "all")}
           className={select}
         >
-          <option value="all">All sources</option>
+          <option value="all" className={opt}>All sources</option>
           {CONTACT_SOURCES.map((s) => (
-            <option key={s.key} value={s.key}>
+            <option key={s.key} value={s.key} className={opt}>
               {s.label}
             </option>
           ))}
@@ -164,26 +180,39 @@ export function AppUsersView({
           onChange={(e) => setOnAppFilter(e.target.value as OnApp)}
           className={select}
         >
-          <option value="all">On app: any</option>
-          <option value="yes">On the app</option>
-          <option value="no">Not on the app</option>
+          <option value="all" className={opt}>On app: any</option>
+          <option value="yes" className={opt}>On the app</option>
+          <option value="no" className={opt}>Not on the app</option>
         </select>
         <select
           value={activity}
           onChange={(e) => setActivity(e.target.value as Activity)}
           className={select}
         >
-          <option value="all">Any activity</option>
-          <option value="today">Active today</option>
-          <option value="week">Last 7 days</option>
-          <option value="month">Last 30 days</option>
-          <option value="dormant">Dormant (30+ days)</option>
-          <option value="never">Never opened</option>
+          <option value="all" className={opt}>Any activity</option>
+          <option value="today" className={opt}>Active today</option>
+          <option value="week" className={opt}>Last 7 days</option>
+          <option value="month" className={opt}>Last 30 days</option>
+          <option value="dormant" className={opt}>Dormant (30+ days)</option>
+          <option value="never" className={opt}>Never opened</option>
+        </select>
+        <select
+          value={acctType}
+          onChange={(e) => setAcctType(e.target.value)}
+          className={select}
+        >
+          <option value="all" className={opt}>Any account type</option>
+          {ACCOUNT_TYPES.map((t) => (
+            <option key={t.key} value={t.key} className={opt}>
+              {t.label}
+            </option>
+          ))}
+          <option value="unset" className={opt}>Not set</option>
         </select>
         <select value={plan} onChange={(e) => setPlan(e.target.value)} className={select}>
-          <option value="all">Any plan</option>
+          <option value="all" className={opt}>Any plan</option>
           {plans.map((p) => (
-            <option key={p} value={p}>
+            <option key={p} value={p} className={opt}>
               {planLabel(p)}
             </option>
           ))}
@@ -209,12 +238,13 @@ export function AppUsersView({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-bg/10">
-          <table className="w-full min-w-[940px] text-left text-sm">
+          <table className="w-full min-w-[1060px] text-left text-sm">
             <thead>
               <tr className="border-b border-bg/10 bg-bg/[0.03] text-[11px] uppercase tracking-[0.12em] text-bg/50">
                 <th className="px-4 py-3 font-medium">Contact</th>
                 <th className="px-4 py-3 font-medium">Source</th>
                 <th className="px-4 py-3 font-medium">Klario ID</th>
+                <th className="px-4 py-3 font-medium">Account type</th>
                 <th className="px-4 py-3 font-medium">Score</th>
                 <th className="px-4 py-3 font-medium">Streak</th>
                 <th className="px-4 py-3 font-medium">Plan</th>
@@ -254,6 +284,26 @@ export function AppUsersView({
                       <span className="text-[12px] text-amber-300/90">Deleted account</span>
                     ) : appLinked ? (
                       <span className="text-[12px] text-bg/30">Not on app</span>
+                    ) : (
+                      <span className="text-[12px] text-bg/25">—</span>
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    {r.app ? (
+                      <span
+                        className={
+                          "rounded-full border px-2 py-0.5 text-[11px] " +
+                          (r.app.account_type === "sme"
+                            ? "border-blue-400/30 bg-blue-400/10 text-blue-200"
+                            : r.app.account_type === "solo_founder"
+                              ? "border-gold/30 bg-gold/[0.08] text-gold"
+                              : r.app.account_type === "personal"
+                                ? "border-bg/15 bg-bg/[0.03] text-bg/65"
+                                : "border-bg/10 text-bg/30")
+                        }
+                      >
+                        {accountTypeLabel(r.app.account_type)}
+                      </span>
                     ) : (
                       <span className="text-[12px] text-bg/25">—</span>
                     )}

@@ -200,7 +200,11 @@ export function TeamView({
             onChange={(e) => setInviteRole(e.target.value)}
             className="rounded-xl border border-bg/15 bg-bg/4 px-3 py-2.5 text-sm text-bg scheme-dark focus:border-gold/50 focus:outline-none"
           >
-            {assignableRoles.length === 0 && <option value="">No roles yet</option>}
+            {assignableRoles.length === 0 && (
+              <option value="" className={OPT}>
+                No roles yet
+              </option>
+            )}
             {assignableRoles.map((r) => (
               <option key={r.id} value={r.id} className={OPT}>
                 {r.name}
