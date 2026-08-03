@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAutomation } from "@/lib/db/automations";
 import { runAutomation } from "@/lib/automations/engine";
 import { getAdminEmail } from "@/lib/supabase/server";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -32,5 +33,9 @@ export async function POST(req: Request) {
   }
 
   const result = await runAutomation(automation);
+  await logAction("automation.run", {
+    target: automation.name ?? automation.id,
+    meta: { result },
+  });
   return NextResponse.json({ ok: true, result });
 }

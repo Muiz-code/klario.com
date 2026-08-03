@@ -1,6 +1,6 @@
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import { listAuditEvents } from "@/lib/db/audit";
-import { listMemberActivity } from "@/lib/db/adminActivity";
+import { getActivityTimeline } from "@/lib/db/activityTimeline";
 import { AuditViews } from "./AuditViews";
 import { StorageCleanupButton } from "./StorageCleanupButton";
 import { SyncFromResendButton } from "./SyncFromResendButton";
@@ -9,8 +9,12 @@ export const dynamic = "force-dynamic";
 
 export default async function AuditPage() {
   const configured = isSupabaseConfigured();
-  const [events, activity] = configured
-    ? await Promise.all([listAuditEvents(), listMemberActivity({ limit: 300 })])
+  const [events, timeline] = configured
+    ? await Promise.all([
+        listAuditEvents(),
+        // includeHistory reconstructs the period before action logging existed.
+        getActivityTimeline({ includeHistory: true }),
+      ])
     : [[], []];
 
   return (
@@ -19,8 +23,8 @@ export default async function AuditPage() {
         <div>
           <h1 className="font-display text-3xl text-bg">Audit log</h1>
           <p className="mt-1 text-sm text-bg/55">
-            Every email send and import: who, what, how many, and delivery. Click
-            a row to see the recipients.
+            Every action taken on the system — who did what, when. Sends also show
+            how many and delivery; click a row for recipients.
           </p>
         </div>
         {configured && (
@@ -36,7 +40,7 @@ export default async function AuditPage() {
           Supabase is not configured, so there is nothing to show yet.
         </p>
       ) : (
-        <AuditViews events={events} activity={activity} />
+        <AuditViews events={events} timeline={timeline} />
       )}
     </div>
   );

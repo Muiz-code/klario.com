@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { reconcileFromResend } from "@/lib/email/resend-reconcile";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -27,5 +28,6 @@ export async function POST(req: Request) {
   if (result.error) {
     return NextResponse.json({ error: result.error, ...result }, { status: 502 });
   }
+  await logAction("resend.reconcile", { meta: { ...result } });
   return NextResponse.json({ ok: true, ...result });
 }

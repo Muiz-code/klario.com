@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { deleteSignup } from "@/lib/db/signups";
 import { deleteSubmission } from "@/lib/db/submissions";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -39,5 +40,6 @@ export async function POST(req: Request) {
     if (ok) removed++;
   }
 
+  await logAction("duplicates.resolve", { meta: { removed } });
   return NextResponse.json({ ok: true, removed });
 }

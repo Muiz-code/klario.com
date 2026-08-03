@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { deleteSegment, updateSegment } from "@/lib/db/segments";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { FIELDS, type MatchType, type Rule, type RuleField } from "@/lib/segments/types";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -34,6 +35,7 @@ export async function DELETE(
   const { id } = await ctx.params;
   const ok = await deleteSegment(id);
   if (!ok) return NextResponse.json({ error: "Delete failed." }, { status: 502 });
+  await logAction("segment.delete", { target: id });
   return NextResponse.json({ ok: true });
 }
 
@@ -72,5 +74,6 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
   if (!segment) {
     return NextResponse.json({ error: "Could not update segment." }, { status: 502 });
   }
+  await logAction("segment.update", { target: name });
   return NextResponse.json({ ok: true, segment });
 }

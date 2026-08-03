@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { mergeDuplicateSignups } from "@/lib/db/signups";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -10,5 +11,6 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const result = await mergeDuplicateSignups();
+  await logAction("duplicates.merge", { meta: { ...result } });
   return NextResponse.json({ ok: true, ...result });
 }

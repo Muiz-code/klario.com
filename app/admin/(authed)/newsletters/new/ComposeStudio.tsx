@@ -12,6 +12,7 @@ import {
   Video,
   FileText,
   ChevronDown,
+  Check,
 } from "lucide-react";
 import { SendProgressModal } from "./SendProgressModal";
 
@@ -88,7 +89,12 @@ const SEGMENTS: { id: Segment; label: string; hint: string }[] = [
   { id: "choose", label: "Choose people", hint: "Pick specific recipients" },
 ];
 
-type Audiences = { anchor: string[]; beta: string[]; newsletter: string[] };
+type Audiences = {
+  anchor: string[];
+  beta: string[];
+  newsletter: string[];
+  imported: string[];
+};
 
 export function ComposeStudio({
   templates,
@@ -138,6 +144,8 @@ export function ComposeStudio({
   // A post-mount effect (not a lazy initializer) avoids an SSR hydration
   // mismatch, since sessionStorage is only available on the client.
   const [segmentTarget, setSegmentTarget] = useState<string | null>(null);
+  /** Which group cards are switched on (ids). Their emails are unioned. */
+  const [groupSel, setGroupSel] = useState<Set<string>>(new Set());
   useEffect(() => {
     let raw: string | null = null;
     try {
@@ -294,22 +302,49 @@ export function ComposeStudio({
     setChosen(new Set());
     setPickerQuery("");
     setSegmentTarget(null);
+    setGroupSel(new Set());
   };
 
-  // Extra audiences (Anchor Club / Beta / Newsletter) send to an explicit email
-  // list via the "choose" path.
+  // Extra audiences (Anchor Club / Beta / Newsletter / Imported) send to an
+  // explicit email list via the "choose" path. Several can be combined.
   const audienceOptions = [
     { id: "anchor", label: "Anchor Club", hint: "Anchor Club registrants", emails: audiences?.anchor ?? [] },
     { id: "beta", label: "Beta testers", hint: "Beta responders", emails: audiences?.beta ?? [] },
     { id: "newsletter", label: "Newsletter", hint: "Newsletter sign-ups", emails: audiences?.newsletter ?? [] },
+    { id: "imported", label: "Imported", hint: "Contacts added by CSV import", emails: audiences?.imported ?? [] },
   ].filter((a) => a.emails.length > 0);
 
-  const selectAudience = (opt: { label: string; emails: string[] }) => {
-    setSegment("choose");
-    setChosen(new Set(opt.emails));
+  /**
+   * Toggle a group in or out of the send. The recipients are the UNION of every
+   * selected group, so anyone who sits in two of them (an Anchor who also
+   * responded to the beta, say) is still mailed exactly once — the Set does the
+   * deduping, and `overlap` below reports how many that was.
+   */
+  const toggleAudience = (id: string) => {
+    const next = new Set(groupSel);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setGroupSel(next);
     setPickerQuery("");
-    setSegmentTarget(opt.label);
+
+    if (next.size === 0) {
+      setChosen(new Set());
+      setSegmentTarget(null);
+      return;
+    }
+    const picked = audienceOptions.filter((a) => next.has(a.id));
+    setSegment("choose");
+    setChosen(new Set(picked.flatMap((a) => a.emails)));
+    setSegmentTarget(picked.map((a) => a.label).join(" + "));
   };
+
+  // How many addresses the selected groups share — i.e. duplicate sends avoided.
+  const groupOverlap = (() => {
+    const picked = audienceOptions.filter((a) => groupSel.has(a.id));
+    if (picked.length < 2) return 0;
+    const total = picked.reduce((n, a) => n + a.emails.length, 0);
+    return total - new Set(picked.flatMap((a) => a.emails)).size;
+  })();
 
   const pickTemplate = (t: GalleryTemplate) => {
     setTemplateId(t.id);
@@ -776,31 +811,58 @@ export function ComposeStudio({
             {audienceOptions.length > 0 && (
               <div className="mt-1 flex flex-col gap-2">
                 <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-bg/35">
-                  Or a group
+                  Or one or more groups
                 </span>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {audienceOptions.map((a) => (
-                    <button
-                      key={a.id}
-                      type="button"
-                      onClick={() => selectAudience(a)}
-                      className={
-                        "rounded-xl border p-3 text-left transition-colors " +
-                        (segmentTarget === a.label
-                          ? "border-gold/60 bg-gold/5"
-                          : "border-bg/10 bg-bg/4 hover:border-bg/25")
-                      }
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-bg">{a.label}</span>
-                        <span className="rounded-full bg-bg/10 px-1.5 text-[11px] text-bg/70">
-                          {a.emails.length}
-                        </span>
-                      </div>
-                      <p className="mt-0.5 text-[11px] leading-snug text-bg/50">{a.hint}</p>
-                    </button>
-                  ))}
+                  {audienceOptions.map((a) => {
+                    const on = groupSel.has(a.id);
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => toggleAudience(a.id)}
+                        className={
+                          "rounded-xl border p-3 text-left transition-colors " +
+                          (on
+                            ? "border-gold/60 bg-gold/5"
+                            : "border-bg/10 bg-bg/4 hover:border-bg/25")
+                        }
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="flex items-center gap-2 text-sm text-bg">
+                            <span
+                              className={
+                                "flex h-4 w-4 shrink-0 items-center justify-center rounded border " +
+                                (on ? "border-gold bg-gold text-ink" : "border-bg/25")
+                              }
+                            >
+                              {on && <Check size={11} />}
+                            </span>
+                            {a.label}
+                          </span>
+                          <span className="rounded-full bg-bg/10 px-1.5 text-[11px] text-bg/70">
+                            {a.emails.length}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-[11px] leading-snug text-bg/50">{a.hint}</p>
+                      </button>
+                    );
+                  })}
                 </div>
+                {groupSel.size > 1 && (
+                  <p className="text-[11px] text-bg/45">
+                    {chosen.size.toLocaleString()} unique{" "}
+                    {chosen.size === 1 ? "person" : "people"} across {groupSel.size} groups
+                    {groupOverlap > 0 && (
+                      <span className="text-gold/80">
+                        {" "}
+                        · {groupOverlap} in more than one group, mailed once
+                      </span>
+                    )}
+                    .
+                  </p>
+                )}
               </div>
             )}
 

@@ -7,6 +7,7 @@ import {
 import { renderBetaConfirmation } from "@/lib/email/betaResponse";
 import { sendTransactional } from "@/lib/email/send";
 import { RESEND_REPLY_TO } from "@/lib/email/client";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -43,5 +44,6 @@ export async function POST(
     );
   }
   await markConfirmationSent(id, true);
+  await logAction("beta.resend", { target: id });
   return NextResponse.json({ ok: true });
 }

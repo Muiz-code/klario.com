@@ -5,6 +5,7 @@ import {
   countTestUsers,
   deleteTestUsers,
 } from "@/lib/db/testUsers";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
     /* default 1000 */
   }
   const created = await createTestUsers(count);
+  await logAction("test_user.create", { meta: { created } });
   return NextResponse.json({ ok: true, created, total: await countTestUsers() });
 }
 
@@ -41,5 +43,6 @@ export async function DELETE() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const result = await deleteTestUsers();
+  await logAction("test_user.delete", { meta: { ...result } });
   return NextResponse.json({ ok: true, ...result });
 }

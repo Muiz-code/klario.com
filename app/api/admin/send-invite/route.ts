@@ -8,6 +8,7 @@ import {
 import { getSettings } from "@/lib/db/settings";
 import { logEmails } from "@/lib/db/email-log";
 import { createAuditEvent } from "@/lib/db/audit";
+import { logAction } from "@/lib/db/adminActivity";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { renderWelcome } from "@/lib/email/welcome";
 import { unsubscribeUrl } from "@/lib/email/links";
@@ -128,6 +129,10 @@ export async function POST(req: Request) {
       auditId
     ),
   ]);
+
+  await logAction("invite.send", {
+    meta: { attempted: results.length, sent, failed, skipped },
+  });
 
   return NextResponse.json({
     ok: true,

@@ -10,6 +10,7 @@ import { createAuditEvent, getAuditIdsForNewsletter } from "@/lib/db/audit";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { unsubscribeUrl } from "@/lib/email/links";
 import { sendBatch, type BatchMessage } from "@/lib/email/batch";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -148,5 +149,9 @@ export async function POST(
     }),
   ]);
 
+  await logAction("mail.resend_failed", {
+    target: newsletter.subject,
+    meta: { sent, failed },
+  });
   return NextResponse.json({ ok: true, sent, failed });
 }

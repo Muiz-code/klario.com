@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createTemplate } from "@/lib/db/templates";
 import { getAdminEmail } from "@/lib/supabase/server";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -42,5 +43,6 @@ export async function POST(req: Request) {
   if (!template) {
     return NextResponse.json({ error: "Could not save template." }, { status: 502 });
   }
+  await logAction("template.create", { target: name });
   return NextResponse.json({ ok: true, template });
 }

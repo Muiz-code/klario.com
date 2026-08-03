@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { csvToContacts } from "@/lib/csv";
 import { importSignups } from "@/lib/db/signups";
 import { createAuditEvent } from "@/lib/db/audit";
+import { logAction } from "@/lib/db/adminActivity";
 import { getAdminEmail } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -73,6 +74,10 @@ export async function POST(req: Request) {
       fileDuplicates,
       existingDuplicates,
     },
+  });
+
+  await logAction("audience.import", {
+    meta: { parsed: contacts.length, added, skipped, invalid },
   });
 
   return NextResponse.json({

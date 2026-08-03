@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSettings, updateSettings } from "@/lib/db/settings";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -52,5 +53,6 @@ export async function PATCH(req: Request) {
   if (!settings) {
     return NextResponse.json({ error: "Update failed." }, { status: 502 });
   }
+  await logAction("settings.update", { meta: patch });
   return NextResponse.json({ ok: true, settings });
 }

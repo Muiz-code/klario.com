@@ -4,6 +4,7 @@ import {
   type NewsletterAttachment,
 } from "@/lib/db/newsletters";
 import { renderNewsletter } from "@/lib/email/newsletter";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -66,6 +67,7 @@ export async function POST(req: Request) {
   if (!created) {
     return NextResponse.json({ error: "Could not save newsletter." }, { status: 502 });
   }
+  await logAction("mail.create", { target: subject });
   return NextResponse.json({ ok: true, id: created.id });
 }
 

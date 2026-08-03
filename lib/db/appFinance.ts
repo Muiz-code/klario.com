@@ -254,7 +254,12 @@ const DAY = 86_400_000;
  * So "online" means something happened in the last 5 minutes — anything older
  * is reported as when they were last seen, never as a live status.
  */
-export function presenceOf(f: AppFinance | undefined, now = Date.now()): Presence {
+export function presenceOf(
+  // Only the two timestamps are needed, so a list view can pass just those
+  // rather than loading a whole finance snapshot.
+  f: { lastActiveDay: string | null; lastSeenAt: string | null } | undefined,
+  now = Date.now()
+): Presence {
   if (!f) return { label: "Unknown", state: "never", at: null };
 
   const stamp = f.lastSeenAt ? Date.parse(f.lastSeenAt) : NaN;

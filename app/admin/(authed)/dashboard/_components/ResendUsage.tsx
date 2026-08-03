@@ -63,7 +63,12 @@ function Meter({
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="mt-1 flex items-center gap-2 text-[10.5px] text-bg/45">
+      {/* All mail in the window, every campaign and automation, load-test
+          addresses excluded — not one send. "Opened" includes clicks. */}
+      <div
+        className="mt-1 flex items-center gap-2 text-[10.5px] text-bg/45"
+        title={`All mail sent ${label.toLowerCase()} across every campaign and automation (load-test addresses excluded). Opened includes recipients who clicked.`}
+      >
         <span className="text-emerald-400/80">{fmt(win.delivered)} delivered</span>
         <span>·</span>
         <span>{fmt(win.opened)} opened</span>

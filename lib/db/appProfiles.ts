@@ -15,6 +15,8 @@ export type AppProfile = {
   account_type: string | null;
   kyc_status: string | null;
   created_at: string | null;
+  /** profiles.last_active_date — the day the app last opened (YYYY-MM-DD). */
+  lastActiveDay: string | null;
   /** Number of distinct days the user has been active in the app. */
   activeDays: number;
   /** Spending-type journey: how their type + rank changed over time. */
@@ -55,7 +57,7 @@ export function emptyActivity(): ActivityCounts {
 }
 
 const SELECT =
-  "id, email, klario_id, kairo_score, streak, plan, personality, account_type, kyc_status, created_at, active_days, type_history";
+  "id, email, klario_id, kairo_score, streak, plan, personality, account_type, kyc_status, created_at, last_active_date, active_days, type_history";
 
 function toProfile(row: Record<string, unknown>): AppProfile {
   const days = row.active_days;
@@ -71,6 +73,7 @@ function toProfile(row: Record<string, unknown>): AppProfile {
     account_type: (row.account_type as string) ?? null,
     kyc_status: (row.kyc_status as string) ?? null,
     created_at: (row.created_at as string) ?? null,
+    lastActiveDay: row.last_active_date ? String(row.last_active_date).slice(0, 10) : null,
     activeDays: Array.isArray(days) ? days.length : 0,
     typeHistory: Array.isArray(th)
       ? th

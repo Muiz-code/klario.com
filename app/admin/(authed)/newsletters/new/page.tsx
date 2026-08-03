@@ -69,6 +69,9 @@ export default async function ComposePage() {
     newsletter: uniq(
       active.filter((s) => (s.source || "").toLowerCase() === "newsletter").map((s) => s.email)
     ),
+    imported: uniq(
+      active.filter((s) => (s.source || "").toLowerCase() === "import").map((s) => s.email)
+    ),
   };
 
   return (

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { deleteTemplate } from "@/lib/db/templates";
 import { getAdminEmail } from "@/lib/supabase/server";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -14,5 +15,6 @@ export async function DELETE(
   const { id } = await ctx.params;
   const ok = await deleteTemplate(id);
   if (!ok) return NextResponse.json({ error: "Delete failed." }, { status: 502 });
+  await logAction("template.delete", { target: id });
   return NextResponse.json({ ok: true });
 }

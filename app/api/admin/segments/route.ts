@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSegment } from "@/lib/db/segments";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { FIELDS, type MatchType, type Rule, type RuleField } from "@/lib/segments/types";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -58,5 +59,6 @@ export async function POST(req: Request) {
   if (!segment) {
     return NextResponse.json({ error: "Could not save segment." }, { status: 502 });
   }
+  await logAction("segment.create", { target: name });
   return NextResponse.json({ ok: true, segment });
 }

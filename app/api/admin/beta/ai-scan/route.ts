@@ -7,6 +7,7 @@ import {
 } from "@/lib/db/betaResponses";
 import { assessFraud, isAiConfigured, type FraudInput } from "@/lib/ai/fraud";
 import { canonicalEmail } from "@/lib/duplicates";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -127,5 +128,6 @@ export async function POST(req: Request) {
     }
   }
 
+  await logAction("beta.ai_scan", { meta: { scanned, failed } });
   return NextResponse.json({ ok: true, scanned, failed, results });
 }

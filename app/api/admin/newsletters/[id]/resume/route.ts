@@ -1,6 +1,7 @@
 import { NextResponse, after } from "next/server";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { drainForBudget, scheduleSendWorker } from "@/lib/email/newsletterSender";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -19,7 +20,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const origin = new URL(req.url).origin;
+  // This handler doesn't take the route params, so read the id off the path.
+  const url = new URL(req.url);
+  await logAction("mail.resume", {
+    target: url.pathname.split("/").at(-2) ?? null,
+  });
+  const origin = url.origin;
   after(async () => {
     const stillPending = await drainForBudget(BUDGET_MS);
     if (stillPending) await scheduleSendWorker(origin);

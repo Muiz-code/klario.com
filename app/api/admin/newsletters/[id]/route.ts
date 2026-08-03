@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { deleteNewsletter, getNewsletter } from "@/lib/db/newsletters";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -29,5 +30,6 @@ export async function DELETE(
   if (!ok) {
     return NextResponse.json({ error: "Delete failed." }, { status: 502 });
   }
+  await logAction("mail.delete", { target: id });
   return NextResponse.json({ ok: true });
 }

@@ -5,6 +5,7 @@ import {
   updateSignupEmail,
   type SignupStatus,
 } from "@/lib/db/signups";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -28,6 +29,10 @@ export async function PATCH(
     if ("error" in result) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
+    await logAction("subscriber.update", {
+      target: body.email,
+      meta: { field: "email" },
+    });
     return NextResponse.json({ ok: true });
   }
 
@@ -37,6 +42,7 @@ export async function PATCH(
   }
   const ok = await setStatus(id, status as SignupStatus);
   if (!ok) return NextResponse.json({ error: "Update failed." }, { status: 502 });
+  await logAction("subscriber.update", { target: id, meta: { status } });
   return NextResponse.json({ ok: true });
 }
 
@@ -47,5 +53,6 @@ export async function DELETE(
   const { id } = await ctx.params;
   const ok = await deleteSignup(id);
   if (!ok) return NextResponse.json({ error: "Delete failed." }, { status: 502 });
+  await logAction("subscriber.delete", { target: id });
   return NextResponse.json({ ok: true });
 }

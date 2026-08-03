@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { getBlogPosts, serializePostBody } from "@/lib/blog";
 import { seedDbPosts } from "@/lib/db/blogPosts";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -25,5 +26,6 @@ export async function POST() {
   }));
 
   const result = await seedDbPosts(seed);
+  await logAction("blog.seed", { meta: { ...result } });
   return NextResponse.json({ ok: true, ...result });
 }

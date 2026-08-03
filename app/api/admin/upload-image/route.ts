@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -80,5 +81,6 @@ export async function POST(req: Request) {
   }
 
   const { data } = db.storage.from(BUCKET).getPublicUrl(path);
+  await logAction("image.upload", { target: data.publicUrl });
   return NextResponse.json({ ok: true, url: data.publicUrl });
 }

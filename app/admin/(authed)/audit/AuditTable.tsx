@@ -142,14 +142,25 @@ export function AuditTable({
               <div className="hidden shrink-0 items-center gap-4 sm:flex">
                 {isEmail && (
                   <>
-                    <Stat label="Sent" value={e.sent_count} />
+                    <Stat label="Sent" value={e.sent_count} title="This send only" />
                     <Stat
                       label="Delivered"
                       value={e.delivered_count}
                       tone="good"
+                      title="This send only"
                     />
-                    <Stat label="Opened" value={e.opened_count} />
-                    <Stat label="Clicked" value={e.clicked_count} />
+                    {/* A click implies an open, so Clicked is a subset of Opened
+                        — not an extra group to add on. */}
+                    <Stat
+                      label="Opened"
+                      value={e.opened_count}
+                      title="Recipients who opened at least once (includes those who clicked)"
+                    />
+                    <Stat
+                      label="Clicked"
+                      value={e.clicked_count}
+                      title="Of those opens, how many clicked a link"
+                    />
                     {e.failed_count + e.bounced_count > 0 && (
                       <Stat
                         label="Failed"
@@ -233,6 +244,9 @@ function EmailRecipients({
     return (
       <div className="flex flex-col gap-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
+          {/* Scope matters: the counters on the row are THIS send, while these
+              come from Resend for every send of this subject in 60 days. Say so
+              — the two sets of numbers are meant to differ. */}
           <p className="text-[12px] text-bg/55">
             <span className="font-semibold text-bg">{report.uniqueRecipients.toLocaleString()}</span>{" "}
             recipients ·{" "}
@@ -240,7 +254,7 @@ function EmailRecipients({
             {report.duplicated > 0 && (
               <span className="text-amber-300"> · {report.duplicated} got duplicates</span>
             )}
-            <span className="text-bg/35"> · from Resend</span>
+            <span className="text-bg/35"> · this subject, all sends, last 60 days (Resend)</span>
           </p>
           {subject && onOpenFull && (
             <button
@@ -401,10 +415,13 @@ function Stat({
   label,
   value,
   tone,
+  title,
 }: {
   label: string;
   value: number;
   tone?: "good" | "bad";
+  /** What exactly this number counts — these are easy to misread. */
+  title?: string;
 }) {
   const color =
     tone === "good"
@@ -413,7 +430,7 @@ function Stat({
         ? "text-red-300"
         : "text-bg";
   return (
-    <div className="text-center">
+    <div className="text-center" title={title}>
       <p className={"text-sm font-medium " + color}>{value}</p>
       <p className="text-[10px] uppercase tracking-wide text-bg/40">{label}</p>
     </div>

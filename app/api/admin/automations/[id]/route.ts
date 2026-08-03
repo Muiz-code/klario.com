@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { updateAutomation } from "@/lib/db/automations";
 import { getAdminEmail } from "@/lib/supabase/server";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -47,5 +48,13 @@ export async function PATCH(
   if (!updated) {
     return NextResponse.json({ error: "Update failed." }, { status: 502 });
   }
+  await logAction(
+    patch.enabled === undefined
+      ? "automation.update"
+      : patch.enabled
+        ? "automation.enable"
+        : "automation.disable",
+    { target: updated.name ?? id, meta: patch }
+  );
   return NextResponse.json({ ok: true, automation: updated });
 }

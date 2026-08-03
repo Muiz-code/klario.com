@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { createDbPost } from "@/lib/db/blogPosts";
 import { parsePostBody } from "@/lib/blogForm";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -26,5 +27,6 @@ export async function POST(req: Request) {
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
+  await logAction("blog.create", { target: parsed.title });
   return NextResponse.json({ ok: true, id: result.id });
 }

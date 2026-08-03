@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { updateDbPost, deleteDbPost } from "@/lib/db/blogPosts";
 import { parsePostBody } from "@/lib/blogForm";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 
@@ -30,6 +31,7 @@ export async function PUT(
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
+  await logAction("blog.update", { target: parsed.title });
   return NextResponse.json({ ok: true });
 }
 
@@ -42,6 +44,7 @@ export async function DELETE(
   }
   const { id } = await ctx.params;
   const ok = await deleteDbPost(id);
+  if (ok) await logAction("blog.delete", { target: id });
   return ok
     ? NextResponse.json({ ok: true })
     : NextResponse.json({ error: "Could not delete the post." }, { status: 400 });

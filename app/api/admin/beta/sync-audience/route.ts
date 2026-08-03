@@ -3,6 +3,7 @@ import { getAdminEmail } from "@/lib/supabase/server";
 import { listBetaResponses } from "@/lib/db/betaResponses";
 import { importSignups, type SignupInput } from "@/lib/db/signups";
 import { splitName } from "@/lib/email/validation";
+import { logAction } from "@/lib/db/adminActivity";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -29,5 +30,6 @@ export async function POST() {
   });
 
   const result = await importSignups(rows, "beta");
+  await logAction("beta.sync_audience", { meta: { added: result.added } });
   return NextResponse.json({ ok: true, added: result.added });
 }
