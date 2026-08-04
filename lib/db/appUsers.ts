@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { normalizeEmail } from "@/lib/duplicates";
 import {
-  getAppProfilesByEmails,
+  listAllAppProfiles,
   getDeletedAccountsByEmails,
   type AppProfile,
   type DeletedAccount,
@@ -19,13 +19,20 @@ import {
  */
 
 /** Where we know this email from. One contact can come from several. */
-export type ContactSource = "subscriber" | "imported" | "anchor" | "beta";
+export type ContactSource =
+  | "subscriber"
+  | "imported"
+  | "anchor"
+  | "beta"
+  /** Uses the app but is on none of our lists — we only know them from the app. */
+  | "app_only";
 
 export const CONTACT_SOURCES: { key: ContactSource; label: string }[] = [
   { key: "subscriber", label: "Audience" },
   { key: "imported", label: "Imported" },
   { key: "anchor", label: "Anchor Club" },
   { key: "beta", label: "Beta" },
+  { key: "app_only", label: "App only (not a contact)" },
 ];
 
 export type AppUserRow = {
@@ -146,24 +153,41 @@ async function collectContacts(): Promise<Map<string, Contact>> {
  * email has never signed up in the app). Newest contact first.
  */
 export async function listAppUsers(): Promise<AppUserRow[]> {
-  const contacts = await collectContacts();
+  // Both directions at once: our contacts, and the app's entire user table.
+  // Reading all profiles (rather than looking up only the emails we hold) is
+  // what makes app users who never joined a list visible at all.
+  const [contacts, profiles] = await Promise.all([collectContacts(), listAllAppProfiles()]);
+
+  // Anyone in the app we have no contact record for is a source of their own.
+  for (const [email, profile] of profiles) {
+    if (contacts.has(email)) continue;
+    contacts.set(email, {
+      email,
+      name: profile.kycName,
+      sources: new Set<ContactSource>(["app_only"]),
+      firstSeen: profile.created_at,
+      status: null,
+    });
+  }
+
   const emails = [...contacts.keys()];
   if (emails.length === 0) return [];
 
-  const [profiles, deleted] = await Promise.all([
-    getAppProfilesByEmails(emails),
-    getDeletedAccountsByEmails(emails),
-  ]);
+  const deleted = await getDeletedAccountsByEmails(emails);
 
-  const rows: AppUserRow[] = [...contacts.values()].map((c) => ({
-    email: c.email,
-    name: c.name,
-    sources: [...c.sources],
-    firstSeen: c.firstSeen,
-    status: c.status,
-    app: profiles.get(c.email) ?? null,
-    deleted: deleted.get(c.email) ?? null,
-  }));
+  const rows: AppUserRow[] = [...contacts.values()].map((c) => {
+    const app = profiles.get(c.email) ?? null;
+    return {
+      email: c.email,
+      // Fall back to the app's KYC name when we hold no name of our own.
+      name: c.name ?? app?.kycName ?? null,
+      sources: [...c.sources],
+      firstSeen: c.firstSeen,
+      status: c.status,
+      app,
+      deleted: deleted.get(c.email) ?? null,
+    };
+  });
 
   rows.sort((a, b) => {
     const x = a.firstSeen ?? "";

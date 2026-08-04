@@ -37,10 +37,13 @@ function csvCell(v: string): string {
 export function AppUsersView({
   rows,
   onApp,
+  appOnly,
   appLinked,
 }: {
   rows: AppUserRow[];
   onApp: number;
+  /** App users with no contact record of ours — unreachable by email today. */
+  appOnly: number;
   appLinked: boolean;
 }) {
   const [q, setQ] = useState("");
@@ -132,7 +135,7 @@ export function AppUsersView({
   return (
     <div className="flex flex-col gap-5">
       {/* Summary */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className={tile}>
           <p className="font-display text-3xl text-bg">{rows.length.toLocaleString()}</p>
           <p className="mt-1 text-[13px] text-bg/55">Contacts across all sources</p>
@@ -149,6 +152,27 @@ export function AppUsersView({
           </p>
           <p className="mt-1 text-[13px] text-bg/55">Active in the last 7 days</p>
         </div>
+        {/* The gap worth acting on: they use the app, but we can't mail them. */}
+        <button
+          type="button"
+          onClick={() => {
+            setSource("app_only");
+            setOnAppFilter("all");
+          }}
+          className={
+            tile +
+            " text-left transition-colors hover:border-gold/40" +
+            (source === "app_only" ? " border-gold/50" : "")
+          }
+        >
+          <p className="font-display text-3xl text-amber-200">{appOnly.toLocaleString()}</p>
+          <p className="mt-1 text-[13px] text-bg/55">
+            App users not on any list
+            <span className="block text-[11.5px] text-bg/35">
+              Not in the audience — click to filter
+            </span>
+          </p>
+        </button>
       </div>
 
       {/* Filters */}
@@ -268,9 +292,16 @@ export function AppUsersView({
                       {r.sources.map((s) => (
                         <span
                           key={s}
-                          className="rounded-full border border-bg/12 px-2 py-0.5 text-[11px] text-bg/55"
+                          className={
+                            "rounded-full border px-2 py-0.5 text-[11px] " +
+                            (s === "app_only"
+                              ? "border-amber-400/30 bg-amber-400/[0.07] text-amber-200/90"
+                              : "border-bg/12 text-bg/55")
+                          }
                         >
-                          {CONTACT_SOURCES.find((c) => c.key === s)?.label ?? s}
+                          {s === "app_only"
+                            ? "App only"
+                            : CONTACT_SOURCES.find((c) => c.key === s)?.label ?? s}
                         </span>
                       ))}
                     </div>

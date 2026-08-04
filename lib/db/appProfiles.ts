@@ -15,6 +15,8 @@ export type AppProfile = {
   account_type: string | null;
   kyc_status: string | null;
   created_at: string | null;
+  /** Legal name from KYC (BVN/NIN) — the only name the app profile holds. */
+  kycName: string | null;
   /** profiles.last_active_date — the day the app last opened (YYYY-MM-DD). */
   lastActiveDay: string | null;
   /** Number of distinct days the user has been active in the app. */
@@ -57,7 +59,7 @@ export function emptyActivity(): ActivityCounts {
 }
 
 const SELECT =
-  "id, email, klario_id, kairo_score, streak, plan, personality, account_type, kyc_status, created_at, last_active_date, active_days, type_history";
+  "id, email, klario_id, kairo_score, streak, plan, personality, account_type, kyc_status, kyc_full_name, created_at, last_active_date, active_days, type_history";
 
 function toProfile(row: Record<string, unknown>): AppProfile {
   const days = row.active_days;
@@ -73,6 +75,7 @@ function toProfile(row: Record<string, unknown>): AppProfile {
     account_type: (row.account_type as string) ?? null,
     kyc_status: (row.kyc_status as string) ?? null,
     created_at: (row.created_at as string) ?? null,
+    kycName: (row.kyc_full_name as string) ?? null,
     lastActiveDay: row.last_active_date ? String(row.last_active_date).slice(0, 10) : null,
     activeDays: Array.isArray(days) ? days.length : 0,
     typeHistory: Array.isArray(th)
@@ -85,6 +88,26 @@ function toProfile(row: Record<string, unknown>): AppProfile {
           }))
       : [],
   };
+}
+
+/**
+ * EVERY app profile, keyed by normalized email — the app's whole user table.
+ * Used by the App users section, which has to show people who use the app but
+ * are on none of our lists (they'd be invisible if we only looked up the emails
+ * we already hold). Paged; `selectAllRows` caps at 25k rows, which is far above
+ * the current user base but worth revisiting if the app grows past it.
+ */
+export async function listAllAppProfiles(): Promise<Map<string, AppProfile>> {
+  const map = new Map<string, AppProfile>();
+  const db = appSupabaseAdmin();
+  if (!db) return map;
+
+  const rows = await selectAllRows(db, "profiles", SELECT);
+  for (const row of rows) {
+    const key = normalizeEmail(row.email as string);
+    if (key) map.set(key, toProfile(row));
+  }
+  return map;
 }
 
 /**

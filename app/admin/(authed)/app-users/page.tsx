@@ -11,14 +11,17 @@ export default async function AppUsersPage() {
   const rows = configured ? await listAppUsers() : [];
 
   const onApp = rows.filter((r) => r.app).length;
+  // App users we hold no contact record for — nobody can mail them today.
+  const appOnly = rows.filter((r) => r.sources.includes("app_only")).length;
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-display text-3xl text-bg">App users</h1>
         <p className="mt-1 text-sm text-bg/55">
-          Every contact we hold — audience, imports, Anchor Club and beta — matched to
-          their Klario app account by email. Click anyone to see their usage.
+          Everyone on both sides: our contacts (audience, imports, Anchor Club, beta) and
+          every Klario app account, joined by email. That includes app users who are on
+          none of our lists. Click anyone to see their usage.
         </p>
       </div>
 
@@ -36,7 +39,12 @@ export default async function AppUsersPage() {
               Kairo app project&apos;s values) to match contacts to app accounts.
             </div>
           )}
-          <AppUsersView rows={rows} onApp={onApp} appLinked={appLinked} />
+          <AppUsersView
+            rows={rows}
+            onApp={onApp}
+            appOnly={appOnly}
+            appLinked={appLinked}
+          />
         </>
       )}
     </div>
