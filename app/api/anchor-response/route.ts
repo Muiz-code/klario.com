@@ -92,6 +92,10 @@ export async function POST(req: Request) {
 
   const name = clean(body.name, 80) ?? null;
   const phone = clean(body.phone, 40) ?? null;
+  // Phone platform. Tolerant of a cached older client that doesn't send it —
+  // the column is nullable — but anything other than ios/android is dropped.
+  const device =
+    body.device === "ios" || body.device === "android" ? body.device : null;
   const institution = clean(body.institution, 160) ?? null;
   const level = clean(body.level, 60) ?? null;
   const area = clean(body.area, 80) ?? null;
@@ -130,6 +134,7 @@ export async function POST(req: Request) {
     name,
     email,
     phone,
+    device,
     institution,
     level,
     area,

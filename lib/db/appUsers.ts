@@ -2,6 +2,8 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { normalizeEmail } from "@/lib/duplicates";
 import {
   listAllAppProfiles,
+  getDevicePlatformsByUserIds,
+  type DevicePlatform,
   getDeletedAccountsByEmails,
   type AppProfile,
   type DeletedAccount,
@@ -45,6 +47,8 @@ export type AppUserRow = {
   status: string | null;
   /** Their app profile, when the email matches one. */
   app: AppProfile | null;
+  /** Phone they use the app on, when anything has recorded it. */
+  platform: DevicePlatform | null;
   /** Set when they hard-deleted an app account at some point. */
   deleted: DeletedAccount | null;
 };
@@ -156,7 +160,11 @@ export async function listAppUsers(): Promise<AppUserRow[]> {
   // Both directions at once: our contacts, and the app's entire user table.
   // Reading all profiles (rather than looking up only the emails we hold) is
   // what makes app users who never joined a list visible at all.
-  const [contacts, profiles] = await Promise.all([collectContacts(), listAllAppProfiles()]);
+  const [contacts, profiles, platforms] = await Promise.all([
+    collectContacts(),
+    listAllAppProfiles(),
+    getDevicePlatformsByUserIds(),
+  ]);
 
   // Anyone in the app we have no contact record for is a source of their own.
   for (const [email, profile] of profiles) {
@@ -185,6 +193,7 @@ export async function listAppUsers(): Promise<AppUserRow[]> {
       firstSeen: c.firstSeen,
       status: c.status,
       app,
+      platform: app ? platforms.get(app.id) ?? null : null,
       deleted: deleted.get(c.email) ?? null,
     };
   });

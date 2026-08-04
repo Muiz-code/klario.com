@@ -11,6 +11,8 @@ export type AnchorResponse = {
   name: string | null;
   email: string;
   phone: string | null;
+  /** Phone platform they picked on the form: ios | android. */
+  device: string | null;
   institution: string | null;
   level: string | null;
   area: string | null;
@@ -30,6 +32,7 @@ export type AnchorResponseInput = {
   name?: string | null;
   email: string;
   phone?: string | null;
+  device?: string | null;
   institution?: string | null;
   level?: string | null;
   area?: string | null;
@@ -114,6 +117,7 @@ export async function upsertAnchorResponse(
     name: input.name ?? null,
     email,
     phone: input.phone ?? null,
+    device: input.device ?? null,
     institution: input.institution ?? null,
     level: input.level ?? null,
     area: input.area ?? null,

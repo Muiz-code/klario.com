@@ -17,6 +17,9 @@ import { AppUserModal } from "./AppUserModal";
 type OnApp = "all" | "yes" | "no";
 type Activity = "all" | "today" | "week" | "month" | "dormant" | "never";
 
+/** The app reports Platform.OS, so only these two ever appear. */
+const PLATFORM_LABEL: Record<string, string> = { ios: "iPhone", android: "Android" };
+
 /** Presence from the profile alone — the list doesn't load the finance module. */
 function presenceFromDay(lastActiveDay: string | null) {
   return presenceOf({ lastActiveDay, lastSeenAt: null });
@@ -52,6 +55,7 @@ export function AppUsersView({
   const [activity, setActivity] = useState<Activity>("all");
   const [plan, setPlan] = useState("all");
   const [acctType, setAcctType] = useState("all");
+  const [platform, setPlatform] = useState("all");
   const [open, setOpen] = useState<AppUserRow | null>(null);
 
   const plans = useMemo(
@@ -66,6 +70,11 @@ export function AppUsersView({
       if (onAppFilter === "yes" && !r.app) return false;
       if (onAppFilter === "no" && r.app) return false;
       if (plan !== "all" && r.app?.plan !== plan) return false;
+      if (platform !== "all") {
+        // "unknown" = on the app, but no device row has told us which phone.
+        if (!r.app) return false;
+        if (platform === "unknown" ? !!r.platform : r.platform !== platform) return false;
+      }
       if (acctType !== "all") {
         // "unset" catches app users who never picked a type in onboarding.
         const t = r.app?.account_type ?? null;
@@ -87,13 +96,13 @@ export function AppUsersView({
         .map((v) => (v ?? "").toLowerCase())
         .some((v) => v.includes(needle));
     });
-  }, [rows, q, source, onAppFilter, activity, plan, acctType]);
+  }, [rows, q, source, onAppFilter, activity, plan, acctType, platform]);
 
   const exportCsv = () => {
     const head = [
       "Email", "Name", "Sources", "First seen", "Audience status", "Klario ID",
       "Kairo score", "Streak", "Active days", "Last active", "Plan", "Verification",
-      "Account type",
+      "Account type", "Phone",
     ];
     const lines = filtered.map((r) =>
       [
@@ -110,6 +119,7 @@ export function AppUsersView({
         r.app ? planLabel(r.app.plan) : "",
         r.app ? verifyLabel(r.app.kyc_status) : "",
         r.app ? accountTypeLabel(r.app.account_type) : "",
+        r.platform ? PLATFORM_LABEL[r.platform] : "",
       ]
         .map(csvCell)
         .join(",")
@@ -233,6 +243,16 @@ export function AppUsersView({
           ))}
           <option value="unset" className={opt}>Not set</option>
         </select>
+        <select
+          value={platform}
+          onChange={(e) => setPlatform(e.target.value)}
+          className={select}
+        >
+          <option value="all" className={opt}>Any phone</option>
+          <option value="ios" className={opt}>iPhone</option>
+          <option value="android" className={opt}>Android</option>
+          <option value="unknown" className={opt}>Phone unknown</option>
+        </select>
         <select value={plan} onChange={(e) => setPlan(e.target.value)} className={select}>
           <option value="all" className={opt}>Any plan</option>
           {plans.map((p) => (
@@ -262,13 +282,14 @@ export function AppUsersView({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-bg/10">
-          <table className="w-full min-w-[1060px] text-left text-sm">
+          <table className="w-full min-w-[1160px] text-left text-sm">
             <thead>
               <tr className="border-b border-bg/10 bg-bg/[0.03] text-[11px] uppercase tracking-[0.12em] text-bg/50">
                 <th className="px-4 py-3 font-medium">Contact</th>
                 <th className="px-4 py-3 font-medium">Source</th>
                 <th className="px-4 py-3 font-medium">Klario ID</th>
                 <th className="px-4 py-3 font-medium">Account type</th>
+                <th className="px-4 py-3 font-medium">Phone</th>
                 <th className="px-4 py-3 font-medium">Score</th>
                 <th className="px-4 py-3 font-medium">Streak</th>
                 <th className="px-4 py-3 font-medium">Plan</th>
@@ -338,6 +359,9 @@ export function AppUsersView({
                     ) : (
                       <span className="text-[12px] text-bg/25">—</span>
                     )}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-[12.5px] text-bg/65">
+                    {r.platform ? PLATFORM_LABEL[r.platform] : r.app ? "Unknown" : "—"}
                   </td>
                   <td className="px-4 py-3 text-bg/70">{r.app?.kairo_score ?? "—"}</td>
                   <td className="px-4 py-3 text-bg/70">{r.app?.streak ?? "—"}</td>

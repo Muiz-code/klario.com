@@ -110,6 +110,55 @@ export async function listAllAppProfiles(): Promise<Map<string, AppProfile>> {
   return map;
 }
 
+/** What phone they signed up on. Null when nothing has recorded it yet. */
+export type DevicePlatform = "ios" | "android";
+
+function toPlatform(v: unknown): DevicePlatform | null {
+  const s = String(v ?? "").toLowerCase();
+  return s === "ios" || s === "android" ? s : null;
+}
+
+/**
+ * Each app user's phone platform, keyed by app user id.
+ *
+ * The app records this in more than one place, in decreasing order of coverage:
+ * `user_devices` (written server-side by register-device on every device check,
+ * so nearly everyone has a row), then `trusted_devices` (only written when the
+ * Trusted Devices screen is opened). `profiles.device_platform` is a third,
+ * push-registration-time field that the app doesn't currently populate, so it's
+ * read as a last resort rather than trusted. Most recent sighting wins.
+ */
+export async function getDevicePlatformsByUserIds(): Promise<
+  Map<string, DevicePlatform>
+> {
+  const map = new Map<string, DevicePlatform>();
+  const db = appSupabaseAdmin();
+  if (!db) return map;
+
+  // seen-at per user, so a newer sighting can overwrite an older one.
+  const seenAt = new Map<string, string>();
+  const take = (userId: string, platform: DevicePlatform | null, at: unknown) => {
+    if (!userId || !platform) return;
+    const when = typeof at === "string" ? at : "";
+    const prev = seenAt.get(userId);
+    if (prev !== undefined && prev >= when) return;
+    seenAt.set(userId, when);
+    map.set(userId, platform);
+  };
+
+  const [devices, trusted] = await Promise.all([
+    selectAllRows(db, "user_devices", "user_id, platform, last_seen"),
+    selectAllRows(db, "trusted_devices", "user_id, platform, last_seen_at"),
+  ]);
+  for (const row of devices) {
+    take(String(row.user_id ?? ""), toPlatform(row.platform), row.last_seen);
+  }
+  for (const row of trusted) {
+    take(String(row.user_id ?? ""), toPlatform(row.platform), row.last_seen_at);
+  }
+  return map;
+}
+
 /**
  * Look up app profiles for a set of Anchor applicant emails, returned as a map
  * keyed by normalized email. Emails are the only link between the two systems

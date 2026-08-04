@@ -41,6 +41,13 @@ const CHALLENGES = [
 ];
 const GUIDELINES_URL = "/anchor-club-guidelines";
 const OTHER = "__other__";
+
+// Phone platform. Matches what the app records (Platform.OS), so the two data
+// sets line up once an anchor installs Klario.
+const PHONES = [
+  { id: "ios" as const, label: "iPhone (iOS)" },
+  { id: "android" as const, label: "Android" },
+];
 const TOTAL = 7; // numbered questions; 0 = hero, 8 = card
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -50,6 +57,8 @@ type State = {
   name: string;
   email: string;
   whatsapp: string;
+  /** Phone they use — so we know the cohort's iOS/Android split. */
+  device: "ios" | "android" | null;
   institution: string;
   level: string;
   why: string;
@@ -66,6 +75,7 @@ const EMPTY: State = {
   name: "",
   email: "",
   whatsapp: "",
+  device: null,
   institution: "",
   level: "",
   why: "",
@@ -222,6 +232,7 @@ export function AnchorWizard() {
             return "That email doesn't look right yet.";
           if (s.whatsapp.replace(/\D/g, "").length < 7)
             return "Add a WhatsApp number we can reach you on.";
+          if (!s.device) return "Tell us which phone you use.";
           return "";
         case 3:
           if (s.institution.trim().length < 2) return "Where do you study?";
@@ -295,6 +306,7 @@ export function AnchorWizard() {
           name: s.name,
           email: s.email,
           phone: s.whatsapp,
+          device: s.device,
           institution: s.institution,
           level: s.level,
           area: s.area === OTHER ? null : s.area,
@@ -582,6 +594,32 @@ export function AnchorWizard() {
               <div className={styles.subnote}>
                 We use WhatsApp for the cohort group. Nothing else.
               </div>
+              <Field label="Which phone do you use?">
+                <div
+                  className={styles.opts}
+                  role="radiogroup"
+                  aria-label="Phone type"
+                >
+                  {PHONES.map((p) => {
+                    const on = s.device === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={on}
+                        className={cx(styles.opt, on && styles.optOn)}
+                        onClick={() => set("device", p.id)}
+                      >
+                        <span className={cx(styles.box, styles.round)}>
+                          <Check />
+                        </span>
+                        <span>{p.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Field>
             </div>
           </>
         );

@@ -179,6 +179,16 @@ export function AppUserModal({ row, onClose }: { row: AppUserRow; onClose: () =>
                   <Mini label="Spending type" value={titleCase(app.personality)} />
                   <Mini label="Verification" value={verifyLabel(app.kyc_status)} />
                   <Mini label="Account type" value={accountTypeLabel(app.account_type)} />
+                  <Mini
+                    label="Phone"
+                    value={
+                      row.platform === "ios"
+                        ? "iPhone"
+                        : row.platform === "android"
+                          ? "Android"
+                          : "Unknown"
+                    }
+                  />
                   <Mini label="Active days" value={String(app.activeDays)} />
                   <Mini
                     label="On app since"

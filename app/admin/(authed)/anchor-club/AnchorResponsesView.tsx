@@ -82,6 +82,11 @@ function engagement(app: AppProfile, a?: ActivityCounts, t?: UserTasks): number 
 }
 
 
+// The phone they told us they use, from the registration form.
+function deviceLabel(v: string | null | undefined): string {
+  return v === "ios" ? "iPhone" : v === "android" ? "Android" : "—";
+}
+
 function csvCell(v: string): string {
   const s = (v ?? "").replace(/"/g, '""');
   return /[",\n]/.test(s) ? `"${s}"` : s;
@@ -296,7 +301,7 @@ export function AnchorResponsesView({
   const exportCsv = () => {
     const head = [
       "Date", "Ref", "Name", "Email", "Phone", "Institution", "Level",
-      "Area", "Challenge", "Excites", "Why", "Pledged", "Guidelines",
+      "Area", "Challenge", "Excites", "Why", "Pledged", "Guidelines", "Phone type",
       "Klario ID", "Kairo score", "Streak", "Active days", "Last active",
       "Klario tasks", "Task XP", "Tasks not done", "Transactions", "Spent",
       "Received", "Budgets", "Budget spent", "Budget limit", "Savings goals",
@@ -323,6 +328,7 @@ export function AnchorResponsesView({
         r.why ?? "",
         r.pledge ? "yes" : "no",
         r.guidelines ? "yes" : "no",
+        deviceLabel(r.device),
         app?.klario_id ?? "",
         app?.kairo_score != null ? String(app.kairo_score) : "",
         app?.streak != null ? String(app.streak) : "",
@@ -890,6 +896,7 @@ function AnchorDetailModal({
         {/* Body */}
         <div className="grid gap-5 px-6 py-5 md:grid-cols-2">
           <Detail label="Phone (WhatsApp)" value={r.phone || "—"} />
+          <Detail label="Phone type" value={deviceLabel(r.device)} />
           <Detail label="Level" value={r.level || r.notes?.level || "—"} />
           <Detail label="Anchor reference" value={r.ref || "—"} mono />
           <Detail label="Challenge" value={r.challenge || r.notes?.challenge || "—"} />
