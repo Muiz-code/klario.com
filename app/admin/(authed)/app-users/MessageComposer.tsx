@@ -97,7 +97,7 @@ export function MessageComposer({
       }
       // Nothing landed at all — keep the composer open with the reason, rather
       // than reporting a "success" of zero.
-      if (!data.delivered && !data.inAppOnly && !data.skipped) {
+      if (!data.delivered && !data.skipped) {
         setError(
           data.error
             ? `Nothing was delivered. The app returned: ${data.error}`
@@ -107,8 +107,7 @@ export function MessageComposer({
       }
       const parts: string[] = [];
       if (data.delivered) parts.push(`Delivered to ${data.delivered}`);
-      if (data.inAppOnly)
-        parts.push(`${data.inAppOnly} in-app only (push unavailable)`);
+      if (data.pushed !== undefined) parts.push(`${data.pushed} got a push`);
       if (data.skipped) parts.push(`${data.skipped} had announcements off`);
       if (data.failed) parts.push(`${data.failed} failed`);
       onSent(`${parts.join(" · ")}.`);

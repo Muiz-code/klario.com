@@ -5,14 +5,21 @@ import { MAX_RECIPIENTS, type MessageCategory } from "@/lib/appMessageKinds";
 /**
  * In-app messages to Klario app users, sent from this admin.
  *
- * Delivery goes through the APP's own `send-push-notification` edge function
- * rather than writing rows ourselves, because that function is where the rules
- * live: it honours each user's notification preferences (an admin message maps
- * to their "announcements" toggle), writes the in-app bell entry, and pushes to
- * their device only if they have a valid Expo token. Reimplementing that here
- * would drift from the app.
+ * Delivery mirrors the path Kairo-Admin already uses in production, because
+ * that one is proven to reach devices:
  *
- * Every send is also recorded in the app's `broadcasts` table, which exists for
+ *   1. Bulk-insert `notifications` rows — the in-app bell, and the source of
+ *      truth for whether a message landed.
+ *   2. Push to Expo DIRECTLY, in batches of 100.
+ *
+ * An earlier version called the app's `send-push-notification` edge function
+ * once per user. That's one HTTP round-trip per recipient and it failed in
+ * practice, while the same user received a push fine from Kairo-Admin — so the
+ * function is not the reliable route from here. Pushing directly also means a
+ * send is a couple of queries plus a few batched calls, however many people
+ * it goes to.
+ *
+ * Every send is recorded in the app's `broadcasts` table, which exists for
  * exactly this ("one row per send, holding the content plus delivery stats").
  */
 
@@ -25,10 +32,10 @@ export {
 } from "@/lib/appMessageKinds";
 
 export type SendResult = {
-  /** Went through the app's function — bell entry plus a push if they have a token. */
+  /** In-app notifications written — everyone who actually got the message. */
   delivered: number;
-  /** The function was unreachable, so we wrote the bell entry ourselves: no push. */
-  inAppOnly: number;
+  /** Of those, how many Expo accepted a push for (no push token = in-app only). */
+  pushed: number;
   /** Silenced by the user's own notification settings. */
   skipped: number;
   failed: number;
@@ -36,10 +43,23 @@ export type SendResult = {
   error?: string;
 };
 
-const CONCURRENCY = 8;
+/** Expo takes up to 100 messages per request. */
+const PUSH_CHUNK = 100;
+const INSERT_CHUNK = 500;
+const EXPO_SEND = "https://exp.host/--/api/v2/push/send";
 
-/** The notification type that maps to the app's "announcements" preference. */
-const MESSAGE_TYPE = "admin_message";
+/**
+ * `broadcast_*` is what the app's prefKeyFor maps to the announcements toggle,
+ * and what Kairo-Admin already writes — keep both admins on the same type so
+ * the app treats their messages identically.
+ */
+const typeFor = (category: MessageCategory) => `broadcast_${category}`;
+
+/** A token only counts if Expo hasn't already told us the install is gone. */
+function isLivePushToken(token: unknown, deadAt: unknown): boolean {
+  if (deadAt) return false;
+  return typeof token === "string" && token.startsWith("ExponentPushToken");
+}
 
 /**
  * Send one message to a set of app user ids. Returns per-recipient outcomes;
@@ -58,72 +78,107 @@ export async function sendAppMessage(opts: {
   const ids = [...new Set(opts.userIds.filter(Boolean))].slice(0, MAX_RECIPIENTS);
   if (!db || ids.length === 0) return null;
 
-  const result: SendResult = { delivered: 0, inAppOnly: 0, skipped: 0, failed: 0 };
+  const result: SendResult = { delivered: 0, pushed: 0, skipped: 0, failed: 0 };
   const note = (e: unknown) => {
     const msg = e instanceof Error ? e.message : String(e ?? "unknown error");
     if (!result.error) result.error = msg;
-    console.error("[appmsg] send-push-notification failed:", msg);
+    console.error("[appmsg]", msg);
   };
 
-  // Honour the announcements toggle here rather than burning a function call
-  // per silenced user. (The function checks it too — this is the same rule,
-  // applied earlier.)
-  const silenced = new Set<string>();
+  // One read for everything the send needs: who has muted announcements, and
+  // who has a live push token.
+  //
+  // `push_dead_at` is added by Kairo-Admin's migration, so it may not exist in
+  // every environment — fall back to reading without it rather than failing the
+  // whole send over a missing column.
+  const COLS = "id, notification_prefs, expo_push_token, push_dead_at";
+  const COLS_NO_DEAD = "id, notification_prefs, expo_push_token";
+  let cols = COLS;
+
+  type Target = { id: string; token: string | null };
+  const targets: Target[] = [];
   for (const slice of chunk(ids, 300)) {
-    const { data } = await db
-      .from("profiles")
-      .select("id, notification_prefs")
-      .in("id", slice);
-    for (const row of data ?? []) {
-      const prefs = (row as { notification_prefs?: Record<string, boolean> | null })
-        .notification_prefs;
-      if (prefs?.announcements === false) silenced.add(String((row as { id: string }).id));
+    let { data, error } = await db.from("profiles").select(cols).in("id", slice);
+    if (error && cols === COLS) {
+      cols = COLS_NO_DEAD;
+      ({ data, error } = await db.from("profiles").select(cols).in("id", slice));
+    }
+    if (error) {
+      note(error);
+      continue;
+    }
+    for (const raw of data ?? []) {
+      const row = raw as unknown as Record<string, unknown>;
+      const prefs = row.notification_prefs as Record<string, boolean> | null;
+      if (prefs?.announcements === false) {
+        result.skipped += 1;
+        continue;
+      }
+      targets.push({
+        id: String(row.id),
+        token: isLivePushToken(row.expo_push_token, row.push_dead_at)
+          ? String(row.expo_push_token)
+          : null,
+      });
     }
   }
-  result.skipped = ids.filter((id) => silenced.has(id)).length;
-  const targets = ids.filter((id) => !silenced.has(id));
 
-  const payload = {
-    title: opts.title,
-    body: opts.body,
-    type: MESSAGE_TYPE,
-    data: { category: opts.category, source: "marketing-admin" },
-  };
+  const data = { broadcast: true, category: opts.category, source: "marketing-admin" };
 
-  for (const batch of chunk(targets, CONCURRENCY)) {
-    await Promise.all(
-      batch.map(async (userId) => {
-        try {
-          const { data, error } = await db.functions.invoke("send-push-notification", {
-            body: { user_id: userId, ...payload },
-          });
-          if (error) throw error;
-          if ((data as { skipped?: string } | null)?.skipped) result.skipped += 1;
-          else result.delivered += 1;
-          return;
-        } catch (e) {
-          note(e);
-        }
-
-        // The function is how a message also becomes a PUSH. If it's
-        // unreachable, still write the in-app notification directly so the
-        // message isn't lost — it just won't buzz their phone.
-        const { error: insertError } = await db.from("notifications").insert({
-          user_id: userId,
-          title: opts.title,
-          body: opts.body,
-          type: MESSAGE_TYPE,
-          data: payload.data,
-          read: false,
-        });
-        if (insertError) {
-          note(insertError);
-          result.failed += 1;
-        } else {
-          result.inAppOnly += 1;
-        }
-      })
+  // 1. The in-app bell. This is delivery — a push that fails is a lost buzz,
+  //    not a lost message.
+  for (const batch of chunk(targets, INSERT_CHUNK)) {
+    const { error } = await db.from("notifications").insert(
+      batch.map((t) => ({
+        user_id: t.id,
+        title: opts.title,
+        body: opts.body,
+        type: typeFor(opts.category),
+        read: false,
+        data,
+      }))
     );
+    if (error) {
+      note(error);
+      result.failed += batch.length;
+    } else {
+      result.delivered += batch.length;
+    }
+  }
+
+  // 2. Push, straight to Expo, 100 at a time. Never fails the send.
+  const pushable = targets.filter((t) => t.token);
+  for (const batch of chunk(pushable, PUSH_CHUNK)) {
+    try {
+      const res = await fetch(EXPO_SEND, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          batch.map((t) => ({
+            to: t.token,
+            title: opts.title,
+            body: opts.body,
+            data,
+            sound: "default",
+          }))
+        ),
+        signal: AbortSignal.timeout(10_000),
+      });
+      const json = (await res.json().catch(() => null)) as {
+        data?: { status?: string; message?: string }[];
+        errors?: { message?: string }[];
+      } | null;
+      if (!res.ok) {
+        note(json?.errors?.[0]?.message ?? `Expo HTTP ${res.status}`);
+        continue;
+      }
+      for (const ticket of json?.data ?? []) {
+        if (ticket?.status === "ok") result.pushed += 1;
+        else note(ticket?.message ?? "push rejected");
+      }
+    } catch (e) {
+      note(e);
+    }
   }
 
   // History row, so the app's own broadcast list shows what was sent.
@@ -133,9 +188,10 @@ export async function sendAppMessage(opts: {
     body: opts.body,
     category: opts.category,
     audience: opts.audience.slice(0, 200),
-    recipients: ids.length,
-    // `pushed` counts only what actually went through the push path.
-    pushed: result.delivered,
+    // Recipients = who actually got the in-app message; pushed = how many of
+    // those Expo also accepted a push for.
+    recipients: result.delivered,
+    pushed: result.pushed,
   });
   if (error) console.error("[appdb] broadcast history failed:", error.message);
 
