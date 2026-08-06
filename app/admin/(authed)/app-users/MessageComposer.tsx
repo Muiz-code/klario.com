@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { X, Send, Loader2, Sparkles, Bell } from "lucide-react";
 import {
   MESSAGE_CATEGORIES,
+  SYNC_LIMIT,
   type MessageCategory,
-} from "@/lib/db/appMessages";
+} from "@/lib/appMessageKinds";
 import type { Suggestion } from "@/lib/appMessageSuggestions";
 
 const MAX_TITLE = 120;
@@ -86,7 +87,28 @@ export function MessageComposer({
         setError(data.error || "Could not send. Please try again.");
         return;
       }
-      const parts = [`Delivered to ${data.delivered}`];
+      if (data.queued) {
+        // Too many to deliver before responding — it finishes in the
+        // background, and the audit log records how it went.
+        onSent(
+          `Sending to ${Number(data.recipients).toLocaleString()} people in the background. The result lands in the audit log when it finishes.`
+        );
+        return;
+      }
+      // Nothing landed at all — keep the composer open with the reason, rather
+      // than reporting a "success" of zero.
+      if (!data.delivered && !data.inAppOnly && !data.skipped) {
+        setError(
+          data.error
+            ? `Nothing was delivered. The app returned: ${data.error}`
+            : "Nothing was delivered. Check that the app database is linked."
+        );
+        return;
+      }
+      const parts: string[] = [];
+      if (data.delivered) parts.push(`Delivered to ${data.delivered}`);
+      if (data.inAppOnly)
+        parts.push(`${data.inAppOnly} in-app only (push unavailable)`);
       if (data.skipped) parts.push(`${data.skipped} had announcements off`);
       if (data.failed) parts.push(`${data.failed} failed`);
       onSent(`${parts.join(" · ")}.`);
@@ -100,11 +122,20 @@ export function MessageComposer({
     "w-full rounded-lg border border-bg/15 bg-bg/[0.03] px-3 py-2 text-sm text-bg placeholder:text-bg/35 focus:border-gold/50 focus:outline-none";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-ink/70 p-4 backdrop-blur-sm">
+    // This can render inside the user-profile modal, which closes on any click
+    // that reaches it — so every click here must stop before it gets there.
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!sending) onClose();
+      }}
+      className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-ink/70 p-4 backdrop-blur-sm"
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Send an in-app message"
+        onClick={(e) => e.stopPropagation()}
         className="my-8 w-full max-w-2xl rounded-2xl border border-bg/12 bg-[#0d0e12] shadow-2xl"
       >
         {/* Header */}
@@ -255,6 +286,13 @@ export function MessageComposer({
               <p className="mt-1.5 text-[11px] text-bg/35">
                 Goes to their Klario notifications, and as a push if they have the app
                 installed with announcements on.
+                {onAppRecipients.length > SYNC_LIMIT && (
+                  <>
+                    {" "}
+                    Over {SYNC_LIMIT} recipients, so this sends in the background — the
+                    outcome appears in the audit log.
+                  </>
+                )}
               </p>
             </div>
           )}

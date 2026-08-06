@@ -1,7 +1,7 @@
 import type { AppProfile } from "@/lib/db/appProfiles";
 import type { UserTasks } from "@/lib/db/appTasks";
 import type { AppFinance } from "@/lib/db/appFinance";
-import type { MessageCategory } from "@/lib/db/appMessages";
+import type { MessageCategory } from "@/lib/appMessageKinds";
 
 /**
  * Message suggestions curated from what a user has actually done in the app.

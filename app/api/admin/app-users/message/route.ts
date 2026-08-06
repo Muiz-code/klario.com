@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { requireApiCapability } from "@/lib/auth/access";
 import { normalizeEmail } from "@/lib/duplicates";
 import { getAppProfilesByEmails } from "@/lib/db/appProfiles";
@@ -6,6 +6,7 @@ import {
   sendAppMessage,
   isMessageCategory,
   MAX_RECIPIENTS,
+  SYNC_LIMIT,
 } from "@/lib/db/appMessages";
 import { logAction } from "@/lib/db/adminActivity";
 
@@ -85,14 +86,34 @@ export async function POST(req: Request) {
     );
   }
 
-  const result = await sendAppMessage({
-    userIds,
-    title,
-    body: text,
-    category,
-    actorEmail: access.email,
-    audience,
-  });
+  const send = { userIds, title, body: text, category, actorEmail: access.email, audience };
+
+  // Big sends run after the response so the admin isn't staring at a spinner
+  // for minutes. The broadcast row and the audit entry are still written when
+  // it finishes, so the outcome is never lost — it just lands a bit later.
+  if (userIds.length > SYNC_LIMIT) {
+    after(async () => {
+      const result = await sendAppMessage(send);
+      await logAction("app_message.send", {
+        target: title,
+        meta: {
+          audience,
+          category,
+          recipients: userIds.length,
+          background: true,
+          ...(result ?? { failed: userIds.length }),
+        },
+      });
+    });
+    return NextResponse.json({
+      ok: true,
+      queued: true,
+      recipients: userIds.length,
+      notOnApp,
+    });
+  }
+
+  const result = await sendAppMessage(send);
   if (!result) {
     return NextResponse.json(
       { error: "The app database is not linked, so nothing was sent." },
