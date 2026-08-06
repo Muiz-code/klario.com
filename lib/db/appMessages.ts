@@ -1,6 +1,7 @@
 import { appSupabaseAdmin } from "@/lib/supabase/appAdmin";
 import { chunk } from "@/lib/db/appQuery";
 import { MAX_RECIPIENTS, type MessageCategory } from "@/lib/appMessageKinds";
+import { personalize } from "@/lib/appPersonalize";
 
 /**
  * In-app messages to Klario app users, sent from this admin.
@@ -55,6 +56,40 @@ const EXPO_SEND = "https://exp.host/--/api/v2/push/send";
  */
 const typeFor = (category: MessageCategory) => `broadcast_${category}`;
 
+/** Metadata keys sign-up flows put a name under, in order of preference. */
+const NAME_KEYS = ["full_name", "name", "display_name", "first_name"];
+
+/**
+ * User id → the name they gave at signup, read from auth metadata.
+ *
+ * One page covers the current user base; raise it alongside Kairo-Admin's
+ * equivalent if it ever stops. An email echoed back as the "name" (an artifact
+ * of social sign-in) is rejected — deriving one from the address reads better.
+ */
+async function authNameMap(
+  db: NonNullable<ReturnType<typeof appSupabaseAdmin>>
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  try {
+    const { data } = await db.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    for (const user of data?.users ?? []) {
+      const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+      for (const key of NAME_KEYS) {
+        const raw = meta[key];
+        if (typeof raw !== "string") continue;
+        const value = raw.trim();
+        if (!value || value.includes("@")) continue;
+        map.set(user.id, value);
+        break;
+      }
+    }
+  } catch {
+    // Auth admin unavailable — every recipient falls back to their KYC name,
+    // then to a name derived from their email.
+  }
+  return map;
+}
+
 /** A token only counts if Expo hasn't already told us the install is gone. */
 function isLivePushToken(token: unknown, deadAt: unknown): boolean {
   if (deadAt) return false;
@@ -91,11 +126,12 @@ export async function sendAppMessage(opts: {
   // `push_dead_at` is added by Kairo-Admin's migration, so it may not exist in
   // every environment — fall back to reading without it rather than failing the
   // whole send over a missing column.
-  const COLS = "id, notification_prefs, expo_push_token, push_dead_at";
-  const COLS_NO_DEAD = "id, notification_prefs, expo_push_token";
+  const COLS =
+    "id, email, kyc_full_name, notification_prefs, expo_push_token, push_dead_at";
+  const COLS_NO_DEAD = "id, email, kyc_full_name, notification_prefs, expo_push_token";
   let cols = COLS;
 
-  type Target = { id: string; token: string | null };
+  type Target = { id: string; token: string | null; email: string; name: string | null };
   const targets: Target[] = [];
   for (const slice of chunk(ids, 300)) {
     let { data, error } = await db.from("profiles").select(cols).in("id", slice);
@@ -119,9 +155,17 @@ export async function sendAppMessage(opts: {
         token: isLivePushToken(row.expo_push_token, row.push_dead_at)
           ? String(row.expo_push_token)
           : null,
+        email: String(row.email ?? ""),
+        name: (row.kyc_full_name as string | null) ?? null,
       });
     }
   }
+
+  // The name a user actually typed at signup lives in auth metadata, not on
+  // the profile — so {name} renders what they call themselves rather than
+  // their legal KYC name. Best-effort: without it we fall back per recipient.
+  const authNames = await authNameMap(db);
+  const nameFor = (t: Target) => authNames.get(t.id) ?? t.name;
 
   const data = { broadcast: true, category: opts.category, source: "marketing-admin" };
 
@@ -131,8 +175,8 @@ export async function sendAppMessage(opts: {
     const { error } = await db.from("notifications").insert(
       batch.map((t) => ({
         user_id: t.id,
-        title: opts.title,
-        body: opts.body,
+        title: personalize(opts.title, { name: nameFor(t), email: t.email }),
+        body: personalize(opts.body, { name: nameFor(t), email: t.email }),
         type: typeFor(opts.category),
         read: false,
         data,
@@ -156,8 +200,8 @@ export async function sendAppMessage(opts: {
         body: JSON.stringify(
           batch.map((t) => ({
             to: t.token,
-            title: opts.title,
-            body: opts.body,
+            title: personalize(opts.title, { name: nameFor(t), email: t.email }),
+            body: personalize(opts.body, { name: nameFor(t), email: t.email }),
             data,
             sound: "default",
           }))

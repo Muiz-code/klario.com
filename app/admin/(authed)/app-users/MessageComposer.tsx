@@ -8,6 +8,7 @@ import {
   type MessageCategory,
 } from "@/lib/appMessageKinds";
 import type { Suggestion } from "@/lib/appMessageSuggestions";
+import { personalize } from "@/lib/appPersonalize";
 
 const MAX_TITLE = 120;
 const MAX_BODY = 1000;
@@ -51,9 +52,11 @@ export function MessageComposer({
   const onAppRecipients = recipients.filter((r) => r.onApp);
   const notOnApp = recipients.length - onAppRecipients.length;
 
-  // {name} is filled per-person at delivery; preview it with the first one.
-  const previewName = onAppRecipients[0]?.name?.split(" ")[0] ?? "there";
-  const preview = (t: string) => t.replace(/\{name\}/g, previewName);
+  // {name} is filled per person at delivery. Preview with the first recipient,
+  // through the SAME function the sender uses, so this can't misrepresent it.
+  const first = onAppRecipients[0];
+  const preview = (t: string) =>
+    personalize(t, { name: first?.name ?? null, email: first?.email ?? null });
 
   const apply = (s: Suggestion) => {
     setTitle(s.title);
@@ -238,7 +241,7 @@ export function MessageComposer({
                 value={body}
                 maxLength={MAX_BODY}
                 onChange={(e) => setBody(e.target.value)}
-                placeholder="Write the message… use {name} for their first name."
+                placeholder="Write the message… {name} becomes their first name, {email} their address."
               />
             </div>
             <div className="flex flex-wrap gap-1.5">
