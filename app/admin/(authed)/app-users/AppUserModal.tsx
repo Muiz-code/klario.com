@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   X,
   Loader2,
+  Bell,
   Smartphone,
   Wallet,
   ListChecks,
@@ -25,6 +26,8 @@ import {
   titleCase,
   verifyLabel,
 } from "../_components/AppUserPanels";
+import { MessageComposer } from "./MessageComposer";
+import { suggestForUser, type Suggestion } from "@/lib/appMessageSuggestions";
 
 type Detail = {
   app: AppProfile | null;
@@ -49,6 +52,8 @@ function fmtDate(iso: string): string {
 export function AppUserModal({ row, onClose }: { row: AppUserRow; onClose: () => void }) {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [composing, setComposing] = useState<Suggestion[] | null>(null);
+  const [sent, setSent] = useState<string | null>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -79,6 +84,18 @@ export function AppUserModal({ row, onClose }: { row: AppUserRow; onClose: () =>
   }, [row.email]);
 
   const app = detail?.app ?? null;
+
+  /**
+   * Suggestions for this person, built when the composer opens — "days idle"
+   * reads the clock, so it must not run during render.
+   */
+  const buildSuggestions = (): Suggestion[] => {
+    if (!app) return [];
+    const daysIdle = app.lastActiveDay
+      ? Math.floor((Date.now() - Date.parse(`${app.lastActiveDay}T00:00:00Z`)) / 86_400_000)
+      : Infinity;
+    return suggestForUser({ app, tasks: detail?.tasks, finance: detail?.finance, daysIdle });
+  };
 
   return (
     <div
@@ -116,18 +133,34 @@ export function AppUserModal({ row, onClose }: { row: AppUserRow; onClose: () =>
               </div>
             )}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="shrink-0 rounded-lg border border-bg/12 p-1.5 text-bg/50 hover:border-gold/40 hover:text-gold"
-          >
-            <X size={16} />
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            {app && (
+              <button
+                type="button"
+                onClick={() => setComposing(buildSuggestions())}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gold/35 px-2.5 py-1.5 text-[12.5px] text-gold transition-colors hover:bg-gold/10"
+              >
+                <Bell size={13} /> Message
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="rounded-lg border border-bg/12 p-1.5 text-bg/50 hover:border-gold/40 hover:text-gold"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Body */}
         <div className="px-6 py-5">
+          {sent && (
+            <p className="mb-4 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-[13px] text-emerald-200">
+              {sent}
+            </p>
+          )}
           {error ? (
             <p className="py-8 text-center text-sm text-red-300">{error}</p>
           ) : !detail ? (
@@ -271,6 +304,21 @@ export function AppUserModal({ row, onClose }: { row: AppUserRow; onClose: () =>
           )}
         </div>
       </div>
+
+      {composing && app && (
+        <MessageComposer
+          recipients={[{ email: row.email, name: row.name, onApp: true }]}
+          // Built from THIS person's tasks, money and time away when the
+          // composer opened — see buildSuggestions above.
+          suggestions={composing}
+          audienceLabel={row.email}
+          onClose={() => setComposing(null)}
+          onSent={(summary) => {
+            setComposing(null);
+            setSent(summary);
+          }}
+        />
+      )}
     </div>
   );
 }

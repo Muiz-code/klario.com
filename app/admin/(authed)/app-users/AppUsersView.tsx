@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Download, ChevronRight, Smartphone } from "lucide-react";
+import { Search, Download, ChevronRight, Smartphone, Bell } from "lucide-react";
 import type { AppUserRow, ContactSource } from "@/lib/db/appUsers";
 import { CONTACT_SOURCES } from "@/lib/db/appUsers";
 import { presenceOf } from "@/lib/db/appFinance";
@@ -13,6 +13,8 @@ import {
   verifyLabel,
 } from "../_components/AppUserPanels";
 import { AppUserModal } from "./AppUserModal";
+import { MessageComposer } from "./MessageComposer";
+import { suggestForGroup } from "@/lib/appMessageSuggestions";
 
 type OnApp = "all" | "yes" | "no";
 type Activity = "all" | "today" | "week" | "month" | "dormant" | "never";
@@ -37,6 +39,26 @@ function csvCell(v: string): string {
   return /[",\n]/.test(s) ? `"${s}"` : s;
 }
 
+/** Plain-English name for the current filter, stored with the send. */
+function describeFilters(f: {
+  source: string;
+  onAppFilter: string;
+  activity: string;
+  plan: string;
+  acctType: string;
+  platform: string;
+  q: string;
+}): string {
+  const parts: string[] = [];
+  if (f.source !== "all") parts.push(f.source.replace("_", " "));
+  if (f.activity !== "all") parts.push(f.activity);
+  if (f.acctType !== "all") parts.push(f.acctType.replace("_", " "));
+  if (f.platform !== "all") parts.push(f.platform);
+  if (f.plan !== "all") parts.push(f.plan);
+  if (f.q.trim()) parts.push(`search "${f.q.trim()}"`);
+  return parts.length ? `app users · ${parts.join(" · ")}` : "all app users";
+}
+
 export function AppUsersView({
   rows,
   onApp,
@@ -57,6 +79,9 @@ export function AppUsersView({
   const [acctType, setAcctType] = useState("all");
   const [platform, setPlatform] = useState("all");
   const [open, setOpen] = useState<AppUserRow | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [composing, setComposing] = useState(false);
+  const [sendResult, setSendResult] = useState<string | null>(null);
 
   const plans = useMemo(
     () => [...new Set(rows.map((r) => r.app?.plan).filter(Boolean))].sort() as string[],
@@ -97,6 +122,38 @@ export function AppUsersView({
         .some((v) => v.includes(needle));
     });
   }, [rows, q, source, onAppFilter, activity, plan, acctType, platform]);
+
+  // Who a send would go to: the ticked rows, or the whole filtered set when
+  // nothing is ticked. Only app accounts can receive an in-app message.
+  const targeted = selected.size > 0 ? filtered.filter((r) => selected.has(r.email)) : filtered;
+  const messageable = targeted.filter((r) => r.app);
+  const audienceLabel =
+    selected.size > 0
+      ? `${selected.size} hand-picked app user${selected.size === 1 ? "" : "s"}`
+      : describeFilters({ source, onAppFilter, activity, plan, acctType, platform, q });
+
+  const groupSuggestions = useMemo(
+    () =>
+      suggestForGroup(
+        messageable.map((r) => ({
+          daysIdle: daysSince(r.app?.lastActiveDay ?? null),
+          verified: r.app?.kyc_status === "verified",
+          plan: r.app?.plan ?? null,
+          accountType: r.app?.account_type ?? null,
+          onApp: !!r.app,
+        }))
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [messageable.length, composing]
+  );
+
+  const toggleRow = (email: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(email)) next.delete(email);
+      else next.add(email);
+      return next;
+    });
 
   const exportCsv = () => {
     const head = [
@@ -269,11 +326,53 @@ export function AppUsersView({
         >
           <Download size={15} /> Export CSV
         </button>
+        <button
+          type="button"
+          onClick={() => setComposing(true)}
+          disabled={messageable.length === 0}
+          className="inline-flex items-center gap-2 rounded-lg bg-gold px-3.5 py-2 text-sm font-medium text-ink transition-transform hover:scale-[1.01] disabled:opacity-40"
+        >
+          <Bell size={15} /> Message {messageable.length.toLocaleString()}
+        </button>
       </div>
 
-      <p className="text-[12px] text-bg/40">
-        {filtered.length.toLocaleString()} of {rows.length.toLocaleString()} contacts
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[12px] text-bg/40">
+        <span>
+          {filtered.length.toLocaleString()} of {rows.length.toLocaleString()} contacts
+          {selected.size > 0 && (
+            <>
+              {" · "}
+              <span className="text-gold">{selected.size} ticked</span>{" "}
+              <button
+                type="button"
+                onClick={() => setSelected(new Set())}
+                className="underline hover:text-bg"
+              >
+                clear
+              </button>
+            </>
+          )}
+        </span>
+        {messageable.length !== targeted.length && (
+          <span>
+            {(targeted.length - messageable.length).toLocaleString()} of these have no app
+            account and can&apos;t receive an in-app message
+          </span>
+        )}
+      </div>
+
+      {sendResult && (
+        <div className="flex items-center justify-between rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-4 py-2.5 text-[13px] text-emerald-200">
+          <span>{sendResult}</span>
+          <button
+            type="button"
+            onClick={() => setSendResult(null)}
+            className="text-emerald-200/70 hover:text-emerald-100"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Table */}
       {filtered.length === 0 ? (
@@ -285,6 +384,19 @@ export function AppUsersView({
           <table className="w-full min-w-[1160px] text-left text-sm">
             <thead>
               <tr className="border-b border-bg/10 bg-bg/[0.03] text-[11px] uppercase tracking-[0.12em] text-bg/50">
+                <th className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all shown"
+                    checked={filtered.length > 0 && filtered.every((r) => selected.has(r.email))}
+                    onChange={(e) =>
+                      setSelected(
+                        e.target.checked ? new Set(filtered.map((r) => r.email)) : new Set()
+                      )
+                    }
+                    className="h-4 w-4 accent-gold"
+                  />
+                </th>
                 <th className="px-4 py-3 font-medium">Contact</th>
                 <th className="px-4 py-3 font-medium">Source</th>
                 <th className="px-4 py-3 font-medium">Klario ID</th>
@@ -304,6 +416,15 @@ export function AppUsersView({
                   onClick={() => setOpen(r)}
                   className="cursor-pointer border-b border-bg/[0.06] last:border-b-0 hover:bg-bg/[0.02]"
                 >
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${r.email}`}
+                      checked={selected.has(r.email)}
+                      onChange={() => toggleRow(r.email)}
+                      className="h-4 w-4 accent-gold"
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     <div className="font-medium text-bg">{r.name || "—"}</div>
                     <div className="text-[12px] text-bg/45">{r.email}</div>
@@ -392,6 +513,24 @@ export function AppUsersView({
       )}
 
       {open && <AppUserModal row={open} onClose={() => setOpen(null)} />}
+
+      {composing && (
+        <MessageComposer
+          recipients={targeted.map((r) => ({
+            email: r.email,
+            name: r.name,
+            onApp: !!r.app,
+          }))}
+          suggestions={groupSuggestions}
+          audienceLabel={audienceLabel}
+          onClose={() => setComposing(false)}
+          onSent={(summary) => {
+            setComposing(false);
+            setSelected(new Set());
+            setSendResult(summary);
+          }}
+        />
+      )}
     </div>
   );
 }

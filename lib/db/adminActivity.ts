@@ -114,6 +114,7 @@ export async function listActivityActors(): Promise<string[]> {
 const ACTION_LABELS: Record<string, string> = {
   "anchor.delete": "deleted Anchor registration",
   "anchor.email": "emailed Anchor Club",
+  "app_message.send": "sent an in-app message",
   "audience.import": "imported subscribers",
   "audience.export": "exported subscribers",
   "automation.create": "created automation",
