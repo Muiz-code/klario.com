@@ -14,7 +14,7 @@ export const INVESTORS = {
   },
 
   // Plain-language product explainer, kept to claims already made elsewhere
-  // (read-only access, KlarioAI, automated savings, in-app bills, human tier).
+  // (account linking, KlarioAI, automated savings, in-app bills, human tier).
   // No metrics here on purpose - this is the "what it actually does" mental
   // model an investor needs before the market case.
   whatItDoes: {
@@ -28,7 +28,7 @@ export const INVESTORS = {
         icon: "Landmark",
         step: "01",
         title: "Connect every account",
-        body: "Link each Nigerian bank with read-only access. Balances, income and spending flow into one live dashboard, no manual entry, no spreadsheets.",
+        body: "Link each Nigerian bank through licensed open banking. Balances, income and spending flow into one live dashboard, no manual entry, no spreadsheets.",
       },
       {
         icon: "Bot",
@@ -40,7 +40,7 @@ export const INVESTORS = {
         icon: "Zap",
         step: "03",
         title: "Act without leaving",
-        body: "Turn clarity into action in the same app: automate savings toward a goal, pay bills and airtime, and get guidance, up to a dedicated human advisor at the top tier.",
+        body: "Turn clarity into action in the same app: automate savings toward a goal, pay bills and airtime, and get guidance, send money, and on the business plan get a dedicated human advisor.",
       },
     ],
   },
@@ -71,7 +71,7 @@ export const INVESTORS = {
     takeaways: [
       "The competition is a habit, not an app: 97% still track manually or from memory.",
       "The demand is not the bottleneck; trust and execution are, and both are our focus.",
-      "Security is the top objection raised, and read-only access is exactly our answer.",
+      "Security is the top objection raised, and never touching the money is exactly our answer.",
     ],
     source: "Klario Beta Insights, two waves combined (n = 331 / 160 / 171), July 2026.",
   },
@@ -203,7 +203,7 @@ export const INVESTORS = {
     heading: "Recurring revenue, with room to",
     emphasis: "compound.",
     streams: [
-      { title: "Subscriptions", body: "A free tier for reach, and two paid tiers, Money Manager and Financial Executive, for households and power users who want automation and a human advisor. The core paid tier is priced inside the ₦2,500-4,000 band our beta community said they would pay (median ₦3,250), with the free tier as the on-ramp." },
+      { title: "Subscriptions", body: "A free tier for reach, and one paid plan sold to two different buyers: Money Manager for personal accounts, priced inside the ₦2,500-4,000 band our beta community said they would pay (median ₦3,250), and Financial Executive for businesses, priced per customer on the accounts and setup they need. The free tier is the on-ramp and still earns, because money keeps moving on it." },
       { title: "Partnerships", body: "Distribution and product partnerships with regulated financial institutions that want to reach engaged, verified, financially active users." },
       { title: "Referrals", body: "Warm, permissioned introductions to vetted savings and investment products, on the user's terms." },
     ],
@@ -215,11 +215,14 @@ export const INVESTORS = {
     label: "How it earns",
     heading: "Freemium, sold as one-time upgrades,",
     emphasis: "trust-first by design.",
-    intro: "Three tiers, sold as one-time payments rather than silent auto-renewals. Higher tiers unlock more linked banks, more KlarioAI, and priority support, and the business-versus-personal engine pulls SME users toward paid plans.",
+    intro: "A free tier for reach and one paid plan, sold under the name that fits the buyer: Money Manager for personal accounts, Financial Executive for businesses. Free keeps money moving, since Klario earns on transfers either way; what paying unlocks is the intelligence layer, analytics and exports across every account. Business terms are agreed per customer, which is what makes the SME line worth many times the personal one.",
     columns: ["Capability", "Free", "Money Manager", "Financial Executive"],
     rows: [
-      ["Linked bank accounts", "1", "3", "10"],
-      ["KlarioAI messages / month", "5", "30", "100"],
+      ["Sold to", "Anyone", "Personal", "Business"],
+      ["Linked bank accounts", "2", "5", "10+, agreed"],
+      ["Accounts with analytics", "1", "All", "All"],
+      ["KlarioAI messages / month", "10", "200", "600"],
+      ["Commingling tracking", "No", "No", "Yes"],
       ["Data export (NDPR)", "Yes", "Yes", "Yes"],
       ["Priority support", "No", "No", "Yes"],
     ],
@@ -227,7 +230,7 @@ export const INVESTORS = {
     proof: [
       { value: "~80", label: "local spending contexts the engine recognises (jollof, Uber, DSTV, FIRS, and more)" },
       { value: "30%", label: "company tax rate that mis-booked personal spend is needlessly exposed to" },
-      { value: "Read-only", label: "no money-movement licence, capital, or fraud liability on Klario today" },
+      { value: "No custody", label: "funds never sit with Klario; licensed partners carry the money-movement licence and capital" },
     ],
   },
 
@@ -299,7 +302,7 @@ export const INVESTORS = {
         { title: "On top, not instead", body: "We don't ask people to move banks. Klario reads the accounts they already have, so adoption has no switching cost." },
         { title: "Naira-native intelligence", body: "KlarioAI understands local merchants, charges and habits, guidance built for how Nigerians actually earn and spend, not a foreign template." },
         { title: "The SME wedge", body: "Automatic business-versus-personal separation (commingling) is a clean-books tool no incumbent offers, a direct line into the formalising SME segment." },
-        { title: "Asset-light by design", body: "Read-only today means no money-transmission licence, capital requirement or fraud liability, so we ship faster and burn less than money-movement fintechs." },
+        { title: "Asset-light by design", body: "Klario never custodies funds. Money moves on the user's instruction through licensed partners, so the licence, capital requirement and settlement risk sit with them, and we ship faster and burn less than fintechs that carry it themselves." },
       ],
     },
   },
@@ -326,7 +329,7 @@ export const INVESTORS = {
     emphasis: "three levers.",
     intro: "We're pre-revenue and in beta, so we don't publish a fixed five-year P&L here. Instead, here's how the model grows. The board-reviewed projection, with the assumptions behind it, lives in the data room.",
     levers: [
-      { phase: "Years 1-2", title: "Trust & reach", body: "Grow the free, read-only base and prove retention. Revenue is early subscription; the priority is engaged, verified users and a low-cost growth loop." },
+      { phase: "Years 1-2", title: "Trust & reach", body: "Grow the free base and prove retention. Revenue is early subscription; the priority is engaged, verified users and a low-cost growth loop." },
       { phase: "Years 2-4", title: "Monetise clarity", body: "Convert to paid tiers and the SME business-versus-personal wedge. Subscription ARPU rises as automation and the human-advisor tier mature." },
       { phase: "Years 4-5", title: "Orchestration upside", body: "With a licensed partner, transaction-linked revenue layers on top of subscriptions, once users already rely on Klario to understand their money." },
     ],

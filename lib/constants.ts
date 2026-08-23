@@ -170,7 +170,7 @@ export const FAQS = [
   },
   {
     q: "How much does Klario cost?",
-    a: "Klario has three tiers: Free, Money Manager, and Financial Executive. Free gives you a first taste of clarity; the paid tiers add multiple banks, more KlarioAI, an automated budget engine, in-app bill payments and, on Financial Executive, a dedicated human financial manager. See the Pricing section for current rates.",
+    a: "Klario is free to start, and there is one paid plan sold under two names depending on who you are. Money Manager is for personal accounts. Financial Executive is for businesses, priced on the number of accounts and the setup you need, so it starts with a conversation. Free gives you two connected banks, sending, savings goals and budgets; paying unlocks analytics across every account, far more KlarioAI, and exports. See the Pricing section.",
   },
   {
     q: "Who is behind Klario?",
@@ -193,32 +193,71 @@ export const NAV_LINKS = [
 export const PROBLEM = {
   label: "The Problem",
   heading: { lead: "Nigerians are financially active, but financially", emphasis: "blind." },
+  // Every figure here is now one we can stand behind and point at. The previous
+  // set ("217M+ Nigerians", "<4% use any PFM tool", "₦Billions lost monthly")
+  // carried no source, in a section directly above a market page that footnotes
+  // every external number — the inconsistency was more visible than the stats.
+  //
+  // Three of the four come from our OWN two-wave beta research, which is the
+  // strongest evidence we have precisely because it is ours and it is specific.
+  // The fourth is EFInA, already cited on the investor page.
   cards: [
     {
       icon: "Landmark",
       title: "Multiple Banks, Zero Visibility",
-      body: "The average Nigerian has accounts across 3-5 banks with no unified view of their actual financial health.",
-      stat: "217M+ Nigerians",
+      body: "Most Nigerians hold accounts at several banks and have no single place that shows what they actually have.",
+      stat: "92% use two or more banks",
     },
     {
       icon: "Bot",
       title: "No Localised Guidance",
-      body: "Global finance apps don't understand naira inflation, bank charges, or Nigerian spending patterns.",
-      stat: "<4% use any PFM tool",
+      body: "Global finance apps don't understand naira inflation, Nigerian bank charges, or how people here actually earn and spend.",
+      stat: "97% still track by hand, or not at all",
     },
     {
       icon: "TrendingDown",
       title: "Silent Financial Leakage",
       body: "Without clarity, money disappears: on charges, duplicate subscriptions, things you forgot about.",
-      stat: "₦Billions lost monthly",
+      stat: "79% lose track of where it went",
     },
     {
       icon: "PiggyBank",
-      title: "Saving Without a System",
-      body: "Wanting to save isn't a plan. Without automation, most save by mood, not by method, and the goal never moves.",
-      stat: "Saving by chance, not by plan",
+      title: "Savings Sit in Yet Another App",
+      // Was "Saving Without a System — without automation, most save by mood".
+      // That is not true and Nigerians know it is not true: PiggyVest and
+      // Cowrywise solved automated saving years ago and solved it well. A
+      // problem section that claims otherwise loses the reader on the one card
+      // where they have first-hand experience.
+      //
+      // The real gap is the one those apps create by design: your savings live
+      // apart from the accounts you spend from, so the whole picture is still
+      // split. That is a problem Klario actually addresses, and it does not
+      // require pretending the savings apps failed.
+      body: "Savings apps do the saving well, but that money sits apart from the accounts you spend from. Your savings know nothing about your salary, and your bank knows nothing about your goals.",
+      stat: "86% want every account in one view",
+    },
+    {
+      icon: "Briefcase",
+      title: "Business and Personal in One Pot",
+      body: "When diesel for the shop and school fees leave the same account, you can't tell what the business actually made, or prove it to a bank when you need a loan.",
+      stat: "30% company tax on profit you can't prove",
+    },
+    // These two carry no stat on purpose. IconCard omits the line entirely when
+    // `stat` is absent, and a card that stands on its copy is better than one
+    // propped up by a number we cannot point at.
+    {
+      icon: "CreditCard",
+      title: "Debt You Can't See All Of",
+      body: "A card here, a loan app there, something owed to a cooperative. Each one knows its own balance. Nothing tells you what you owe in total, or which to clear first.",
+    },
+    {
+      icon: "ArrowLeftRight",
+      title: "Your Own Money, Out of Reach",
+      body: "The money is yours and it is right there, just in the wrong account. Moving it means opening another app, retyping details you already have, and hoping you got them right.",
     },
   ],
+  sources:
+    "Klario Beta Insights, two waves combined (n = 331), July 2026. Company income tax rate: Federal Inland Revenue Service, Nigeria.",
 } as const;
 
 export const DOWNLOAD = {
@@ -258,6 +297,12 @@ export const PRICING = {
   // masked and the billing toggle is hidden.
   revealPrices: false,
   annualDiscount: 0.1,
+  // Money Manager and Financial Executive are NOT a ladder. They are the same
+  // paid plan sold to two different buyers: a person, and a business. Nobody
+  // upgrades from one to the other, so the cards must not imply "everything in
+  // Money Manager, plus…" the way a tiered page would. Limits and figures here
+  // mirror the app's featureGates.ts; change them together or the site starts
+  // promising something the app refuses.
   tiers: [
     {
       id: "free",
@@ -266,58 +311,71 @@ export const PRICING = {
       monthly: 0,
       cta: "Get Started Free",
       features: [
-        "Limited bank connections",
-        "5 KlarioAI queries / month",
-        "Basic balance dashboard",
-        "Budget alerts",
+        "2 bank connections",
+        "Send money from any connected bank",
+        "10 KlarioAI messages / month",
+        "Savings goals and budgets",
+        "Analytics for one account",
       ],
     },
     {
       id: "money-manager",
       name: "Money Manager",
-      tagline: "For everyday active money management.",
-      // Set inside the ₦2,500-4,000 band beta users named they'd pay (median
-      // ₦3,250); kept consistent with the investor page's stated core-tier price.
-      monthly: 3500,
+      tagline: "For personal money, handled properly.",
+      // Matches the app: ₦3,250/month personal, ₦3,000/month billed annually.
+      monthly: 3250,
       cta: "Start Money Manager",
       featured: true,
+      audience: "personal",
       features: [
-        "Multiple bank connections",
-        "15 KlarioAI queries / day",
-        "Automated budget engine",
-        "4-tier debt risk scoring",
-        "In-app bill payments",
+        "5 bank connections",
+        "200 KlarioAI messages / month",
+        "Analytics and exports across every account",
+        "Automated budget engine with funded vaults",
+        "Savings goals with scheduled auto-save",
+        "Debt tracking and risk scoring",
+        "Document and payslip analysis",
         "Transaction export (PDF / CSV)",
-        "Bank-integrated savings goals",
-        "Push notifications",
       ],
     },
     {
       id: "executive",
       name: "Financial Executive",
-      tagline: "A real human financial manager in your corner.",
-      monthly: 5400,
-      cta: "Go Executive",
+      tagline: "For businesses, priced on what you need.",
+      // Business terms are agreed per customer, so no figure is shown even once
+      // revealPrices is on. The number in the app (₦32,700) is the standard
+      // rate, not the one every business pays.
+      monthly: null,
+      contactSales: true,
+      audience: "business",
+      cta: "Talk to sales",
       features: [
-        "10 bank connections",
-        "30 KlarioAI queries / day",
+        "10+ bank connections, agreed with you",
+        "600 KlarioAI messages / month",
+        "Business and personal money kept separate",
+        "Commingling tracking and reports",
         "Everything in Money Manager",
         "Dedicated human financial manager",
-        "Monthly 1-on-1 strategy call",
-        "Personalised financial plan (quarterly)",
-        "Investment partner referrals",
-        "Priority support (2hr response)",
+        "Priority support",
       ],
     },
   ],
 } as const;
 
 export const SECURITY = {
-  label: "Bank-Grade Security",
-  heading: "Your data is safer here than",
-  emphasis: "anywhere else.",
+  label: "Security",
+  // Was "Your data is safer here than anywhere else." — a superlative nobody
+  // can verify and we cannot support, on the one section where a reader is
+  // actively looking for a reason not to trust us.
+  //
+  // What replaces it is narrower and checkable, and it happens to answer the
+  // objection our own research found people raise first. The strongest thing
+  // we can say about security is not that we protect what we hold; it is how
+  // little we hold in the first place.
+  heading: "We never see your bank login, and we never",
+  emphasis: "hold your money.",
   intro:
-    "We are obsessed with security. Not because we have to be, because your financial data deserves nothing less.",
+    "Your credentials go straight to licensed open banking infrastructure. Your money stays with your bank and our regulated payment partners. What we can't hold, we can't lose.",
   cards: [
     {
       icon: "Fingerprint",
@@ -326,28 +384,41 @@ export const SECURITY = {
     },
     {
       icon: "ShieldCheck",
-      title: "256-bit AES Encryption",
-      body: "Every piece of your data, encrypted end to end, at rest and in transit. Always.",
+      title: "Encrypted at Rest and in Transit",
+      // Was "encrypted end to end". End-to-end encryption means only the two
+      // endpoints can read the data, and that is not what Klario does: reading
+      // your transactions is the product. AES-256 at rest and TLS 1.3 in
+      // transit is the true claim, and it is a strong one.
+      body: "AES-256 at rest, TLS 1.3 in transit. Your data is protected everywhere it sits and everywhere it travels.",
     },
     {
       icon: "BadgeCheck",
-      title: "BVN Verification",
-      body: "Every user verified against their Bank Verification Number. Zero fake accounts.",
+      title: "Identity Verification",
+      // Was "Every user verified... Zero fake accounts". Not true while
+      // BETA_SKIP_KYC_GATE is on in the app, and stating it as fact on a live
+      // site is the kind of claim that is checked after something goes wrong.
+      body: "Bank Verification Number checks confirm real people behind real accounts before money moves.",
     },
     {
       icon: "KeyRound",
-      title: "Zero Knowledge Storage",
-      body: "Your bank credentials never touch Klario's servers. We read data, we never store passwords.",
+      title: "We Never See Your Bank Login",
+      // Was "Zero Knowledge Storage", which means the provider cannot read the
+      // data at all. The body always said the accurate thing; the title
+      // contradicted it.
+      body: "Your bank credentials go straight to licensed open banking infrastructure and never touch Klario's servers.",
     },
     {
       icon: "Webhook",
-      title: "HMAC-SHA512 Webhooks",
-      body: "Every payment callback cryptographically verified before a single naira moves.",
+      title: "Verified Payment Callbacks",
+      // Was "HMAC-SHA512 Webhooks". The webhook authenticates a shared secret
+      // in constant time and refuses every event if that secret is unset. That
+      // is genuinely good, and it is not HMAC-SHA512, which nothing computes.
+      body: "Every payment callback is authenticated before a single naira moves, and unverified events are refused outright.",
     },
     {
       icon: "DatabaseZap",
       title: "Row-Level Security",
-      body: "Database rules ensure no user can ever access another user's data. Architecturally impossible.",
+      body: "Database rules enforce, on every single query, that you can only ever reach your own data.",
     },
   ],
 } as const;
@@ -400,6 +471,27 @@ export const SOLUTION = {
       eyebrow: "Debt Management",
       title: "Get on top of every debt.",
       body: "See what you owe across every lender in one place, and let KlarioAI map out a repayment plan you can actually keep.",
+    },
+    {
+      id: "send",
+      icon: "Send",
+      eyebrow: "Send Money",
+      title: "Send from any account you've connected.",
+      body: "Pick the account, send, done. Split one transfer across several banks when no single account covers it. Klario charges nothing to send.",
+    },
+    {
+      id: "savings",
+      icon: "PiggyBank",
+      eyebrow: "Savings",
+      title: "Money set aside, and kept there.",
+      body: "Savings goals that fund themselves on a schedule you choose, with a maturity date that holds you to it. Watch it grow without touching it.",
+    },
+    {
+      id: "budgets",
+      icon: "PieChart",
+      eyebrow: "Budgets",
+      title: "Plan a month before you spend it.",
+      body: "Give every naira of your income a job in one pass, then let Klario hold the money back and release it as the month goes.",
     },
     {
       id: "bills",

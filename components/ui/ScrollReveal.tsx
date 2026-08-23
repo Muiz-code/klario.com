@@ -22,7 +22,15 @@ export function ScrollReveal({
   children: React.ReactNode;
   className?: string;
   delay?: number;
-  amount?: number;
+  /**
+   * How much of the element must be visible before it reveals.
+   *
+   * A number is a FRACTION OF THE ELEMENT, so it breaks silently on tall
+   * content: 0.25 of a five-viewport-high container can never be on screen, the
+   * reveal never fires, and its children stay invisible with no error anywhere.
+   * Use "some" for anything whose height you do not control.
+   */
+  amount?: number | "some" | "all";
   as?: "div" | "section" | "article" | "li" | "header";
 }) {
   const MotionTag = motion[as] as typeof motion.div;

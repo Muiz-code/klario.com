@@ -72,8 +72,9 @@ export function Pricing() {
       <div className="grid gap-6 md:grid-cols-3 md:items-stretch">
         {PRICING.tiers.map((tier, i) => {
           const featured = "featured" in tier && tier.featured;
+          const contactSales = "contactSales" in tier && tier.contactSales;
           const monthly = isAnnual
-            ? Math.round(tier.monthly * (1 - PRICING.annualDiscount))
+            ? Math.round((tier.monthly ?? 0) * (1 - PRICING.annualDiscount))
             : tier.monthly;
 
           return (
@@ -101,7 +102,22 @@ export function Pricing() {
                 {tier.tagline}
               </p>
 
-              {reveal ? (
+              {/* Business pricing is agreed per customer, so this card shows no
+                  figure at all — not even a masked one. "###" implies a number
+                  exists and is being withheld; for this tier there genuinely
+                  isn't one until we've talked. */}
+              {contactSales ? (
+                <>
+                  <div className="mt-6 flex h-12 items-baseline md:h-14">
+                    <span className="font-display text-3xl text-ink md:text-4xl">
+                      Let&rsquo;s talk
+                    </span>
+                  </div>
+                  <p className="mt-1 min-h-[18px] text-xs text-gold/80">
+                    Priced on the accounts and setup you need.
+                  </p>
+                </>
+              ) : reveal ? (
                 <>
                   <div className="mt-6 flex items-baseline gap-1.5">
                     <span className="font-mono text-base text-ink/55">₦</span>
@@ -115,15 +131,15 @@ export function Pricing() {
                           transition={{ duration: 0.35, ease }}
                           className="font-mono text-4xl font-medium text-ink md:text-5xl"
                         >
-                          {monthly.toLocaleString("en-NG")}
+                          {(monthly ?? 0).toLocaleString("en-NG")}
                         </motion.span>
                       </AnimatePresence>
                     </span>
                     <span className="text-sm text-body/55">/month</span>
                   </div>
                   <p className="mt-1 min-h-[18px] text-xs text-body/50">
-                    {isAnnual && tier.monthly > 0
-                      ? `Billed ₦${(monthly * 12).toLocaleString("en-NG")} annually`
+                    {isAnnual && (tier.monthly ?? 0) > 0
+                      ? `Billed ₦${((monthly ?? 0) * 12).toLocaleString("en-NG")} annually`
                       : tier.monthly === 0
                         ? "Free, forever."
                         : "Cancel anytime."}
@@ -162,7 +178,7 @@ export function Pricing() {
 
               <div className="mt-8">
                 <Button
-                  href={SITE.downloadHref}
+                  href={contactSales ? `mailto:${SITE.emails.contact}?subject=Klario for business` : SITE.downloadHref}
                   size="lg"
                   variant={featured ? "solid" : "outline"}
                   className="w-full"

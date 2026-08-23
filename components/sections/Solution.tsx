@@ -6,19 +6,15 @@ import {
   TrendingDown,
   Zap,
   UserRound,
+  Send,
+  PiggyBank,
+  PieChart,
   type LucideIcon,
 } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { StackedCards } from "@/components/ui/StackedCards";
 import { AppScreen } from "@/components/ui/AppScreen";
 import { SOLUTION } from "@/lib/constants";
-import {
-  DashboardVisual,
-  AIVisual,
-  SavingsVisual,
-  BillsVisual,
-  ManagerVisual,
-} from "./SolutionVisuals";
 
 const icons: Record<string, LucideIcon> = {
   Landmark,
@@ -26,14 +22,9 @@ const icons: Record<string, LucideIcon> = {
   TrendingDown,
   Zap,
   UserRound,
-};
-
-const visuals: Record<string, () => React.ReactNode> = {
-  dashboard: DashboardVisual,
-  ai: AIVisual,
-  debt: SavingsVisual,
-  bills: BillsVisual,
-  manager: ManagerVisual,
+  Send,
+  PiggyBank,
+  PieChart,
 };
 
 export function Solution() {
@@ -48,7 +39,6 @@ export function Solution() {
       <StackedCards heightClass="h-[80vh] md:h-[90vh]">
         {SOLUTION.tabs.map((t) => {
           const Icon = icons[t.icon];
-          const Visual = visuals[t.id];
           return (
             <article
               key={t.id}
@@ -68,13 +58,12 @@ export function Solution() {
               </div>
 
               <div className="flex items-center justify-center md:w-[46%] md:shrink-0">
-                {/* Uses public/screens/<id>.(png|jpg|jpeg|webp) if present, else the mockup.
-                    The dark panel is applied only to the mockup, not the screenshot. */}
+                {/* Real screenshot from public/screens/<tab id>. Every tab has
+                    one now, so the hand-built mockups that used to stand in
+                    here are gone. */}
                 <AppScreen
                   base={`/screens/${t.id}`}
                   alt={`Klario ${t.eyebrow} screen`}
-                  fallback={<Visual />}
-                  fallbackClassName="w-full rounded-2xl border border-ink/10 bg-phone-dark p-5 text-white/95 shadow-[0_30px_80px_-30px_rgba(13,13,14,0.4)] md:p-6"
                 />
               </div>
             </article>

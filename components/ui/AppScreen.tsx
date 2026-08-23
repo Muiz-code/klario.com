@@ -20,7 +20,9 @@ export function AppScreen({
 }: {
   base: string;
   alt: string;
-  fallback: React.ReactNode;
+  /** Optional. Every tab now ships a real screenshot, so this exists only as a
+   *  safety net for a file that fails to load, not as a design element. */
+  fallback?: React.ReactNode;
   /** Wrapper applied only to the mockup fallback (e.g. its dark panel). The
    *  real screenshot renders bare in the phone frame, with no background. */
   fallbackClassName?: string;

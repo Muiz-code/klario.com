@@ -122,7 +122,15 @@ export function Section({
               )}
             </ScrollReveal>
 
+            {/* `amount="some"` on the CONTENT column, not the default 0.25.
+                This slot holds arbitrary-height content, and a percentage
+                threshold silently fails once that content is taller than about
+                four viewports: 25% of it can never be on screen at once, the
+                reveal never fires, and everything inside stays at opacity 0.
+                The Problem section's card stack hit exactly that and rendered
+                blank. Any part visible is the correct trigger here. */}
             <ScrollReveal
+              amount="some"
               className={cn(
                 "flex flex-col gap-10",
                 titleRight && "lg:order-1"
