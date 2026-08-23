@@ -9,6 +9,7 @@ import { Pricing } from "@/components/sections/Pricing";
 import { Faq } from "@/components/sections/Faq";
 import { Download } from "@/components/sections/Download";
 import { AnchorClubCTA } from "@/components/sections/AnchorClubCTA";
+import { Team } from "@/components/sections/Team";
 import { Contact } from "@/components/sections/Contact";
 import { Footer } from "@/components/layout/Footer";
 
@@ -25,6 +26,7 @@ export default function Home() {
         <Security />
         <Pricing />
         <Faq />
+        <Team />
         <Download />
         <Contact />
       </main>

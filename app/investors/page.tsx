@@ -17,6 +17,7 @@ import { DownloadDeckButton } from "@/components/investors/DownloadDeckButton";
 import { GuillocheRosette, CertificateDivider } from "@/components/ui/Engraving";
 import { StackedCards } from "@/components/ui/StackedCards";
 import { SectionEngrave } from "@/components/ui/SectionEngrave";
+import { Team } from "@/components/sections/Team";
 import { INVESTORS } from "@/lib/investors";
 
 export const metadata: Metadata = {
@@ -593,6 +594,9 @@ export default function InvestorsPage() {
             </ScrollReveal>
           </Container>
         </section>
+
+        {/* ── The team ── */}
+        <Team />
 
         {/* ── Two investor tracks ── */}
         <section className="relative overflow-hidden bg-ink py-24 text-bg md:py-32">
