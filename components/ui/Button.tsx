@@ -53,7 +53,10 @@ export function Button(props: AsLink | AsButton) {
     }
     // mailto:/tel: and static files (e.g. a PDF in /public) must use a plain
     // anchor, not Next's router-based Link. Files also get a download hint.
-    const isProtocol = /^(mailto:|tel:)/.test(href);
+    // Any scheme that is not http(s): mailto:, tel:, and the app's own
+    // klario:// deep links. http(s) returned above; the router must never see
+    // these, or a deep link is treated as a page path and 404s.
+    const isProtocol = /^[a-z][a-z0-9+.-]*:/i.test(href);
     const isFile = href.startsWith("/") && /\.[a-z0-9]+$/i.test(href);
     if (isProtocol || isFile) {
       return (
