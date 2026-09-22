@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { promises as fs } from "fs";
 import path from "path";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { TemplatesLanding, type TemplateEntry } from "@/components/templates/TemplatesLanding";
 
 /**
@@ -32,5 +34,11 @@ async function loadCatalogue(): Promise<TemplateEntry[]> {
 
 export default async function TemplatesPage() {
   const catalogue = await loadCatalogue();
-  return <TemplatesLanding catalogue={catalogue} />;
+  return (
+    <>
+      <Navbar theme="light" />
+      <TemplatesLanding catalogue={catalogue} />
+      <Footer />
+    </>
+  );
 }

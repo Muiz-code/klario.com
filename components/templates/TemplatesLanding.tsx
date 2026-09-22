@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
-import { Logo } from "@/components/layout/Logo";
 import { cn } from "@/lib/utils";
 
 export type TemplateEntry = {
@@ -67,13 +66,11 @@ export function TemplatesLanding({ catalogue }: { catalogue: TemplateEntry[] }) 
 
   return (
     <main className="min-h-dvh bg-bg">
-      <Container className="py-12 md:py-16">
-        <Logo className="mb-10" />
-
+      <Container className="pt-32 pb-20 md:pt-40 md:pb-28">
         <header className="max-w-3xl">
           <span className="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.2em] text-gold/80">
             <span className="h-px w-6 bg-gold/40" />
-            Budget templates
+            Free resources · Budget templates
           </span>
           <h1 className="mt-4 font-[family-name:var(--font-jakarta)] text-4xl font-semibold tracking-tight text-mahogany md:text-5xl">
             A budget for your kind of business
@@ -169,7 +166,6 @@ export function TemplatesLanding({ catalogue }: { catalogue: TemplateEntry[] }) 
           </p>
         </section>
 
-        <p className="mt-10 text-xs text-muted">Klario · klario.finance</p>
       </Container>
     </main>
   );

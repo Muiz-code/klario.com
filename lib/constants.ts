@@ -112,6 +112,8 @@ export const FOOTER = {
         { label: "About", href: "#problem" },
         { label: "Investors", href: "/investors" },
         { label: "Anchor Club", href: "/anchor-club" },
+        { label: "Free resources", href: "/resources" },
+        { label: "Budget templates", href: "/templates" },
         { label: "Contact", href: "#contact" },
         { label: "Beta program", action: "beta" as const },
       ],
@@ -186,6 +188,7 @@ export const NAV_LINKS = [
   { label: "Features", href: "/#features" },
   { label: "Security", href: "/#security" },
   { label: "Pricing", href: "/#pricing" },
+  { label: "Resources", href: "/resources" },
   { label: "Investors", href: "/investors" },
   { label: "Blog", href: "/blog" },
 ] as const;
