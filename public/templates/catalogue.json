@@ -1,0 +1,311 @@
+[
+  {
+    "mode": "fast",
+    "id": "agriculture",
+    "name": "Agriculture & Farming",
+    "description": "For crop, poultry, fish and livestock farms.",
+    "file": "fast/Klario_Fast_Budget_agriculture.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "My Month",
+      "My Year"
+    ]
+  },
+  {
+    "mode": "advanced",
+    "id": "agriculture",
+    "name": "Agriculture & Farming",
+    "description": "For crop, poultry, fish and livestock farms.",
+    "file": "advanced/Klario_Advanced_Budget_agriculture.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "Setup",
+      "Budget",
+      "Actuals",
+      "Variance"
+    ]
+  },
+  {
+    "mode": "fast",
+    "id": "corporate",
+    "name": "Large Company (Departmental)",
+    "description": "Department-by-department budget for established companies.",
+    "file": "fast/Klario_Fast_Budget_corporate.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "My Month",
+      "My Year"
+    ]
+  },
+  {
+    "mode": "advanced",
+    "id": "corporate",
+    "name": "Large Company (Departmental)",
+    "description": "Department-by-department budget for established companies.",
+    "file": "advanced/Klario_Advanced_Budget_corporate.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "Setup",
+      "Budget",
+      "Actuals",
+      "Variance"
+    ]
+  },
+  {
+    "mode": "fast",
+    "id": "event-manager",
+    "name": "Event Manager & Planner",
+    "description": "For event planners, decorators and rental businesses. Includes a per-event budget sheet.",
+    "file": "fast/Klario_Fast_Budget_event-manager.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "My Month",
+      "My Year"
+    ]
+  },
+  {
+    "mode": "advanced",
+    "id": "event-manager",
+    "name": "Event Manager & Planner",
+    "description": "For event planners, decorators and rental businesses. Includes a per-event budget sheet.",
+    "file": "advanced/Klario_Advanced_Budget_event-manager.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "Setup",
+      "Budget",
+      "Actuals",
+      "Variance",
+      "Event budget"
+    ]
+  },
+  {
+    "mode": "fast",
+    "id": "fashion",
+    "name": "Fashion & Tailoring",
+    "description": "For fashion designers, tailors and clothing brands.",
+    "file": "fast/Klario_Fast_Budget_fashion.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "My Month",
+      "My Year"
+    ]
+  },
+  {
+    "mode": "advanced",
+    "id": "fashion",
+    "name": "Fashion & Tailoring",
+    "description": "For fashion designers, tailors and clothing brands.",
+    "file": "advanced/Klario_Advanced_Budget_fashion.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "Setup",
+      "Budget",
+      "Actuals",
+      "Variance"
+    ]
+  },
+  {
+    "mode": "fast",
+    "id": "food-vendor",
+    "name": "Food Vendor & Restaurant",
+    "description": "For bukas, restaurants, food stalls, bakers and cloud kitchens.",
+    "file": "fast/Klario_Fast_Budget_food-vendor.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "My Month",
+      "My Year"
+    ]
+  },
+  {
+    "mode": "advanced",
+    "id": "food-vendor",
+    "name": "Food Vendor & Restaurant",
+    "description": "For bukas, restaurants, food stalls, bakers and cloud kitchens.",
+    "file": "advanced/Klario_Advanced_Budget_food-vendor.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "Setup",
+      "Budget",
+      "Actuals",
+      "Variance"
+    ]
+  },
+  {
+    "mode": "fast",
+    "id": "general",
+    "name": "General Business",
+    "description": "A flexible budget for any small or medium business.",
+    "file": "fast/Klario_Fast_Budget_general.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "My Month",
+      "My Year"
+    ]
+  },
+  {
+    "mode": "advanced",
+    "id": "general",
+    "name": "General Business",
+    "description": "A flexible budget for any small or medium business.",
+    "file": "advanced/Klario_Advanced_Budget_general.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "Setup",
+      "Budget",
+      "Actuals",
+      "Variance"
+    ]
+  },
+  {
+    "mode": "fast",
+    "id": "logistics",
+    "name": "Transport & Logistics",
+    "description": "For dispatch riders, haulage and delivery companies.",
+    "file": "fast/Klario_Fast_Budget_logistics.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "My Month",
+      "My Year"
+    ]
+  },
+  {
+    "mode": "advanced",
+    "id": "logistics",
+    "name": "Transport & Logistics",
+    "description": "For dispatch riders, haulage and delivery companies.",
+    "file": "advanced/Klario_Advanced_Budget_logistics.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "Setup",
+      "Budget",
+      "Actuals",
+      "Variance"
+    ]
+  },
+  {
+    "mode": "fast",
+    "id": "retail",
+    "name": "Retail Shop & Trader",
+    "description": "For shops, market traders, supermarkets and online sellers.",
+    "file": "fast/Klario_Fast_Budget_retail.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "My Month",
+      "My Year"
+    ]
+  },
+  {
+    "mode": "advanced",
+    "id": "retail",
+    "name": "Retail Shop & Trader",
+    "description": "For shops, market traders, supermarkets and online sellers.",
+    "file": "advanced/Klario_Advanced_Budget_retail.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "Setup",
+      "Budget",
+      "Actuals",
+      "Variance"
+    ]
+  },
+  {
+    "mode": "fast",
+    "id": "salon",
+    "name": "Salon & Beauty",
+    "description": "For hair salons, barbers, spas and beauty studios.",
+    "file": "fast/Klario_Fast_Budget_salon.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "My Month",
+      "My Year"
+    ]
+  },
+  {
+    "mode": "advanced",
+    "id": "salon",
+    "name": "Salon & Beauty",
+    "description": "For hair salons, barbers, spas and beauty studios.",
+    "file": "advanced/Klario_Advanced_Budget_salon.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "Setup",
+      "Budget",
+      "Actuals",
+      "Variance"
+    ]
+  },
+  {
+    "mode": "fast",
+    "id": "services",
+    "name": "Freelancer & Agency",
+    "description": "For consultants, creatives, agencies and professional services.",
+    "file": "fast/Klario_Fast_Budget_services.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "My Month",
+      "My Year"
+    ]
+  },
+  {
+    "mode": "advanced",
+    "id": "services",
+    "name": "Freelancer & Agency",
+    "description": "For consultants, creatives, agencies and professional services.",
+    "file": "advanced/Klario_Advanced_Budget_services.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "Setup",
+      "Budget",
+      "Actuals",
+      "Variance"
+    ]
+  },
+  {
+    "mode": "fast",
+    "id": "startup",
+    "name": "Startup",
+    "description": "For early-stage and tech startups. Tracks monthly burn and runway.",
+    "file": "fast/Klario_Fast_Budget_startup.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "My Month",
+      "My Year"
+    ]
+  },
+  {
+    "mode": "advanced",
+    "id": "startup",
+    "name": "Startup",
+    "description": "For early-stage and tech startups. Tracks monthly burn and runway.",
+    "file": "advanced/Klario_Advanced_Budget_startup.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "Setup",
+      "Budget",
+      "Actuals",
+      "Variance"
+    ]
+  }
+]
