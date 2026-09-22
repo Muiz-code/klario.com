@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 
 export type TemplateEntry = {
   mode: "fast" | "advanced";
+  /** Who it is for. Missing means a business (the first templates predate the field). */
+  audience?: "business" | "personal";
   id: string;
   name: string;
   description: string;
@@ -36,7 +38,7 @@ const MODES: { key: Mode; title: string; strap: string; points: string[] }[] = [
     points: [
       "Setup, Budget, Actuals and Variance sheets, with a chart.",
       "Plan the same every month or fill each month yourself.",
-      "Every line item can be renamed to fit your business.",
+      "Every line item can be renamed to fit you.",
       "Burn and runway for startups, a per-event sheet for event managers.",
     ],
   },
@@ -50,16 +52,20 @@ const MODES: { key: Mode; title: string; strap: string; points: string[] }[] = [
 export function TemplatesLanding({ catalogue }: { catalogue: TemplateEntry[] }) {
   const [mode, setMode] = useState<Mode>("fast");
 
-  // One card per business type, holding both files.
-  const types = useMemo(() => {
-    const byId = new Map<string, { id: string; name: string; description: string; fast?: TemplateEntry; advanced?: TemplateEntry }>();
+  // One card per type, holding both files, split into who it is for.
+  const groups = useMemo(() => {
+    const byId = new Map<string, { id: string; name: string; description: string; audience: "business" | "personal"; fast?: TemplateEntry; advanced?: TemplateEntry }>();
     for (const t of catalogue) {
-      const row = byId.get(t.id) ?? { id: t.id, name: t.name, description: t.description };
+      const row = byId.get(t.id) ?? { id: t.id, name: t.name, description: t.description, audience: t.audience ?? "business" };
       row[t.mode] = t;
       byId.set(t.id, row);
     }
     // General first: it is the one most people want.
-    return [...byId.values()].sort((a, b) => (a.id === "general" ? -1 : b.id === "general" ? 1 : a.name.localeCompare(b.name)));
+    const all = [...byId.values()].sort((a, b) => (a.id === "general" ? -1 : b.id === "general" ? 1 : a.name.localeCompare(b.name)));
+    return [
+      { key: "personal", title: "For yourself", intro: "Students, staff and anyone paid monthly.", types: all.filter((t) => t.audience === "personal") },
+      { key: "business", title: "For your business", intro: "Eleven kinds of business, from a food vendor to a startup.", types: all.filter((t) => t.audience === "business") },
+    ].filter((g) => g.types.length > 0);
   }, [catalogue]);
 
   const current = MODES.find((m) => m.key === mode)!;
@@ -73,11 +79,12 @@ export function TemplatesLanding({ catalogue }: { catalogue: TemplateEntry[] }) 
             Free resources · Budget templates
           </span>
           <h1 className="mt-4 font-[family-name:var(--font-jakarta)] text-4xl font-semibold tracking-tight text-mahogany md:text-5xl">
-            A budget for your kind of business
+            A budget for your business, or just for you
           </h1>
           <p className="mt-4 text-[17px] leading-relaxed text-body">
-            Download the Excel file, fill it in, and upload it to Klario when you are ready. Klario reads it, tracks it
-            against your bank, and tells you how the month is going. Free, no sign-in needed.
+            For a business, a student, or anyone paid monthly. Download the Excel file, fill it in, and upload it to Klario
+            when you are ready. Klario reads it, tracks it against your bank, and tells you how the month is going. Free,
+            no sign-in needed.
           </p>
         </header>
 
@@ -116,16 +123,19 @@ export function TemplatesLanding({ catalogue }: { catalogue: TemplateEntry[] }) 
           })}
         </div>
 
-        {/* One card per business type */}
-        <section className="mt-12" aria-label={`${current.title} downloads`}>
+        <p className="mt-10 text-[15px] text-muted">
+          Every file opens in Excel, Google Sheets or Numbers. Each has a short "How to use" sheet at the front.
+        </p>
+
+        {/* One card per type, grouped by who it is for */}
+        {groups.map((g) => (
+        <section key={g.key} className="mt-10" aria-label={`${current.title} downloads, ${g.title.toLowerCase()}`}>
           <h2 className="font-[family-name:var(--font-jakarta)] text-2xl font-semibold tracking-tight text-mahogany">
-            {current.title}, by business type
+            {g.title}
           </h2>
-          <p className="mt-2 text-[15px] text-muted">
-            Every file opens in Excel, Google Sheets or Numbers. Each has a short "How to use" sheet at the front.
-          </p>
+          <p className="mt-2 text-[15px] text-muted">{g.intro}</p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {types.map((t) => {
+            {g.types.map((t) => {
               const chosen = t[mode];
               const other = t[mode === "fast" ? "advanced" : "fast"];
               return (
@@ -152,6 +162,7 @@ export function TemplatesLanding({ catalogue }: { catalogue: TemplateEntry[] }) 
             })}
           </div>
         </section>
+        ))}
 
         <section className="mt-14 max-w-3xl rounded-3xl border border-border-gold bg-surface p-6 md:p-8">
           <h2 className="font-[family-name:var(--font-jakarta)] text-xl font-semibold text-mahogany">What happens next</h2>

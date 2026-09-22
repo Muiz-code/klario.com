@@ -10,7 +10,8 @@
       "How to use",
       "My Month",
       "My Year"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "advanced",
@@ -25,7 +26,8 @@
       "Budget",
       "Actuals",
       "Variance"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "fast",
@@ -38,7 +40,8 @@
       "How to use",
       "My Month",
       "My Year"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "advanced",
@@ -53,7 +56,8 @@
       "Budget",
       "Actuals",
       "Variance"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "fast",
@@ -66,7 +70,8 @@
       "How to use",
       "My Month",
       "My Year"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "advanced",
@@ -82,7 +87,8 @@
       "Actuals",
       "Variance",
       "Event budget"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "fast",
@@ -95,7 +101,8 @@
       "How to use",
       "My Month",
       "My Year"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "advanced",
@@ -110,7 +117,8 @@
       "Budget",
       "Actuals",
       "Variance"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "fast",
@@ -123,7 +131,8 @@
       "How to use",
       "My Month",
       "My Year"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "advanced",
@@ -138,7 +147,8 @@
       "Budget",
       "Actuals",
       "Variance"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "fast",
@@ -151,7 +161,8 @@
       "How to use",
       "My Month",
       "My Year"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "advanced",
@@ -166,7 +177,8 @@
       "Budget",
       "Actuals",
       "Variance"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "fast",
@@ -179,7 +191,8 @@
       "How to use",
       "My Month",
       "My Year"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "advanced",
@@ -194,7 +207,8 @@
       "Budget",
       "Actuals",
       "Variance"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "fast",
@@ -207,7 +221,8 @@
       "How to use",
       "My Month",
       "My Year"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "advanced",
@@ -222,7 +237,8 @@
       "Budget",
       "Actuals",
       "Variance"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "fast",
@@ -235,7 +251,8 @@
       "How to use",
       "My Month",
       "My Year"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "advanced",
@@ -250,7 +267,8 @@
       "Budget",
       "Actuals",
       "Variance"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "fast",
@@ -263,7 +281,8 @@
       "How to use",
       "My Month",
       "My Year"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "advanced",
@@ -278,7 +297,8 @@
       "Budget",
       "Actuals",
       "Variance"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "fast",
@@ -291,7 +311,8 @@
       "How to use",
       "My Month",
       "My Year"
-    ]
+    ],
+    "audience": "business"
   },
   {
     "mode": "advanced",
@@ -299,6 +320,67 @@
     "name": "Startup",
     "description": "For early-stage and tech startups. Tracks monthly burn and runway.",
     "file": "advanced/Klario_Advanced_Budget_startup.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "Setup",
+      "Budget",
+      "Actuals",
+      "Variance"
+    ],
+    "audience": "business"
+  },
+  {
+    "mode": "fast",
+    "audience": "personal",
+    "id": "student",
+    "name": "Student",
+    "description": "For students: allowance, hustle, fees, hostel and everyday costs.",
+    "file": "fast/Klario_Fast_Budget_student.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "My Month",
+      "My Year"
+    ]
+  },
+  {
+    "mode": "advanced",
+    "audience": "personal",
+    "id": "student",
+    "name": "Student",
+    "description": "For students: allowance, hustle, fees, hostel and everyday costs.",
+    "file": "advanced/Klario_Advanced_Budget_student.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "Setup",
+      "Budget",
+      "Actuals",
+      "Variance"
+    ]
+  },
+  {
+    "mode": "fast",
+    "audience": "personal",
+    "id": "salary-earner",
+    "name": "Salary Earner",
+    "description": "For staff and anyone paid monthly: salary, bills, family and savings.",
+    "file": "fast/Klario_Fast_Budget_salary-earner.xlsx",
+    "version": "1.0",
+    "sheets": [
+      "How to use",
+      "My Month",
+      "My Year"
+    ]
+  },
+  {
+    "mode": "advanced",
+    "audience": "personal",
+    "id": "salary-earner",
+    "name": "Salary Earner",
+    "description": "For staff and anyone paid monthly: salary, bills, family and savings.",
+    "file": "advanced/Klario_Advanced_Budget_salary-earner.xlsx",
     "version": "1.0",
     "sheets": [
       "How to use",
