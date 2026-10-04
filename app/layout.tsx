@@ -5,6 +5,7 @@ import { siteMetadata } from "@/lib/metadata";
 import { jsonLd } from "@/lib/jsonld";
 import { AnalyticsBeacon } from "@/components/AnalyticsBeacon";
 import { RouteTransition } from "@/components/providers/RouteTransition";
+import { SmoothScroll } from "@/components/providers/SmoothScroll";
 import "./globals.css";
 
 // Brand type system: Space Grotesk for display/headlines, Manrope for body/UI.
@@ -61,6 +62,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <SmoothScroll />
         <RouteTransition>{children}</RouteTransition>
         <AnalyticsBeacon />
         <Analytics />

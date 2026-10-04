@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import {
   Landmark, Bot, Clock, Sparkles, PiggyBank, Zap, UserRound,
-  Building2, TrendingUp, Download, Presentation, ArrowRight, type LucideIcon,
+  Building2, TrendingUp, Download, Presentation, ArrowRight, Send, PieChart, FileText, type LucideIcon,
 } from "lucide-react";
 import { AppShell } from "@/components/providers/AppShell";
 import { Navbar } from "@/components/layout/Navbar";
@@ -12,7 +12,6 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { ResearchCharts } from "@/components/investors/ResearchCharts";
 import { AudienceMix } from "@/components/investors/AudienceMix";
-import { PrintButton } from "@/components/investors/PrintButton";
 import { DownloadDeckButton } from "@/components/investors/DownloadDeckButton";
 import { GuillocheRosette, CertificateDivider } from "@/components/ui/Engraving";
 import { StackedCards } from "@/components/ui/StackedCards";
@@ -23,12 +22,12 @@ import { INVESTORS } from "@/lib/investors";
 export const metadata: Metadata = {
   title: "Investors | Klario Finance",
   description:
-    "Klario is building the money-clarity layer for everyday Nigeria: every bank account unified, an AI that understands naira, and clarity turned into action. Partnership and investment opportunities.",
+    "Klario is building the financial intelligence layer for everyday Nigeria: every bank account unified, an AI that understands naira, and clarity turned into action. Partnership and investment opportunities.",
   alternates: { canonical: "/investors" },
 };
 
 const icons: Record<string, LucideIcon> = {
-  Landmark, Bot, Clock, Sparkles, PiggyBank, Zap, UserRound, Building2, TrendingUp,
+  Landmark, Bot, Clock, Sparkles, PiggyBank, Zap, UserRound, Building2, TrendingUp, Send, PieChart, FileText,
 };
 
 export default function InvestorsPage() {
@@ -53,9 +52,10 @@ export default function InvestorsPage() {
                 {I.hero.sub}
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
-                <PrintButton size="lg" className="gap-2">
+                {/* A real PDF built on the server (app/Klario-Investor-Brief.pdf), not a print of this page. */}
+                <Button href={I.hero.primaryCta.href} size="lg" className="no-print gap-2">
                   <Download size={17} /> {I.hero.primaryCta.label}
-                </PrintButton>
+                </Button>
                 <DownloadDeckButton size="lg" className="gap-2 border-bg/25 text-bg hover:border-bg hover:bg-bg/10">
                   <Presentation size={17} /> PowerPoint (.pptx)
                 </DownloadDeckButton>
@@ -655,9 +655,9 @@ export default function InvestorsPage() {
                 </h2>
                 <p className="mt-6 max-w-2xl text-[15px] leading-relaxed text-body/75">{I.ask.body}</p>
                 <div className="mt-9 flex flex-wrap gap-3">
-                  <PrintButton size="lg" className="gap-2">
+                  <Button href={I.ask.primaryCta.href} size="lg" className="no-print gap-2">
                     <Download size={17} /> {I.ask.primaryCta.label}
-                  </PrintButton>
+                  </Button>
                   <DownloadDeckButton size="lg" className="gap-2">
                     <Presentation size={17} /> PowerPoint (.pptx)
                   </DownloadDeckButton>

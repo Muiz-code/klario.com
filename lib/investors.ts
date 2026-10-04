@@ -6,7 +6,7 @@
 export const INVESTORS = {
   hero: {
     eyebrow: "Investors",
-    heading: "The money-clarity layer for",
+    heading: "The financial intelligence layer for",
     emphasis: "everyday Nigeria.",
     sub: "Nigerians bank across three to five apps and still can't answer a simple question: how am I actually doing? Klario unifies every account, adds an AI that understands naira, and turns clarity into action, saving, budgeting, paying, all in one place.",
     primaryCta: { label: "Download the investor brief", href: "/Klario-Investor-Brief.pdf" },
@@ -192,9 +192,13 @@ export const INVESTORS = {
     pillars: [
       { icon: "Landmark", title: "Unified dashboard", body: "Every Nigerian bank account, one live view of balances, spending and net worth." },
       { icon: "Sparkles", title: "KlarioAI advisor", body: "An AI that speaks naira. \"Can I afford this?\" gets a real answer, not a generic tip." },
+      { icon: "Send", title: "Send from any bank", body: "Pay anyone from any connected account, authorised once by direct debit. The fee is shown before you send, and the person receives the full amount." },
       { icon: "PiggyBank", title: "Smart savings", body: "Set a goal; Klario funds a dedicated savings wallet automatically on schedule." },
+      { icon: "PieChart", title: "Budgets that hold money back", body: "Give every naira of income a job, then let Klario hold it back and release it through the month." },
+      { icon: "FileText", title: "Money summaries", body: "What you spent, who it went to and through which bank, for any day, week, month, year or your own dates, with a PDF to keep." },
       { icon: "Zap", title: "Bill payments", body: "Airtime, data, electricity and more, paid in-app with no redirects." },
-      { icon: "UserRound", title: "Human financial manager", body: "Top-tier users get a dedicated human advisor with a personal plan and monthly calls." },
+      { icon: "Building2", title: "Klario Business", body: "A web dashboard for business owners: books and ledger, budgets, statements, staff ID cards and attendance, kept apart from personal money." },
+      { icon: "UserRound", title: "Human financial manager", body: "Business customers get a dedicated human advisor with a personal plan and monthly calls." },
     ],
   },
 
@@ -204,8 +208,8 @@ export const INVESTORS = {
     emphasis: "compound.",
     streams: [
       { title: "Subscriptions", body: "A free tier for reach, and one paid plan sold to two different buyers: Money Manager for personal accounts, priced inside the ₦2,500-4,000 band our beta community said they would pay (median ₦3,250), and Financial Executive for businesses, priced per customer on the accounts and setup they need. The free tier is the on-ramp and still earns, because money keeps moving on it." },
-      { title: "Partnerships", body: "Distribution and product partnerships with regulated financial institutions that want to reach engaged, verified, financially active users." },
-      { title: "Referrals", body: "Warm, permissioned introductions to vetted savings and investment products, on the user's terms." },
+      { title: "Transfer charges", body: "Every transfer carries a small Klario charge on top of the partner costs, shown to the sender before they confirm. It earns on the free tier too, because money keeps moving there." },
+      { title: "Partnerships & referrals", body: "Distribution and product partnerships with regulated financial institutions that want engaged, verified, financially active users, and permissioned introductions to vetted savings and investment products, on the user's terms." },
     ],
     note: "Klario is not a bank and never custodies funds. Regulated money movement is carried out by licensed partners on the user's instruction, so the model scales without Klario taking on banking-license risk directly.",
   },
@@ -219,8 +223,9 @@ export const INVESTORS = {
     columns: ["Capability", "Free", "Money Manager", "Financial Executive"],
     rows: [
       ["Sold to", "Anyone", "Personal", "Business"],
-      ["Linked bank accounts", "2", "5", "10+, agreed"],
-      ["Accounts with analytics", "1", "All", "All"],
+      ["Linked bank accounts", "2", "3", "10+, agreed"],
+      ["Accounts with analytics", "1", "3", "All"],
+      ["Daily sending limit", "₦50,000", "₦200,000", "₦5,000,000"],
       ["KlarioAI messages / month", "10", "200", "600"],
       ["Commingling tracking", "No", "No", "Yes"],
       ["Data export (NDPR)", "Yes", "Yes", "Yes"],
@@ -228,7 +233,7 @@ export const INVESTORS = {
     ],
     note: "Business-versus-personal intelligence (commingling alerts, monthly report, tax-impact estimates) is gated to solo-founder and SME account types, independent of plan tier.",
     proof: [
-      { value: "~80", label: "local spending contexts the engine recognises (jollof, Uber, DSTV, FIRS, and more)" },
+      { value: "~80", label: "local spending contexts the engine recognises (jollof, Uber, DSTV, NRS, and more)" },
       { value: "30%", label: "company tax rate that mis-booked personal spend is needlessly exposed to" },
       { value: "No custody", label: "funds never sit with Klario; licensed partners carry the money-movement licence and capital" },
     ],
@@ -244,7 +249,7 @@ export const INVESTORS = {
       body: "Partner with Klario to reach a verified, engaged, multi-banked audience, gain permissioned insight into real financial behaviour, and co-build features that drive deposits, retention and cross-sell.",
       points: [
         "Distribution to financially active, KYC-verified users",
-        "A clarity layer that sits above accounts, not competing with your core",
+        "A financial intelligence layer that sits above accounts, not competing with your core",
         "Co-built savings, lending and deposit journeys",
         "Aggregated, consented insight into how customers actually manage money",
       ],
@@ -271,27 +276,26 @@ export const INVESTORS = {
   // re-check every cell before each investor send. Findings from this review:
   //   - Revolut: core model = you bank with it; only a "Limited" AI assistant;
   //     not available in NG. Cells OK.
-  //   - Emma: live PFM aggregator, cells OK. ⚠️ MINT WAS DISCONTINUED by Intuit
-  //     (closed to users ~Mar 2024, folded into Credit Karma). Listing it as a
-  //     current competitor is outdated - drop "Mint" or swap in a live
-  //     aggregator before this goes to investors.
+  //   - Emma: live PFM aggregator, cells OK. Mint was dropped from the row on
+  //     4 Oct 2026: Intuit closed it in 2024 and folded it into Credit Karma.
   //   - Cleo: connects accounts via Plaid, so "Sits on your existing banks" is
   //     arguably "Yes" rather than "Partly"; AI advisor "Yes" OK; not in NG.
   //   - PiggyVest / Cowrywise: custody funds, NG-native, no AI advisor, no
   //     business-vs-personal. All cells OK.
-  //   - Kuda / Carbon: you bank with them, NG-native. ⚠️ Kuda now ships an AI
-  //     assistant ("Ada") - "AI money advisor" may be "Limited" not "No"; verify
-  //     current scope before relying on the "No".
+  //   - Kuda / Carbon: you bank with them, NG-native. Checked 4 Oct 2026: Kuda's
+  //     AI is a customer-service chatbot being trained on support conversations
+  //     (BusinessDay, "Kuda plans AI integrations as transactions hit N14.3tn in
+  //     Q1"), not a money advisor, so "No" stands. Re-check before each send.
   competitors: {
     label: "The landscape",
     heading: "Everyone owns a slice.",
-    emphasis: "No one owns the clarity layer.",
+    emphasis: "No one owns the intelligence layer.",
     intro: "Neobanks want you to bank with them. Savings apps do one job. PFM aggregators exist abroad, but none are naira-native. Klario sits on top of the banks Nigerians already use and turns them into one clear, intelligent view.",
     columns: ["", "Category", "Sits on your existing banks", "Nigeria-native", "AI money advisor", "Business vs personal"],
     rows: [
-      { name: "Klario", cat: "Money-clarity layer", klario: true, cells: ["Yes", "Yes", "Yes", "Yes"] },
+      { name: "Klario", cat: "Financial intelligence layer", klario: true, cells: ["Yes", "Yes", "Yes", "Yes"] },
       { name: "Revolut (UK)", cat: "Neobank / super-app", klario: false, cells: ["No, you bank with it", "No", "Limited", "No"] },
-      { name: "Emma / Mint (UK-US)", cat: "PFM aggregator", klario: false, cells: ["Yes", "No", "Limited", "No"] },
+      { name: "Emma (UK)", cat: "PFM aggregator", klario: false, cells: ["Yes", "No", "Limited", "No"] },
       { name: "Cleo (US-UK)", cat: "AI budgeting chat", klario: false, cells: ["Partly", "No", "Yes", "No"] },
       { name: "PiggyVest / Cowrywise", cat: "Savings & invest", klario: false, cells: ["No, holds funds", "Yes", "No", "No"] },
       { name: "Kuda / Carbon", cat: "Neobank / lending", klario: false, cells: ["No, you bank with it", "Yes", "No", "No"] },
@@ -312,12 +316,12 @@ export const INVESTORS = {
     label: "How we run",
     heading: "Lean by architecture,",
     emphasis: "not by cost-cutting.",
-    intro: "Because Klario reads money instead of moving it, there's no float, settlement, capital reserve or fraud liability to fund. The cost base is small and mostly variable, so gross margin widens as the user base grows.",
+    intro: "Klario orchestrates money movement but never holds it: licensed partners debit, settle and pay out on the user's instruction. So there's no float, settlement, capital reserve or custody liability to fund. The cost base is small and mostly variable, so gross margin widens as the user base grows.",
     drivers: [
       { title: "Cloud & database", body: "A single modern hosting and database stack. Low fixed cost that amortises across every new user." },
       { title: "AI inference", body: "Pay-per-use on a hosted model, tied to actual KlarioAI usage and capped per tier, so cost tracks revenue." },
       { title: "Open banking & KYC", body: "Per-active-user fees to licensed partners for account linking and identity checks. Variable, and only on engaged users." },
-      { title: "No money-movement cost", body: "Zero float, settlement, chargeback or transmission-licence overhead, the largest cost centre for most fintechs, is simply absent." },
+      { title: "Money movement, passed through", body: "Partner costs for each debit and payout are shown to the sender and paid with the transfer, so they never sit on our books. No float, settlement or transmission-licence overhead, the largest cost centre for most fintechs." },
     ],
     note: "Detailed unit economics (cost per active user, gross margin by tier, blended CAC and payback) are in the data room.",
   },
@@ -331,7 +335,7 @@ export const INVESTORS = {
     levers: [
       { phase: "Years 1-2", title: "Trust & reach", body: "Grow the free base and prove retention. Revenue is early subscription; the priority is engaged, verified users and a low-cost growth loop." },
       { phase: "Years 2-4", title: "Monetise clarity", body: "Convert to paid tiers and the SME business-versus-personal wedge. Subscription ARPU rises as automation and the human-advisor tier mature." },
-      { phase: "Years 4-5", title: "Orchestration upside", body: "With a licensed partner, transaction-linked revenue layers on top of subscriptions, once users already rely on Klario to understand their money." },
+      { phase: "Years 4-5", title: "Orchestration at scale", body: "Transaction-linked revenue, already live through our licensed partner on every transfer, grows with volume and layers on top of subscriptions as users rely on Klario to move as well as understand their money." },
     ],
     note: "Figures in any projection are illustrative and assumption-driven; Klario is pre-revenue. The full model is available under NDA in the data room.",
   },
@@ -340,7 +344,7 @@ export const INVESTORS = {
     label: "The raise",
     heading: "We're building the money app Nigeria",
     emphasis: "actually needs.",
-    body: "Klario is currently in private beta on a controlled test environment while we complete our regulatory and partner licensing. We're speaking with strategic and financial investors who want in early. The investor brief covers our roadmap, model and the round; the data room has the detail.",
+    body: "Klario is in closed testing with real bank connections: testers link their own accounts, and payments run through our licensed partner. It is not yet in the app stores. We're speaking with strategic and financial investors who want in early. The investor brief covers our roadmap, model and the round; the data room has the detail.",
     primaryCta: { label: "Download the investor brief", href: "/Klario-Investor-Brief.pdf" },
     secondaryCta: { label: "Talk to the founders", href: "mailto:invest@klario.finance?subject=Intro%20call" },
     // TODO(legal): counsel to review this disclaimer. The page pairs an

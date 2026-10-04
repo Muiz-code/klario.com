@@ -164,7 +164,7 @@ export const FAQS = [
   },
   {
     q: "How does Klario connect to my bank accounts?",
-    a: "Klario uses licensed open banking infrastructure to read your bank data securely. Your bank login credentials never touch Klario's servers. We receive read-only data through cryptographically signed APIs.",
+    a: "Klario uses licensed open banking infrastructure to read your bank data securely. Your bank login credentials never touch Klario's servers. Connecting a bank only lets Klario see it. Sending money from an account needs a separate direct-debit authorisation that you approve with your bank, and you can cancel it at any time.",
   },
   {
     q: "Is Klario safe to use?",
@@ -180,7 +180,7 @@ export const FAQS = [
   },
   {
     q: "When can I download the Klario app?",
-    a: "Klario is currently in pre-launch. Join the waitlist on klario.finance to be notified the moment we go live on iOS and Android.",
+    a: "Klario is in closed testing with a small group of testers, and not yet in the App Store or Google Play. Join the beta to be considered for a place, or the waitlist to hear the moment it goes live on iOS and Android.",
   },
 ] as const;
 
@@ -260,7 +260,7 @@ export const PROBLEM = {
     },
   ],
   sources:
-    "Klario Beta Insights, two waves combined (n = 331), July 2026. Company income tax rate: Federal Inland Revenue Service, Nigeria.",
+    "Klario Beta Insights, two waves combined (n = 331), July 2026. Company income tax rate: Nigeria Revenue Service (NRS).",
 } as const;
 
 export const DOWNLOAD = {
@@ -331,7 +331,7 @@ export const PRICING = {
       featured: true,
       audience: "personal",
       features: [
-        "5 bank connections",
+        "3 bank connections",
         "200 KlarioAI messages / month",
         "Analytics and exports across every account",
         "Automated budget engine with funded vaults",
@@ -383,7 +383,10 @@ export const SECURITY = {
     {
       icon: "Fingerprint",
       title: "Layered Account Security",
-      body: "A transaction PIN approves every payment, optional Face ID speeds up sign-in, and a fresh-device identity check confirms it's really you.",
+      // The fresh-device identity check is built but off
+      // (app_settings.device_trust_enforced = false). Add it back here when
+      // it is switched on. Two-factor login (TOTP) is live.
+      body: "A transaction PIN approves every payment, Face ID can speed up sign-in, and two-factor login is available.",
     },
     {
       icon: "ShieldCheck",
@@ -392,7 +395,8 @@ export const SECURITY = {
       // endpoints can read the data, and that is not what Klario does: reading
       // your transactions is the product. AES-256 at rest and TLS 1.3 in
       // transit is the true claim, and it is a strong one.
-      body: "AES-256 at rest, TLS 1.3 in transit. Your data is protected everywhere it sits and everywhere it travels.",
+      // TLS 1.3 where the device supports it; older devices may use 1.2.
+      body: "AES-256 at rest, TLS 1.2 or higher in transit. Your data is protected everywhere it sits and everywhere it travels.",
     },
     {
       icon: "BadgeCheck",
@@ -400,7 +404,9 @@ export const SECURITY = {
       // Was "Every user verified... Zero fake accounts". Not true while
       // BETA_SKIP_KYC_GATE is on in the app, and stating it as fact on a live
       // site is the kind of claim that is checked after something goes wrong.
-      body: "Bank Verification Number checks confirm real people behind real accounts before money moves.",
+      // Checks are skipped during beta (BETA_SKIP_KYC_GATE, Smile ID on
+      // sandbox). Drop "being switched on" once they are enforced again.
+      body: "Bank Verification Number checks confirm real people behind real accounts. Being switched on as we leave beta.",
     },
     {
       icon: "KeyRound",
@@ -424,6 +430,21 @@ export const SECURITY = {
       body: "Database rules enforce, on every single query, that you can only ever reach your own data.",
     },
   ],
+  // How the backend is put together, in public words. Only what is true and
+  // switched on: no region (not stated until confirmed), and no device-key
+  // signing until device_signature_enforced is on.
+  stack: {
+    heading: "How Klario is built",
+    intro: "One database holds the rules. Every Klario app reads the same numbers, and nobody reaches data that isn't theirs.",
+    rows: [
+      { label: "Database", body: "Managed Postgres with row-level security on every table. Each query can only reach what that person is allowed to see." },
+      { label: "Books", body: "A double-entry ledger built automatically from every transaction, so your dashboard, your statements and your bank balance agree." },
+      { label: "Server", body: "Small, separate server functions for each partner: bank data, payments, bills, identity and AI. Each checks who is calling before it acts." },
+      { label: "Money", body: "Money only moves from the Klario app, never from the web. Every fee is shown before you confirm, and every partner callback is verified first." },
+      { label: "AI", body: "Kai, our assistant, runs on Anthropic's Claude. It reads documents and sorts transactions, and business use is capped per member." },
+      { label: "What we never keep", body: "Your bank login, your BVN and your full account number. What we don't hold, we can't lose." },
+    ],
+  },
 } as const;
 
 export const HOW_IT_WORKS = {
@@ -480,7 +501,7 @@ export const SOLUTION = {
       icon: "Send",
       eyebrow: "Send Money",
       title: "Send from any account you've connected.",
-      body: "Pick the account, send, done. Split one transfer across several banks when no single account covers it. Klario charges nothing to send.",
+      body: "Pick the account, send, done. Split one transfer across several banks when no single account covers it. The fee is shown before you confirm, and the person you pay receives the full amount.",
     },
     {
       id: "savings",

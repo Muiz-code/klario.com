@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { KlarioLogoLottie } from "@/components/ui/KlarioLogoLottie";
+import { KlarioWordmarkLoader } from "@/components/ui/KlarioLoader";
 
 // The alignment mark, generated from maths (never an image). Two arcs per ring
 // interrupted by the vertical channel; left arc -> .hl plate, right arc -> .hr.
@@ -112,17 +112,12 @@ function Half({
       />
       {/* Tagline and (in splash mode) the animated wordmark share one grid
           cell, so swapping between them never shifts the composition. The
-          Lottie mounts hidden from the start so its JSON is loaded and ready
-          the moment the swap fires. */}
+          wordmark loader mounts at the swap, so its letters press in then. */}
       <div className="grid place-items-center">
-        {logoMode && (
-          <KlarioLogoLottie
-            play={showLogo}
-            labelled={labelled}
-            className={`col-start-1 row-start-1 w-72 transition-opacity duration-500 md:w-104 ${
-              showLogo ? "opacity-100" : "opacity-0"
-            }`}
-          />
+        {logoMode && showLogo && (
+          <span className="col-start-1 row-start-1" {...(labelled ? {} : { "aria-hidden": true })}>
+            <KlarioWordmarkLoader width={300} variant="dark" label="Klario" />
+          </span>
         )}
         {!showLogo && (
           <p
