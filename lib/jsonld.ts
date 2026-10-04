@@ -24,9 +24,9 @@ export const jsonLd = {
       url: SITE.url,
       logo: {
         "@type": "ImageObject",
-        url: `${SITE.url}/Klario-primary-and-secondary-Logo.png`,
-        width: 3150,
-        height: 649,
+        url: `${SITE.url}/brand/icon-light.png`,
+        width: 512,
+        height: 512,
       },
       description:
         "AI-powered personal finance management app. Connect every bank, track every naira, automate savings, and pay bills in one place.",

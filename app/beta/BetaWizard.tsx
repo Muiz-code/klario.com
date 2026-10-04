@@ -6,7 +6,7 @@ import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
 import { Loader } from "@/components/ui/Loader";
 import { deviceFingerprint } from "@/lib/fingerprint";
-import wordmark from "@/public/Klario-primary-and-secondary-Logo.png";
+import wordmark from "@/public/brand/logo-dark.png"; // noir stage
 import {
   ArrowRight,
   X,

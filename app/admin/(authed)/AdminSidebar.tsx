@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import brandLogo from "@/public/Klario-primary-and-secondary-Logo.png";
+import brandLogo from "@/public/brand/logo-dark.png"; // noir sidebar
 import {
   LayoutDashboard,
   Megaphone,

@@ -10,7 +10,7 @@ import { Logo } from "./Logo";
 import { SITE, FOOTER } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { GuillocheRosette } from "@/components/ui/Engraving";
-import emblem from "@/public/klario-sub-logo.png";
+import emblem from "@/public/brand/mark-dark.png"; // the k mark, as a faint watermark on the ink footer
 
 const socialIcons: Record<string, React.ReactNode> = {
   Twitter: (

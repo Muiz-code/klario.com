@@ -125,11 +125,15 @@ export const siteMetadata: Metadata = {
       "max-video-preview": -1,
     },
   },
-  // Favicons resolved from the file conventions app/icon.png + app/apple-icon.png
-  // (both now the engraved Klario sub-logo / app logo).
+  // The new app icon (Oct 2026), following the browser's light or dark mode.
+  // Declared here rather than as app/icon.png, which would override it.
   icons: {
-    icon: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: [
+      { url: "/brand/icon-light.png", type: "image/png", sizes: "512x512", media: "(prefers-color-scheme: light)" },
+      { url: "/brand/icon-dark.png", type: "image/png", sizes: "512x512", media: "(prefers-color-scheme: dark)" },
+      { url: "/favicon.ico", sizes: "48x48" },
+    ],
+    apple: [{ url: "/brand/apple-icon-light.png", sizes: "180x180" }],
   },
   formatDetection: {
     email: false,

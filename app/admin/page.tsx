@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Image from "next/image";
 import { getAdminEmail } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
-import brandLogo from "@/public/Klario-primary-and-secondary-Logo.png";
+import brandLogo from "@/public/brand/logo-dark.png"; // noir sign-in card
 
 export const dynamic = "force-dynamic";
 

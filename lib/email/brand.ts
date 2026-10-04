@@ -20,13 +20,14 @@ export const COLORS = {
 } as const;
 
 // Primary wordmark (3150x649, ratio ~4.85), shown 131x27 in the header.
-const LOGO_URL = `${SITE.url}/Klario-primary-and-secondary-Logo.png`;
+// The new logo (Oct 2026), cream ink for the charcoal email header.
+const LOGO_URL = `${SITE.url}/brand/logo-dark.png`;
 
 /** White header strip with the Klario wordmark, centered. */
 export function emailHeaderRow(): string {
   return `<tr>
     <td align="center" style="background:${COLORS.header};padding:24px 32px;">
-      <img src="${LOGO_URL}" alt="Klario" width="131" height="27" style="display:block;border:0;outline:none;text-decoration:none;height:27px;width:131px;" />
+      <img src="${LOGO_URL}" alt="Klario" width="93" height="27" style="display:block;border:0;outline:none;text-decoration:none;height:27px;width:93px;" />
     </td>
   </tr>`;
 }
