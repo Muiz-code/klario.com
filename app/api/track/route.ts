@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { recordEvent } from "@/lib/db/analytics-events";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
+import { rateLimited, LIMITS } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
 /** Public, fire-and-forget analytics ingest (pageviews + clicks). */
 export async function POST(req: Request) {
+  const limited = await rateLimited(req, "track", LIMITS.beacon);
+  if (limited) return limited;
+
   if (!isSupabaseConfigured()) return new NextResponse(null, { status: 204 });
 
   let body: Record<string, unknown>;

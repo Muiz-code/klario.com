@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import { incrementDbPostView } from "@/lib/db/blogPosts";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
+import { rateLimited, LIMITS } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
 /** Public: record one view for an admin-authored blog post. */
 export async function POST(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ slug: string }> }
 ) {
+  const limited = await rateLimited(req, "blog_view", LIMITS.beacon);
+  if (limited) return limited;
+
   const { slug } = await ctx.params;
   if (isSupabaseConfigured() && slug) {
     try {

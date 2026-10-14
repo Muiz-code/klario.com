@@ -10,6 +10,7 @@ import {
 import { renderAnchorConfirmation } from "@/lib/email/anchorConfirmation";
 import { sendTransactional } from "@/lib/email/send";
 import { RESEND_REPLY_TO } from "@/lib/email/client";
+import { rateLimited, LIMITS } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -19,6 +20,9 @@ export const maxDuration = 30;
  * registered? Returns { exists }. Only reveals a boolean (no data).
  */
 export async function GET(req: Request) {
+  const limited = await rateLimited(req, "anchor_response_get", LIMITS.link);
+  if (limited) return limited;
+
   const email = validateEmail(new URL(req.url).searchParams.get("email"));
   if (!email) return NextResponse.json({ exists: false });
   const prior = await getAnchorResponseByEmail(email);
@@ -64,6 +68,9 @@ export async function POST(req: Request) {
   }
 
   const email = validateEmail(body.email);
+  const limited = await rateLimited(req, "anchor_response", LIMITS.form, email);
+  if (limited) return limited;
+
   if (!email) {
     return NextResponse.json(
       { error: "A valid email is required." },

@@ -140,4 +140,9 @@ export const siteMetadata: Metadata = {
     address: false,
     telephone: false,
   },
+  // Meta (Raavon Limited's business portfolio) confirms it owns klario.finance
+  // from this tag in the home page's <head>, for WhatsApp Business.
+  verification: {
+    other: { "facebook-domain-verification": "pveerhi3aw1gewar5h9xyddb6x9r27" },
+  },
 };

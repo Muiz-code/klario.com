@@ -3,6 +3,7 @@ import { sendTransactional } from "@/lib/email/send";
 import { newsletterWelcome } from "@/lib/email/templates";
 import { clean, splitName, validateEmail } from "@/lib/email/validation";
 import { upsertSignup } from "@/lib/db/signups";
+import { rateLimited, LIMITS } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -15,6 +16,9 @@ export async function POST(req: Request) {
   }
 
   const email = validateEmail(body.email);
+  const limited = await rateLimited(req, "newsletter", LIMITS.form, email);
+  if (limited) return limited;
+
   if (!email) {
     return NextResponse.json(
       { error: "A valid email is required." },

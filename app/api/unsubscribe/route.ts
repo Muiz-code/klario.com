@@ -1,11 +1,15 @@
 import { verifyUnsubscribeToken } from "@/lib/email/links";
 import { unsubscribeByEmail } from "@/lib/db/signups";
 import { SITE } from "@/lib/constants";
+import { rateLimited, LIMITS } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
 /** Public, unauthenticated. Validates the signed token before unsubscribing. */
 export async function GET(req: Request) {
+  const limited = await rateLimited(req, "unsubscribe_get", LIMITS.link);
+  if (limited) return limited;
+
   const url = new URL(req.url);
   const email = (url.searchParams.get("e") || "").trim().toLowerCase();
   const token = url.searchParams.get("t") || "";
@@ -23,6 +27,9 @@ export async function GET(req: Request) {
 
 // Support one-click unsubscribe (RFC 8058: List-Unsubscribe-Post).
 export async function POST(req: Request) {
+  const limited = await rateLimited(req, "unsubscribe", LIMITS.link);
+  if (limited) return limited;
+
   return GET(req);
 }
 

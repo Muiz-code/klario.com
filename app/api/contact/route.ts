@@ -6,6 +6,7 @@ import {
 } from "@/lib/email/templates";
 import { clean, splitName, validateEmail } from "@/lib/email/validation";
 import { saveSubmission } from "@/lib/db/submissions";
+import { rateLimited, LIMITS } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,9 @@ export async function POST(req: Request) {
   }
 
   const email = validateEmail(body.email);
+  const limited = await rateLimited(req, "contact", LIMITS.form, email);
+  if (limited) return limited;
+
   if (!email) {
     return NextResponse.json(
       { error: "A valid email is required." },

@@ -11,6 +11,7 @@ import {
 import { renderBetaConfirmation } from "@/lib/email/betaResponse";
 import { sendTransactional } from "@/lib/email/send";
 import { RESEND_REPLY_TO } from "@/lib/email/client";
+import { rateLimited, LIMITS } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -73,6 +74,9 @@ export async function POST(req: Request) {
   }
 
   const email = validateEmail(body.email);
+  const limited = await rateLimited(req, "beta_response", LIMITS.form, email);
+  if (limited) return limited;
+
   if (!email) {
     return NextResponse.json(
       { error: "A valid email is required." },

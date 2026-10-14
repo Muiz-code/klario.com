@@ -1,6 +1,7 @@
 import { verifyBetaToken } from "@/lib/email/links";
 import { markVerified } from "@/lib/db/betaResponses";
 import { SITE } from "@/lib/constants";
+import { rateLimited, LIMITS } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -27,6 +28,9 @@ function page(opts: { ok: boolean; heading: string; body: string }): Response {
 
 /** Confirm a beta respondent's email. Linked from the confirmation email. */
 export async function GET(req: Request) {
+  const limited = await rateLimited(req, "beta_verify", LIMITS.link);
+  if (limited) return limited;
+
   const url = new URL(req.url);
   const email = (url.searchParams.get("e") || "").trim();
   const token = url.searchParams.get("t") || "";
