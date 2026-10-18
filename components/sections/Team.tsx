@@ -17,7 +17,7 @@ const DWELL_VH = 30;
 
 
 /**
- * The roster: nine people on the left, one portrait on the right.
+ * The roster: eight people on the left, one portrait on the right.
  *
  * On desktop the panel is PINNED — it holds still while you scroll, stepping
  * through the team one at a time, and only releases once the last person has

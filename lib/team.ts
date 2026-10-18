@@ -27,7 +27,7 @@ export type TeamMember = {
    * Static imports let Next hash and size the file; no /public copy needed.
    *
    * Use the *-set.png files: one canvas, one head size, crown at the same
-   * height, so the roster reads as one set rather than nine different crops.
+   * height, so the roster reads as one set rather than eight different crops.
    */
   photo: StaticImageData | null;
 };
@@ -36,17 +36,17 @@ export type Discipline = { label: string; count: number };
 
 export const TEAM_INTRO = {
   eyebrow: "The team",
-  heading: "Nine people, and",
+  heading: "Eight people, and",
   emphasis: "three disciplines.",
   lede: "Deliberately weighted towards the parts of this that are not code, because the hard part of a money product is proving what happened, not shipping a screen.",
 };
 
 /**
  * Shown under the portrait — the shape of the team at a glance.
- * Counts must add up to TEAM.length; the heading says nine.
+ * Counts must add up to TEAM.length; the heading says eight.
  */
 export const DISCIPLINES: Discipline[] = [
-  { label: "Marketing & research", count: 4 },
+  { label: "Marketing & research", count: 3 },
   { label: "Accounting & legal compliance", count: 3 },
   { label: "Engineering", count: 2 },
 ];
@@ -105,13 +105,6 @@ export const TEAM: TeamMember[] = [
     division: MARKETING,
     line: "Writes what Klario says out loud and puts a face to it on Instagram and TikTok.",
     photo: oyinkansola,
-  },
-  {
-    name: "Hadiza Oni",
-    role: "Social Media Manager, LinkedIn",
-    division: MARKETING,
-    line: "Runs LinkedIn, where the partners and institutions we work with are watching.",
-    photo: null,
   },
   {
     name: "Daniel Oso",
