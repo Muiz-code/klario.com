@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { SectionLabel } from "@/components/ui/SectionLabel";
+import { CoinMark } from "@/components/ui/CoinMark";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { GuillocheRosette } from "@/components/ui/Engraving";
 import { TEAM, TEAM_INTRO, DISCIPLINES, initialsOf } from "@/lib/team";
@@ -71,10 +71,13 @@ export function Team() {
       {/* Intro scrolls in normally, then hands over to the pinned panel. */}
       <Container className="relative z-10 pt-24 md:pt-32">
         <ScrollReveal>
-          <SectionLabel>{TEAM_INTRO.eyebrow}</SectionLabel>
-          <h2 className="mt-5 max-w-[16ch] font-display text-3xl leading-[1.06] tracking-tight text-cream-gold sm:text-4xl md:text-5xl">
+          <p className="flex items-center gap-3 font-mono text-xs tracking-[0.22em] text-gold uppercase">
+            <CoinMark className="w-4" />
+            {TEAM_INTRO.eyebrow}
+          </p>
+          <h2 className="font-display mt-6 max-w-[14ch] text-[clamp(2.5rem,6vw,6.25rem)] leading-[0.92] font-bold tracking-[-0.045em] text-cream-gold uppercase">
             {TEAM_INTRO.heading}{" "}
-            <span className="text-gold-hi">{TEAM_INTRO.emphasis}</span>
+            <span className="text-gold">{TEAM_INTRO.emphasis}</span>
           </h2>
           <p className="mt-4 max-w-[52ch] text-[15px] leading-relaxed text-bg/65 md:text-base">
             {TEAM_INTRO.lede}

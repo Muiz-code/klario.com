@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const inputCls =
-  "w-full rounded-xl border border-border-gold/60 bg-bg px-4 py-3 text-sm text-ink placeholder:text-body/40 transition-colors focus:border-gold focus:outline-none";
+  "w-full rounded-xl border border-border-gold/60 bg-bg/5 px-4 py-3 text-sm text-bg placeholder:text-bg/35 transition-colors focus:border-gold focus:outline-none";
 
-const labelCls = "text-xs font-medium uppercase tracking-[0.14em] text-body/65";
+const labelCls = "text-xs font-medium uppercase tracking-[0.14em] text-bg/60";
 
 type Submit = "idle" | "submitting" | "done";
 type Topic = (typeof CONTACT.topics)[number];
@@ -44,47 +44,49 @@ export function Contact() {
 
   return (
     <Section
+      bold
       id="contact"
       label={CONTACT.label}
       heading={CONTACT.heading}
       emphasis={CONTACT.emphasis}
       intro={CONTACT.intro}
+      tone="dark"
     >
       <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
         <div className="flex flex-col gap-6">
           <a
             href={`mailto:${CONTACT.email}`}
-            className="glass-card-dark group flex items-center gap-4 rounded-2xl p-5 transition-colors hover:border-gold"
+            className="glass-card group flex items-center gap-4 rounded-2xl p-5 transition-colors hover:border-gold"
           >
             <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gold-dim text-gold">
               <Mail size={18} strokeWidth={1.75} />
             </span>
             <div className="flex flex-col">
-              <span className="text-[11px] uppercase tracking-[0.14em] text-body/55">
+              <span className="text-[11px] uppercase tracking-[0.14em] text-bg/55">
                 Or email us directly
               </span>
-              <span className="font-mono text-sm text-ink transition-colors group-hover:text-gold">
+              <span className="font-mono text-sm text-cream-gold transition-colors group-hover:text-gold">
                 {CONTACT.email}
               </span>
             </div>
           </a>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[12px] text-body/55">
-            <span className="uppercase tracking-[0.14em] text-body/45">Also</span>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[12px] text-bg/55">
+            <span className="uppercase tracking-[0.14em] text-bg/45">Also</span>
             <a
               href={`mailto:${SITE.emails.contact}`}
-              className="font-mono text-body/80 transition-colors hover:text-gold"
+              className="font-mono text-bg/75 transition-colors hover:text-gold"
             >
               {SITE.emails.contact}
             </a>
-            <span className="text-body/30">·</span>
+            <span className="text-bg/30">·</span>
             <a
               href={`mailto:${SITE.poweredBy.email}`}
-              className="font-mono text-body/80 transition-colors hover:text-gold"
+              className="font-mono text-bg/75 transition-colors hover:text-gold"
             >
               {SITE.poweredBy.email}
             </a>
           </div>
-          <p className="text-sm leading-relaxed text-body/65">
+          <p className="text-sm leading-relaxed text-bg/65">
             Want to build with us? Join the{" "}
             <a href="/anchor-club" className="text-gold hover:underline">
               Anchor Club
@@ -93,7 +95,7 @@ export function Contact() {
           </p>
         </div>
 
-        <div className="glass-card-dark rounded-3xl p-7 md:p-8">
+        <div className="glass-card rounded-3xl p-7 md:p-8">
           <AnimatePresence mode="wait">
             {state === "done" ? (
               <motion.div
@@ -107,10 +109,10 @@ export function Contact() {
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-dim text-gold">
                   <CheckCircle2 size={28} strokeWidth={1.75} />
                 </span>
-                <h3 className="font-display text-2xl text-ink">
+                <h3 className="font-display text-2xl text-cream-gold">
                   {CONTACT.successTitle}
                 </h3>
-                <p className="max-w-sm text-sm text-body/70">
+                <p className="max-w-sm text-sm text-bg/70">
                   {CONTACT.successBody}
                 </p>
               </motion.div>
@@ -140,8 +142,8 @@ export function Contact() {
                           className={cn(
                             "rounded-full border px-4 py-1.5 text-xs font-medium transition-colors",
                             active
-                              ? "border-gold bg-gold-dim text-ink"
-                              : "border-border-gold/60 text-body/70 hover:border-gold hover:text-ink"
+                              ? "border-gold bg-gold-dim text-cream-gold"
+                              : "border-bg/15 text-bg/70 hover:border-gold hover:text-bg"
                           )}
                         >
                           {t}

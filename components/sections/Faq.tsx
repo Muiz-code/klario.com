@@ -14,10 +14,12 @@ export function Faq() {
 
   return (
     <Section
+      bold
       id="faq"
       label="Frequently Asked"
       heading="Questions,"
       emphasis="answered."
+      tone="dark"
     >
       <ul className="mx-auto flex w-full max-w-3xl flex-col gap-3">
         {FAQS.map((f, i) => {
@@ -25,9 +27,9 @@ export function Faq() {
           return (
             <li
               key={f.q}
-              style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)" }}
+              style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)" }}
               className={cn(
-                "glass-card-dark overflow-hidden rounded-2xl transition-colors",
+                "glass-card overflow-hidden rounded-2xl transition-colors",
                 isOpen ? "border-gold" : "hover:border-gold/80"
               )}
             >
@@ -38,7 +40,7 @@ export function Faq() {
                 aria-controls={`faq-panel-${i}`}
                 className="flex w-full items-center gap-4 p-5 text-left md:p-6"
               >
-                <span className="flex-1 font-display text-[15px] leading-snug text-ink md:text-lg">
+                <span className="flex-1 font-display text-[15px] leading-snug text-cream-gold md:text-lg">
                   {f.q}
                 </span>
                 <motion.span
@@ -59,7 +61,7 @@ export function Faq() {
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.35, ease }}
                   >
-                    <p className="border-t border-border-gold/40 px-5 py-4 text-[15px] leading-relaxed text-body/80 md:px-6 md:py-5 md:text-base">
+                    <p className="border-t border-border-gold/40 px-5 py-4 text-[15px] leading-relaxed text-bg/70 md:px-6 md:py-5 md:text-base">
                       {f.a}
                     </p>
                   </motion.div>

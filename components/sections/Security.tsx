@@ -24,6 +24,7 @@ const icons: Record<string, LucideIcon> = {
 export function Security() {
   return (
     <Section
+      bold
       id="security"
       tone="dark"
       label={SECURITY.label}

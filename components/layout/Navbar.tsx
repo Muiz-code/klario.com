@@ -12,17 +12,58 @@ import { cn } from "@/lib/utils";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
+/**
+ * True once #hero starts scrolling away, which is when its own nav leaves
+ * and the next section comes in. While GSAP pins the hero, the element sits
+ * still inside a .pin-spacer that carries the extra scroll length, so
+ * measure the spacer: the pin ends when its bottom meets the hero's.
+ */
+function usePastHero(enabled: boolean) {
+  const [past, setPast] = useState(false);
+  useEffect(() => {
+    if (!enabled) return;
+    const check = () => {
+      const hero = document.getElementById("hero");
+      if (!hero) return setPast(true);
+      const box = hero.parentElement?.classList.contains("pin-spacer") ? hero.parentElement : hero;
+      setPast(box.getBoundingClientRect().bottom < hero.offsetHeight - 1);
+    };
+    check();
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    return () => {
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
+  }, [enabled]);
+  return past;
+}
+
 // Section ids the in-page anchor links point at, for scroll-spy on the home page.
 const SPY_IDS = NAV_LINKS.filter((l) => l.href.includes("#")).map(
   (l) => l.href.split("#")[1]
 );
 
-export function Navbar({ theme = "auto" }: { theme?: "auto" | "light" }) {
+export function Navbar({
+  theme = "auto",
+  deferred = false,
+}: {
+  /** "dark": stays on ink when scrolled (the landing page's dark base). */
+  theme?: "auto" | "light" | "dark";
+  /**
+   * Home page: the hero (#hero) carries its own glass nav, so on md+ this
+   * bar stays tucked above the viewport until the hero, pinned scroll and
+   * all, has gone by. Phones always show it (the hero hides its nav there).
+   */
+  deferred?: boolean;
+}) {
   const pathname = usePathname();
   const scrolled = useScrolled(80);
+  const pastHero = usePastHero(deferred);
   const [open, setOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  const isLight = theme === "light" || scrolled;
+  const dark = theme === "dark";
+  const isLight = !dark && (theme === "light" || scrolled);
   const onDark = !isLight && !open;
 
   // Scroll-spy: on the home page, mark the anchor link whose section is in view.
@@ -70,7 +111,12 @@ export function Navbar({ theme = "auto" }: { theme?: "auto" | "light" }) {
       <header
         className={cn(
           "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-          isLight ? "bg-bg/95 border-b border-border-gold" : "bg-transparent"
+          isLight
+            ? "bg-bg/95 border-b border-border-gold"
+            : dark && scrolled
+              ? "border-b border-gold/15 bg-ink/90 backdrop-blur-md"
+              : "bg-transparent",
+          deferred && !pastHero && "md:-translate-y-full"
         )}
       >
         <div className="hidden h-16 items-center px-8 md:grid md:grid-cols-[1fr_auto_1fr] lg:px-12">

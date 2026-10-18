@@ -19,17 +19,19 @@ export function Pricing() {
 
   return (
     <Section
+      bold
       id="pricing"
       label={PRICING.label}
       heading={PRICING.heading}
       emphasis={PRICING.emphasis}
+      tone="dark"
     >
       {reveal && (
       <div className="mb-12 flex justify-center">
         <div
           role="tablist"
           aria-label="Billing cycle"
-          className="relative inline-flex rounded-full border border-border-gold bg-card/60 p-1"
+          className="relative inline-flex rounded-full border border-border-gold bg-bg/5 p-1"
         >
           {(["monthly", "annual"] as const).map((c) => {
             const active = c === cycle;
@@ -41,7 +43,7 @@ export function Pricing() {
                 onClick={() => setCycle(c)}
                 className={cn(
                   "relative z-10 inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-colors",
-                  active ? "text-ink" : "text-body/65 hover:text-ink"
+                  active ? "text-ink" : "text-bg/65 hover:text-bg"
                 )}
               >
                 {active && (
@@ -85,7 +87,7 @@ export function Pricing() {
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.6, delay: i * 0.08, ease }}
               className={cn(
-                "glass-card-dark relative flex flex-col rounded-2xl p-7 transition-all duration-500",
+                "glass-card relative flex flex-col rounded-2xl p-7 transition-all duration-500",
                 featured
                   ? "border-gold shadow-[0_28px_80px_-30px_rgba(212,168,83,0.45)] lg:scale-[1.04]"
                   : "hover:border-gold"
@@ -97,8 +99,8 @@ export function Pricing() {
                 </span>
               )}
 
-              <h3 className="font-display text-xl text-ink">{tier.name}</h3>
-              <p className="mt-1 max-w-[260px] text-sm text-body/65">
+              <h3 className="font-display text-xl text-cream-gold">{tier.name}</h3>
+              <p className="mt-1 max-w-[260px] text-sm text-bg/60">
                 {tier.tagline}
               </p>
 
@@ -109,7 +111,7 @@ export function Pricing() {
               {contactSales ? (
                 <>
                   <div className="mt-6 flex h-12 items-baseline md:h-14">
-                    <span className="font-display text-3xl text-ink md:text-4xl">
+                    <span className="font-display text-3xl text-cream-gold md:text-4xl">
                       Let&rsquo;s talk
                     </span>
                   </div>
@@ -120,7 +122,7 @@ export function Pricing() {
               ) : reveal ? (
                 <>
                   <div className="mt-6 flex items-baseline gap-1.5">
-                    <span className="font-mono text-base text-ink/55">₦</span>
+                    <span className="font-mono text-base text-bg/55">₦</span>
                     <span className="relative inline-flex h-12 items-baseline overflow-hidden md:h-14">
                       <AnimatePresence mode="wait">
                         <motion.span
@@ -129,15 +131,15 @@ export function Pricing() {
                           animate={{ y: 0, opacity: 1 }}
                           exit={{ y: "-100%", opacity: 0 }}
                           transition={{ duration: 0.35, ease }}
-                          className="font-mono text-4xl font-medium text-ink md:text-5xl"
+                          className="font-mono text-4xl font-medium text-cream-gold md:text-5xl"
                         >
                           {(monthly ?? 0).toLocaleString("en-NG")}
                         </motion.span>
                       </AnimatePresence>
                     </span>
-                    <span className="text-sm text-body/55">/month</span>
+                    <span className="text-sm text-bg/55">/month</span>
                   </div>
-                  <p className="mt-1 min-h-[18px] text-xs text-body/50">
+                  <p className="mt-1 min-h-[18px] text-xs text-bg/50">
                     {isAnnual && (tier.monthly ?? 0) > 0
                       ? `Billed ₦${((monthly ?? 0) * 12).toLocaleString("en-NG")} annually`
                       : tier.monthly === 0
@@ -148,11 +150,11 @@ export function Pricing() {
               ) : (
                 <>
                   <div className="mt-6 flex items-baseline gap-1.5">
-                    <span className="font-mono text-base text-ink/55">₦</span>
-                    <span className="font-mono text-4xl font-medium tracking-wider text-ink/35 md:text-5xl">
+                    <span className="font-mono text-base text-bg/55">₦</span>
+                    <span className="font-mono text-4xl font-medium tracking-wider text-bg/35 md:text-5xl">
                       {tier.monthly === 0 ? "0" : "###"}
                     </span>
-                    <span className="text-sm text-body/45">/month</span>
+                    <span className="text-sm text-bg/45">/month</span>
                   </div>
                   <p className="mt-1 min-h-[18px] text-xs text-gold/80">
                     {tier.monthly === 0 ? "Free, forever." : "Pricing coming soon."}
@@ -164,7 +166,7 @@ export function Pricing() {
                 {tier.features.map((f) => (
                   <li
                     key={f}
-                    className="flex items-start gap-2.5 text-sm text-body/85"
+                    className="flex items-start gap-2.5 text-sm text-bg/80"
                   >
                     <Check
                       size={15}
@@ -181,7 +183,7 @@ export function Pricing() {
                   href={contactSales ? `mailto:${SITE.emails.contact}?subject=Klario for business` : SITE.downloadHref}
                   size="lg"
                   variant={featured ? "solid" : "outline"}
-                  className="w-full"
+                  className={cn("w-full", !featured && "border-bg/25 text-bg hover:border-bg hover:bg-bg/10")}
                 >
                   {tier.cta}
                 </Button>

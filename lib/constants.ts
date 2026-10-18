@@ -540,4 +540,29 @@ export const HERO = {
   line2: { prefix: "in your", suffix: "." } as const,
   rotatingWords: ["control", "clarity", "focus", "hands"] as const,
   sub: "Connect every Nigerian bank account. Track every naira. Save automatically. Pay bills without leaving the app. All powered by AI that actually understands you.",
+  // Statement words scattered across the wide bento tile, in reading order.
+  statement: { words: ["The art", "of", "understanding", "your", "finance"] } as const,
+  // Hero copy beats (HeroCopy): verbs (flipWords), then lead + emphasis,
+  // then the line1/line2 tagline. BentoHero (unused) also uses bridge.
+  headline: {
+    lead: "The financial intelligence layer for",
+    emphasis: "people and businesses",
+    bridge: "that",
+    suffix: ".",
+  } as const,
+  flipWords: ["connect", "track", "understand"] as const,
+  // Full-bleed landing hero (KlarioHero): scan card and trust row. Trust
+  // lines repeat claims the Security section already makes; keep them in step.
+  scan: { title: ["Scan to", "join Klario"], body: "Beta on iOS and Android", href: "/beta" } as const,
+  trust: [
+    { icon: "Building2", label: "Built by Raavon Limited · RC-9537604" },
+    { icon: "Landmark", label: "Licensed open banking partners" },
+    { icon: "Lock", label: "Encrypted at rest and in transit" },
+  ] as const,
+  // Product tile: the original tagline with its own flip words.
+  product: {
+    label: "Connect · Track · Understand",
+    lead: "Your money, finally in your",
+    words: ["control", "clarity", "focus", "hands"] as const,
+  } as const,
 } as const;

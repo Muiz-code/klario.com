@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/providers/AppShell";
 import { Navbar } from "@/components/layout/Navbar";
-import { Hero } from "@/components/sections/Hero";
+import { KlarioHero } from "@/components/sections/KlarioHero";
+import { HeroCopyFallback } from "@/components/sections/HeroCopy";
 import { Problem } from "@/components/sections/Problem";
 import { Solution } from "@/components/sections/Solution";
 import { HowItWorks } from "@/components/sections/HowItWorks";
@@ -16,9 +17,14 @@ import { Footer } from "@/components/layout/Footer";
 export default function Home() {
   return (
     <AppShell>
-      <Navbar />
-      <main>
-        <Hero />
+      {/* Engraved guilloche mesh over the whole landing page (globals.css). */}
+      <div aria-hidden className="engrave-overlay" />
+      <Navbar deferred theme="dark" />
+      {/* Ink behind every section, so a sub-pixel seam between two dark
+          sections never shows the page's cream background as a hairline. */}
+      <main className="bg-ink">
+        <KlarioHero />
+        <HeroCopyFallback />
         <Problem />
         <Solution />
         <AnchorClubCTA />

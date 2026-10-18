@@ -1,5 +1,6 @@
 import { Container } from "./Container";
 import { SectionLabel } from "./SectionLabel";
+import { CoinMark } from "./CoinMark";
 import { ScrollReveal } from "./ScrollReveal";
 import { SectionEngrave } from "./SectionEngrave";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,12 @@ type Props = {
   className?: string;
   /** Render the slow-rotating rosette engraving behind the section (default true). */
   engrave?: boolean;
+  /**
+   * The landing page's display style: bold uppercase headings with a solid
+   * gold emphasis, and the coin-mark label. Off by default so the blog,
+   * investor and resources pages keep their own look.
+   */
+  bold?: boolean;
 };
 
 export function Section({
@@ -38,6 +45,7 @@ export function Section({
   children,
   className,
   engrave = true,
+  bold = false,
 }: Props) {
   const split = layout === "split";
   const titleRight = split && titleSide === "right";
@@ -55,6 +63,9 @@ export function Section({
   const headingColor = dark ? "text-bg" : "text-ink";
   const subHeadingColor = dark ? "text-bg/85" : "text-ink/85";
   const introColor = dark ? "text-bg/65" : "text-body/75";
+  const emphasisCls = bold ? "text-gold" : "italic text-gold";
+  // Bold mode headings use cream on dark, like the hero and Problem.
+  const boldHeading = dark ? "text-cream-gold" : "text-ink";
 
   return (
     <section
@@ -93,14 +104,18 @@ export function Section({
               {label && (
                 <h2
                   className={cn(
-                    "font-display relative inline-block text-balance text-5xl leading-[0.95] capitalize sm:text-6xl lg:text-[5rem] xl:text-[5.5rem]",
-                    headingColor
+                    bold
+                      ? "font-display relative inline-block text-balance text-[clamp(2.75rem,5.6vw,5.5rem)] leading-[0.9] font-bold tracking-[-0.045em] uppercase"
+                      : "font-display relative inline-block text-balance text-5xl leading-[0.95] capitalize sm:text-6xl lg:text-[5rem] xl:text-[5.5rem]",
+                    bold ? boldHeading : headingColor
                   )}
                 >
-                  <span
-                    aria-hidden
-                    className="absolute inset-x-[-6%] bottom-[8%] h-[32%] -skew-x-12 bg-gold/35"
-                  />
+                  {!bold && (
+                    <span
+                      aria-hidden
+                      className="absolute inset-x-[-6%] bottom-[8%] h-[32%] -skew-x-12 bg-gold/35"
+                    />
+                  )}
                   <span className="relative">{label}</span>
                 </h2>
               )}
@@ -115,7 +130,7 @@ export function Section({
                   {sub.emphasis && (
                     <>
                       {" "}
-                      <span className="italic text-gold">{sub.emphasis}</span>
+                      <span className={emphasisCls}>{sub.emphasis}</span>
                     </>
                   )}
                 </p>
@@ -147,7 +162,7 @@ export function Section({
                   {emphasis && (
                     <>
                       {" "}
-                      <span className="italic text-gold">{emphasis}</span>
+                      <span className={emphasisCls}>{emphasis}</span>
                     </>
                   )}
                 </h3>
@@ -164,19 +179,29 @@ export function Section({
           <>
             {(label || heading) && (
               <ScrollReveal className="mb-14 flex flex-col gap-5 md:mb-20">
-                {label && <SectionLabel>{label}</SectionLabel>}
+                {label &&
+                  (bold ? (
+                    <p className="flex items-center gap-3 font-mono text-xs tracking-[0.22em] text-gold uppercase">
+                      <CoinMark className="w-4" />
+                      {label}
+                    </p>
+                  ) : (
+                    <SectionLabel>{label}</SectionLabel>
+                  ))}
                 {heading && (
                   <h2
                     className={cn(
-                      "font-display text-balance text-4xl leading-[1.0] capitalize sm:text-5xl md:text-6xl lg:text-7xl",
-                      headingColor
+                      bold
+                        ? "font-display text-balance text-[clamp(2.5rem,6vw,6.25rem)] leading-[0.92] font-bold tracking-[-0.045em] uppercase"
+                        : "font-display text-balance text-4xl leading-[1.0] capitalize sm:text-5xl md:text-6xl lg:text-7xl",
+                      bold ? boldHeading : headingColor
                     )}
                   >
                     {heading}
                     {emphasis && (
                       <>
                         {" "}
-                        <span className="italic text-gold">{emphasis}</span>
+                        <span className={emphasisCls}>{emphasis}</span>
                       </>
                     )}
                   </h2>

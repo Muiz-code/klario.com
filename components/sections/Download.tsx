@@ -50,10 +50,10 @@ export function Download() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.4 }}
           transition={{ duration: 0.7, ease }}
-          className="font-display text-[1.65rem] leading-[1.1] capitalize sm:text-4xl md:text-5xl lg:text-[4.5rem]"
+          className="font-display text-[clamp(2.25rem,5.6vw,6rem)] leading-[0.92] font-bold tracking-[-0.045em] text-cream-gold uppercase"
         >
           <span className="block lg:whitespace-nowrap">{DOWNLOAD.heading}</span>
-          <span className="block italic text-gold lg:whitespace-nowrap">
+          <span className="block text-gold lg:whitespace-nowrap">
             {DOWNLOAD.emphasis}
           </span>
         </motion.h2>

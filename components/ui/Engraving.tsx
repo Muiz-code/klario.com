@@ -66,13 +66,19 @@ const ROSETTE_ANGLES = Array.from({ length: ROSETTE_N }, (_, i) => ((i * 360) / 
  * A large engine-turned guilloche rosette. Place low-opacity behind content.
  * The pattern rotates slowly around its own centre (paused for reduced-motion);
  * pass `reverse` to spin counter-clockwise so adjacent rosettes differ.
+ *
+ * `spin="scroll"` drops the clock-driven spin and marks the pattern with
+ * `data-rosette` instead, so a scroll timeline can turn it (rotate it about
+ * svgOrigin "250 250").
  */
 export function GuillocheRosette({
   className,
   reverse = false,
+  spin = "auto",
 }: {
   className?: string;
   reverse?: boolean;
+  spin?: "auto" | "scroll";
 }) {
   return (
     <svg
@@ -83,7 +89,8 @@ export function GuillocheRosette({
       className={cn("text-gold", className)}
     >
       <g
-        className={cn("engrave-rotate", reverse && "engrave-rotate-rev")}
+        data-rosette={spin === "scroll" ? (reverse ? "rev" : "fwd") : undefined}
+        className={cn(spin === "auto" && "engrave-rotate", spin === "auto" && reverse && "engrave-rotate-rev")}
         stroke="currentColor"
         strokeWidth="0.4"
         strokeOpacity="0.75"
