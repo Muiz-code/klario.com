@@ -114,15 +114,17 @@ export function KlarioHero() {
       </header>
 
       {/* The three beats, stacked in one stage. Beats 2 and 3 start hidden
-          in CSS and only exist here where the hero pins. */}
+          in CSS and only exist here where the hero pins. Each beat clears the
+          phone navbar (pt-16), which overlays the top of the hero, so all
+          three centre on the visible space rather than riding high. */}
       <div className="relative z-10 flex-1">
         <div className="absolute inset-0 flex items-center justify-center px-6 pt-16 md:pt-0">
           <Verbs />
         </div>
-        <div className="pointer-events-none absolute inset-0 hidden items-center justify-center px-6 motion-safe:flex">
+        <div className="pointer-events-none absolute inset-0 hidden items-center justify-center px-6 pt-16 motion-safe:flex md:pt-0">
           <Sentence hidden />
         </div>
-        <div className="pointer-events-none absolute inset-0 hidden items-center justify-center px-6 motion-safe:flex md:px-12">
+        <div className="pointer-events-none absolute inset-0 hidden items-center justify-center px-6 pt-16 motion-safe:flex md:px-12 md:pt-0">
           <Tagline hidden />
         </div>
       </div>
