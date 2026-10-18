@@ -1,28 +1,7 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Manrope, JetBrains_Mono } from "next/font/google";
 import { SITE } from "@/lib/constants";
+import { spaceStandalone as space, manropeStandalone as manrope, jetbrains } from "@/lib/fonts";
 import { AnchorWizard } from "./AnchorWizard";
-
-const space = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  variable: "--font-manrope",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains",
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
 
 const title = "Join the KLARIO Anchor Club";
 const description =

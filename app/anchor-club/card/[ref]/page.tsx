@@ -1,27 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Space_Grotesk, Manrope, JetBrains_Mono } from "next/font/google";
 import { getAnchorResponseByRef } from "@/lib/db/anchorClub";
+import { spaceStandalone as space, manropeStandalone as manrope, jetbrains } from "@/lib/fonts";
 import { CardView } from "./CardView";
-
-const space = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-const manrope = Manrope({
-  subsets: ["latin"],
-  variable: "--font-manrope",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains",
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
 
 export const dynamic = "force-dynamic";
 

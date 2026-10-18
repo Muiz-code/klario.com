@@ -1,23 +1,9 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Manrope } from "next/font/google";
 import { SITE } from "@/lib/constants";
 import { listBetaResponses } from "@/lib/db/betaResponses";
+import { spaceStandalone as space, manropeStandalone as manrope } from "@/lib/fonts";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import { BetaLeaderboard, type LeaderRow } from "./BetaLeaderboard";
-
-const space = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  variable: "--font-manrope",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 export const dynamic = "force-dynamic";
 

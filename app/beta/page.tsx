@@ -1,21 +1,7 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Manrope } from "next/font/google";
 import { SITE } from "@/lib/constants";
+import { spaceStandalone as space, manropeStandalone as manrope } from "@/lib/fonts";
 import { BetaWizard } from "./BetaWizard";
-
-const space = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  variable: "--font-manrope",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 const title = "Join the Klario beta";
 const description =

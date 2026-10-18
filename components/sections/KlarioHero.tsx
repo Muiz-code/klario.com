@@ -64,11 +64,16 @@ export function KlarioHero() {
     { scope: root }
   );
 
+  // Sized to the large viewport, not dvh: the pin freezes the hero at its
+  // measured height, and on phones the browser chrome collapses as you scroll,
+  // so a dvh hero would end short of the screen and leave an ink band below.
+  // The trust row's bottom padding adds back the chrome's height (lvh - svh,
+  // zero on desktop) so the button still clears it before it collapses.
   return (
     <section
       ref={root}
       id="hero"
-      className="relative isolate flex h-dvh min-h-160 flex-col overflow-hidden bg-ink text-bg"
+      className="relative isolate flex h-lvh min-h-160 flex-col overflow-hidden bg-ink text-bg"
     >
       <h1 className="sr-only">{HERO_SENTENCE}</h1>
 
@@ -146,7 +151,7 @@ export function KlarioHero() {
       </div>
 
       {/* Trust row */}
-      <ul data-trust className="relative z-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 px-4 pb-6 text-xs font-medium text-bg/80">
+      <ul data-trust className="relative z-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 px-4 pb-[calc(1.5rem+100lvh-100svh)] text-xs font-medium text-bg/80">
         {HERO.trust.map((t) => {
           const Icon = TRUST_ICONS[t.icon];
           return (
