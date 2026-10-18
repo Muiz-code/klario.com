@@ -47,7 +47,7 @@ function Phone({ active, className }: { active: number; className?: string }) {
   return (
     <div
       className={cn(
-        "relative aspect-591/1280 w-[clamp(160px,min(52vw,38dvh),300px)] overflow-hidden rounded-[1.8rem] border-[6px] md:w-[clamp(220px,19vw,300px)] md:rounded-[2.6rem] md:border-[9px] border-[#161412] bg-ink shadow-[0_40px_90px_-30px_rgba(0,0,0,0.85),0_0_0_1px_rgba(232,213,173,0.18)]",
+        "relative aspect-591/1280 w-[min(60vw,250px)] overflow-hidden rounded-[1.8rem] border-[6px] md:w-[clamp(220px,19vw,300px)] md:rounded-[2.6rem] md:border-[9px] border-[#161412] bg-ink shadow-[0_40px_90px_-30px_rgba(0,0,0,0.85),0_0_0_1px_rgba(232,213,173,0.18)]",
         className
       )}
     >
@@ -165,13 +165,16 @@ export function Solution() {
         </h2>
       </Container>
 
-      {/* The tour: pinned stage, on every screen size. */}
-      <div ref={stage} className="relative isolate hidden h-dvh overflow-hidden motion-safe:block">
+      {/* The tour: pinned stage, on every screen size. Large viewport, not
+          dvh, for the same reason as the hero: the pin freezes the height and
+          phone browser chrome collapses mid-scroll. The bottom padding (zero
+          on desktop) keeps the content inside the visible area meanwhile. */}
+      <div ref={stage} className="relative isolate hidden h-lvh overflow-hidden motion-safe:block">
         <GuillocheRosette
           spin="scroll"
           className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-[125%] w-auto -translate-x-1/2 -translate-y-1/2 text-gold-hi opacity-20"
         />
-        <Container className="flex h-full flex-col items-center justify-center gap-5 pt-16 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-10 md:pt-0 lg:gap-16">
+        <Container className="flex h-full flex-col items-center justify-center gap-4 pt-16 pb-[calc(100lvh-100svh)] md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-10 md:pt-0 lg:gap-16">
           {/* Phones: counter and progress bar in place of the list. */}
           <div className="flex w-full max-w-xs items-center gap-3 md:hidden">
             <span className="font-mono text-xs text-gold">{pad(active)}</span>
@@ -212,14 +215,19 @@ export function Solution() {
             </ol>
           </nav>
 
-          {/* Phone, with a soft gold glow behind */}
+          {/* Phone, with a soft gold glow behind. A whole phone plus the story
+              is taller than a phone screen, so there the frame is cut to the
+              room left over and fades out at the bottom: the top of each
+              screen is the part worth reading. */}
           <div className="relative">
             <div aria-hidden className="absolute inset-[-18%] -z-10 rounded-full bg-gold/25 blur-[90px]" />
-            <Phone active={active} />
+            <div className="max-md:max-h-[calc(100svh-21rem)] max-md:overflow-hidden max-md:mask-b-from-70%">
+              <Phone active={active} />
+            </div>
           </div>
 
           {/* The active feature's story */}
-          <div className="relative min-h-52 w-full max-w-md text-center md:min-h-72 md:text-left">
+          <div className="relative min-h-44 w-full max-w-md text-center md:min-h-72 md:text-left">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={tab.id}

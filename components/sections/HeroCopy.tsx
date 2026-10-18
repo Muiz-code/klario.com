@@ -81,33 +81,38 @@ export function Tagline({ hidden = false, className }: { hidden?: boolean; class
     <p
       aria-hidden
       className={cn(
-        "font-display flex w-full flex-col gap-4 text-[clamp(2.75rem,12.5vw,4.5rem)] leading-[0.86] md:text-[clamp(2.5rem,6.2vw,7.75rem)] font-bold tracking-[-0.045em] uppercase md:w-auto md:flex-row md:items-center md:justify-center md:gap-[4vw]",
+        "font-display flex w-full flex-col gap-5 text-[clamp(2.75rem,12.5vw,4.5rem)] leading-[0.86] md:text-[clamp(2.5rem,6.2vw,7.75rem)] font-bold tracking-[-0.045em] uppercase md:w-auto md:flex-row md:items-center md:justify-center md:gap-[4vw]",
         className
       )}
     >
-      <span data-split="left" className={cn("block text-cream-gold md:whitespace-nowrap", hidden && "opacity-0")}>
+      {/* The halves stagger, left raised and right dropped, with the coin
+          holding still between them. Phones stack it as a diagonal: left half
+          flush left, coin centred, right half flush right. Desktop sets them
+          in a row and offsets them by equal and opposite margins, so the row
+          stays centred on the same line. Margins rather than a translate,
+          since the scroll timeline owns these elements' transforms. */}
+      <span
+        data-split="left"
+        className={cn("block self-start text-cream-gold md:mb-[2em] md:self-auto md:whitespace-nowrap", hidden && "opacity-0")}
+      >
         {HERO.line1.lead}
         <br />
         {HERO.line1.emphasis}
       </span>
-      {/* Flex item, so it sits mid-gap however wide each half is. Phones
-          stack the halves, so there is no gap to fill there. */}
       <CoinMark
         data-mark
         className={cn(
-          "hidden w-[min(6vw,110px)] shrink-0 drop-shadow-[0_6px_24px_rgba(0,0,0,0.55)] md:block",
+          "w-[min(16vw,72px)] shrink-0 self-center drop-shadow-[0_6px_24px_rgba(0,0,0,0.55)] md:w-[min(6vw,110px)] md:self-auto",
           hidden && "opacity-0"
         )}
       />
-      <span data-split="right" className={cn("block md:text-right md:whitespace-nowrap", hidden && "opacity-0")}>
+      <span
+        data-split="right"
+        className={cn("block self-end text-right md:mt-[2em] md:self-auto md:whitespace-nowrap", hidden && "opacity-0")}
+      >
         <span className="text-cream-gold">{HERO.line2.prefix}</span>
         <br />
-        <WordRotator
-          words={TAGLINE_WORDS}
-          interval={4200}
-          mode="flip"
-          className="grid justify-items-start text-gold md:justify-items-end"
-        />
+        <WordRotator words={TAGLINE_WORDS} interval={4200} mode="flip" className="grid justify-items-end text-gold" />
       </span>
     </p>
   );
