@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-// The landing carousel: the sign-in paintings from klario-business, copied
-// to public/hero/caro. Warm and busy, so they hold up under an ink wash.
-export const CAROUSEL = Array.from({ length: 12 }, (_, i) => `/hero/caro/Caro${i + 1}.jpg`);
+// The landing carousel: Caro1–Caro10.webp in public/hero/caro. Warm and busy,
+// so they hold up under an ink wash. Change the count when slides are added
+// or removed; a missing file shows as a blank slide, not a build error.
+export const CAROUSEL = Array.from({ length: 10 }, (_, i) => `/hero/caro/Caro${i + 1}.webp`);
 export const CAROUSEL_MS = 3800;
 
 /** Advances through `n` slides on a timer; stays on the first for reduced motion. */
